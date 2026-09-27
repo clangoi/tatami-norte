@@ -62,7 +62,11 @@ window.SITE_CONFIG = {
     // Una pestaña por clase. slug = la parte final de la URL en Cal.com
     // (cal.com/hccombat/judo → "judo"). Agrega una línea por cada clase nueva.
     classes: [
-      { label: "Judo", slug: "judo" }
+      { label: "BJJ Gi",               slug: "jiu-jitsu-gi" },
+      { label: "BJJ No-Gi",            slug: "jiujitsu-no-gi" },
+      { label: "Judo",                 slug: "judo" },
+      { label: "Físico",               slug: "fisico" },
+      { label: "Sala libre / Randoris", slug: "sala-libre-randoris" }
     ]
   }
 };

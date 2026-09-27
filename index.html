@@ -34,9 +34,9 @@
   <div class="hero-bg-word" aria-hidden="true">OSS</div>
   <div class="wrap">
     <div>
-      <div class="eyebrow">Jiu-Jitsu · Muay Thai · Boxeo · MMA</div>
+      <div class="eyebrow">BJJ Gi · BJJ No-Gi · Judo · Físico</div>
       <h1>Entra al<br><span class="gold">tatami.</span><br><span class="outline">Sal distinto.</span></h1>
-      <p class="hero-lede">Academia de artes marciales y deportes de combate con clases para principiantes, competidores y niños. Tu primera clase es gratis.</p>
+      <p class="hero-lede">Academia de artes marciales y deportes de combate con clases para principiantes y competidores. Tu primera clase es gratis.</p>
       <div class="hero-cta">
         <a class="btn" href="#horario">Agendar clase</a>
         <a class="btn ghost" href="#planes">Ver planes</a>
@@ -63,13 +63,13 @@
   <div class="wrap">
     <div class="sec-head">
       <div><div class="eyebrow">Disciplinas</div><h2>Elige tu estilo<br>de pelea</h2></div>
-      <p>Cada programa tiene currículo por niveles. Empiezas con fundamentos y avanzas a sparring cuando tu profesor lo aprueba.</p>
+      <p>Grappling con y sin gi, Judo y preparación física pensada para el tatami. Además, sala libre para randoris entre clases.</p>
     </div>
     <div class="disc-grid">
-      <article class="disc"><span class="tag">Grappling · Gi y No-Gi</span><h3>Jiu-Jitsu Brasileño</h3><p>Derribos, guardias, pasajes y sumisiones. Cada clase cierra con 5 rounds de rodada de 5 minutos.</p><div class="specs"><span>90 min</span><span>14 clases/sem</span></div></article>
-      <article class="disc"><span class="tag">Striking · 8 armas</span><h3>Muay Thai</h3><p>Puños, patadas, codos, rodillas y clinch. Trabajo en pads con compañero y sacos pesados.</p><div class="specs"><span>75 min</span><span>12 clases/sem</span></div></article>
-      <article class="disc"><span class="tag">Striking · Puños</span><h3>Boxeo</h3><p>Guardia, juego de piernas, esquivas y combinaciones. Rounds de 3 minutos con 1 de descanso.</p><div class="specs"><span>60 min</span><span>10 clases/sem</span></div></article>
-      <article class="disc"><span class="tag">Mixto · Jaula</span><h3>MMA</h3><p>Transiciones entre striking, lucha y suelo. Requiere 6 meses en otra disciplina o evaluación.</p><div class="specs"><span>90 min</span><span>6 clases/sem</span></div></article>
+      <article class="disc"><span class="tag">Grappling · Con gi</span><h3>BJJ Gi</h3><p>Guardias, pasajes, raspados y sumisiones usando agarres en solapa y manga. Cada clase cierra con rounds de rodada.</p><div class="specs"><span>Gi</span><span>Todos los niveles</span></div></article>
+      <article class="disc"><span class="tag">Grappling · Sin gi</span><h3>BJJ No-Gi</h3><p>El mismo Jiu-Jitsu con control de cuerpo: underhooks, llaves de pierna y un ritmo más rápido.</p><div class="specs"><span>Rashguard y short</span><span>Todos los niveles</span></div></article>
+      <article class="disc"><span class="tag">Proyecciones · Con judogi</span><h3>Judo</h3><p>Caídas, agarres y proyecciones de pie, con trabajo de suelo (ne-waza). Termina con randori.</p><div class="specs"><span>Judogi</span><span>Todos los niveles</span></div></article>
+      <article class="disc"><span class="tag">Preparación física</span><h3>Físico</h3><p>Fuerza, agarre, movilidad y resistencia adaptados a las artes marciales, para rendir más y lesionarte menos.</p><div class="specs"><span>Ropa deportiva</span><span>Todos los niveles</span></div></article>
     </div>
 
     <div class="belts">
@@ -100,7 +100,7 @@
         <ul class="first-steps">
           <li><b>Es gratis.</b> Reserva como cualquier clase y avísanos al llegar.</li>
           <li><b>Llega 10 minutos antes</b> para registrarte y calentar.</li>
-          <li><b>Trae</b> ropa deportiva sin cierres, agua y sandalias. Si no tienes judogi, te prestamos uno.</li>
+          <li><b>Trae</b> ropa deportiva sin cierres, agua y sandalias. Si aún no tienes gi o judogi, ven con ropa deportiva.</li>
           <li><b>¿Dudas?</b> Escríbenos a <a data-site-href="email" data-site="contact.email" href="#">hola@tataminorte.mx</a>.</li>
         </ul>
         <div class="confirm" id="bConfirm" hidden>
@@ -215,7 +215,7 @@
   links.addEventListener('click',e=>{if(e.target.closest('a')){links.classList.remove('open');menuBtn.setAttribute('aria-expanded',false);}});
 
   /* strip */
-  const words=['Jiu-Jitsu','Muay Thai','Boxeo','MMA','Kids','Open Mat','Sparring','Competición','Acondicionamiento'];
+  const words=['BJJ Gi','BJJ No-Gi','Judo','Físico','Randori','Sala libre','Competición','Ukemi','Sumisión'];
   $('#strip').innerHTML=[...words,...words].map(w=>`<span>${w}</span>`).join('');
 
   /* round clock: 5 rounds of 5:00 with 1:00 rest */
@@ -281,8 +281,8 @@
 
   /* plans */
   const PLANS=[
-    {id:'base',name:'Base',for:'Para empezar con una disciplina y crear el hábito.',m:45,feats:['1 disciplina a elegir','2 clases por semana','Acceso a Fundamentos','Evaluación de cinturón semestral']},
-    {id:'ilim',name:'Ilimitado',for:'Entrena todo lo que quieras, en todas las disciplinas.',m:79,feat:true,feats:['Todas las disciplinas','Clases ilimitadas','Open mat de domingo','10% en tienda del dojo']},
+    {id:'base',name:'Base',for:'Para empezar con una disciplina y crear el hábito.',m:45,feats:['1 disciplina a elegir','2 clases por semana','Evaluación de cinturón semestral']},
+    {id:'ilim',name:'Ilimitado',for:'Entrena todo lo que quieras, en todas las disciplinas.',m:79,feat:true,feats:['Todas las disciplinas','Clases ilimitadas','Sala libre / Randoris','Físico incluido']},
     {id:'comp',name:'Competidor',for:'Para quien prepara torneos o peleas amateur.',m:119,feats:['Todo lo del plan Ilimitado','4 clases privadas al mes','Plan de fuerza y acondicionamiento','Esquina en torneos y corte de peso guiado']}
   ];
   let cycle='mes';
@@ -342,12 +342,13 @@
        ['h','Qué llevar'],['p','Ropa deportiva sin cierres ni bolsillos, una playera ajustada, agua y sandalias para caminar fuera del tatami. Si no tienes gi, te prestamos uno. Corta tus uñas de manos y pies: es la primera regla de higiene.'],
        ['h','Cómo es la clase'],['p','Calentamiento de 15 minutos con movimientos propios del Jiu-Jitsu (escapes de cadera, rolls), luego técnica en parejas y al final la rodada. En tu primera clase no haces rodada libre: tu profesor te asigna rounds posicionales con alguien de experiencia.'],
        ['h','La palmada'],['p','Si una posición te duele o no puedes respirar, das dos palmadas a tu compañero o al tatami. Tu compañero suelta de inmediato. Hacerlo a tiempo no es rendirse, es la forma en que entrenas mañana también.']]},
-    {id:2,cat:'Técnica',letter:'MT',title:'El clinch de Muay Thai en cuatro posiciones',date:'15 sep 2026',read:'8 min',author:'Arturo Peña',
-     ex:'Doble collar, underhook, brazo controlado y cuerpo a cuerpo: cuándo usar cada uno y cómo salir.',
-     body:[['p','El clinch es donde se ganan muchas peleas de Muay Thai y donde más se pierden los peleadores nuevos. Bien trabajado, te deja golpear con rodillas y desbalancear sin gastar energía.'],
-       ['h','1. Doble collar'],['p','Manos una sobre otra en la nuca del rival, codos juntos hacia el pecho. Desde aquí tiras hacia abajo y subes la rodilla. Si los codos se abren, pierdes control.'],
-       ['h','2. Underhook'],['p','Un brazo por debajo de la axila del rival. Es la posición para girarlo y sacarlo de balance hacia tu lado dominante.'],
-       ['h','3 y 4. Brazo controlado y cuerpo a cuerpo'],['p','Controlar un brazo te abre rodillas al cuerpo del lado libre. El cuerpo a cuerpo, con cadera pegada, sirve para descansar y cortar la distancia en el último minuto de un round cerrado.']]},
+    {id:2,cat:'Técnica',letter:'JU',title:'Ukemi: en Judo primero aprendes a caer',date:'15 sep 2026',read:'6 min',author:`Equipo ${NAME}`,
+     ex:'Las cuatro caídas básicas y por qué te protegen dentro y fuera del tatami.',
+     body:[['p','Antes de proyectar a alguien, en Judo aprendes a que te proyecten. Las caídas (ukemi) reparten el impacto entre brazos, espalda y piernas para que la cabeza y las articulaciones no reciban el golpe.'],
+       ['h','Ushiro ukemi: hacia atrás'],['p','Barbilla al pecho, espalda redonda y los dos brazos golpean el tatami a unos 45° del cuerpo. Es la primera que se practica y la que más usarás.'],
+       ['h','Yoko ukemi: de lado'],['p','Una pierna cruza, caes sobre el costado y golpea el brazo del mismo lado. Es la caída de la mayoría de las proyecciones de cadera y pierna.'],
+       ['h','Mae ukemi y zenpo kaiten'],['p','Hacia el frente sobre los antebrazos, y la caída rodando sobre el hombro. Se trabajan cuando las dos primeras ya salen sin pensar.'],
+       ['p','Las primeras semanas vas a repetir caídas en cada calentamiento. Es normal y es lo que te permite hacer randori sin miedo después.']]},
     {id:3,cat:'Nutrición',letter:'KG',title:'Cortar peso sin perder potencia',date:'8 sep 2026',read:'7 min',author:'Iván Robles',
      ex:'La diferencia entre bajar de categoría y deshidratarte. Un calendario de 8 semanas que sí funciona.',
      body:[['p','Casi todos los errores con el peso vienen de dejarlo para la última semana. Si necesitas bajar más del 5% de tu peso corporal en siete días, estás en la categoría equivocada.'],
@@ -361,12 +362,14 @@
     {id:5,cat:'Noticias',letter:'7',title:'Siete medallas en el Open Regional de Jiu-Jitsu',date:'25 ago 2026',read:'3 min',author:`Equipo ${NAME}`,
      ex:'Tres oros, dos platas y dos bronces entre cinturones blancos, azules y master.',
      body:[['p','El equipo competidor viajó con once atletas y regresó con siete medallas. Destacan los oros de Valeria Cruz (azul, pluma) y de Ramón Ibarra (master 2, pesado), ambos por sumisión.'],
-       ['p','El próximo objetivo es el Nacional de noviembre. Las clases de preparación para competidores son martes y jueves a las 20:30 y están abiertas a cualquier miembro con permiso de su profesor.']]},
-    {id:6,cat:'Técnica',letter:'BX',title:'Tres combinaciones de boxeo para tu primer sparring',date:'18 ago 2026',read:'6 min',author:'Sofía Treviño',
-     ex:'Jab-cross-gancho, jab al cuerpo y el contraataque con cross: simples, seguras y difíciles de leer.',
-     body:[['p','En tu primer sparring vas a olvidar la mitad de lo que sabes. Por eso conviene llevar pocas herramientas y muy practicadas.'],
-       ['h','1-2-3'],['p','Jab, cross y gancho de mano adelantada. La clave es regresar la guardia después del gancho, no quedarte admirando el golpe.'],
-       ['h','Jab al cuerpo'],['p','Baja el nivel doblando rodillas, no la cintura. Obliga a tu compañero a bajar las manos y te abre la cabeza para la siguiente entrada.']]}
+       ['p','El próximo objetivo es el Nacional de noviembre. La sala libre de randoris está abierta a cualquier miembro que quiera prepararse; revisa los horarios en el calendario de reservas.']]},
+    {id:6,cat:'Físico',letter:'FX',title:'Tres ejercicios de agarre para grappling',date:'18 ago 2026',read:'5 min',author:`Equipo ${NAME}`,
+     ex:'Si se te cansan los antebrazos a mitad del randori, empieza por aquí.',
+     body:[['p','En BJJ con gi y en Judo, el agarre decide quién controla. Unos antebrazos fuertes te dejan sostener la solapa y la manga sin quemarte en el primer minuto.'],
+       ['h','Colgarse de una toalla o un gi'],['p','Pasa una toalla o un gi viejo por la barra y cuélgate agarrando la tela. Empieza con 3 series de 20 segundos y sube de 5 en 5.'],
+       ['h','Remo con agarre de tela'],['p','El mismo agarre, pero en un remo invertido o con mancuerna. Trabajas espalda y antebrazo al mismo tiempo, como cuando jalas a tu compañero.'],
+       ['h','Caminata de granjero'],['p','Carga pesada en cada mano y camina 30 metros sin soltar. Es simple, se nota rápido y también fortalece el core.'],
+       ['p','Dos sesiones por semana bastan. No las hagas justo antes de una clase: llega con los antebrazos frescos.']]}
   ];
   const CATS=['Todo',...new Set(POSTS.map(p=>p.cat))];
   let curCat='Todo';

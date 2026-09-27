@@ -44,6 +44,9 @@ footer{background:var(--ink);border-top:1px solid var(--line)}
 .foot h4{font:700 14px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 16px}
 .foot p,.foot li{color:#b8b4aa;font-size:15px}
 .foot ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.foot a{text-decoration:none}
+.foot a:hover{color:var(--gold)}
+.foot p + p{margin-top:10px}
 .foot-big{font:900 clamp(40px,5vw,60px)/.9 var(--display);text-transform:uppercase;margin-bottom:16px}
 .foot-base{border-top:1px solid var(--line);padding-block:20px;font:600 13px/1.4 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--steel);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 @media (max-width:820px){.foot{grid-template-columns:1fr 1fr}}

@@ -35,13 +35,16 @@ Si cambias el horario de una clase, cámbialo en los dos lugares: en Cal.com y e
 
 ## 3. Conectar el sitio
 
-Abre `js/booking.js` y escribe tu usuario:
+Abre `site.config.js` y escribe tu usuario en `booking`:
 
 ```js
-username: "tu-usuario",
+booking: {
+  calUsername: "tu-usuario",
+  calOrigin: "https://app.cal.com"
+}
 ```
 
-Si usaste slugs distintos, cámbialos en `events`. Luego sube los cambios:
+Si usaste slugs distintos, cámbialos en `events` dentro de `js/booking.js`. Luego sube los cambios:
 
 ```bash
 git add -A
@@ -57,4 +60,4 @@ Vercel publica la nueva versión en menos de un minuto.
 2. Se abre Cal.com con el día de esa clase ya seleccionado y los datos llenos. El teléfono, la experiencia y si es su primera clase llegan en las notas de la reserva.
 3. Al confirmar, Cal.com manda el correo y el sitio muestra la reserva en "Tus reservas", con un enlace para cambiarla o cancelarla.
 
-Mientras `username` esté vacío, el sitio muestra un aviso con el correo y el teléfono de la academia en lugar del botón de reserva.
+Mientras `calUsername` esté vacío, el sitio muestra un aviso con el correo y el teléfono de la academia en lugar del botón de reserva.

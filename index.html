@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Academia de Jiu-Jitsu, Muay Thai, Boxeo y MMA. Agenda tu primera clase gratis, elige tu plan y lee el blog del dojo.">
+<meta name="description" content="" data-site-meta>
 <meta name="theme-color" content="#1B2338">
 <title>Tatami Norte</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +18,7 @@
 <body>
 <nav class="nav" aria-label="Principal">
   <div class="wrap">
-    <a class="brand" href="#inicio"><span class="brand-mark">T</span><span class="brand-name">Tatami Norte</span></a>
+    <a class="brand" href="#inicio"><span class="brand-mark" data-site="initial">T</span><span class="brand-name" data-site="name">Tatami Norte</span></a>
     <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks">Menú</button>
     <div class="nav-links" id="navLinks">
       <a href="#disciplinas">Disciplinas</a>
@@ -41,7 +41,7 @@
         <a class="btn" href="#horario">Agendar clase</a>
         <a class="btn ghost" href="#planes">Ver planes</a>
       </div>
-      <div class="hero-meta">
+      <div class="hero-meta" data-site-stats>
         <div><b>42</b>clases por semana</div>
         <div><b>6</b>profesores cinturón negro</div>
         <div><b>380 m²</b>de tatami</div>
@@ -102,7 +102,7 @@
       <div class="panel" id="bookPanel">
         <h3>Reservar lugar</h3>
         <p class="hint">Elige una clase del horario, completa tus datos y confirma la fecha. Te llegará un correo con la confirmación.</p>
-        <div class="notice" id="bSetup" hidden><strong>Reservas en línea en configuración.</strong> Mientras tanto, reserva escribiendo a hola@tataminorte.mx o al +52 55 4821 0930.</div>
+        <div class="notice" id="bSetup" hidden><strong>Reservas en línea en configuración.</strong> Mientras tanto, reserva escribiendo a <span data-site="contact.email">hola@tataminorte.mx</span> o al <span data-site="contact.phone">+52 55 4821 0930</span>.</div>
         <div class="picked-class" id="pickedClass">Ninguna clase seleccionada.</div>
         <form id="bookForm" novalidate>
           <div class="field"><label for="bName">Nombre completo</label><input id="bName" autocomplete="name" placeholder="Ej. Andrea Ruiz"></div>
@@ -113,7 +113,7 @@
           <div class="field"><label for="bLevel">Experiencia</label>
             <select id="bLevel"><option>Nunca he entrenado</option><option>Menos de 1 año</option><option>1 a 3 años</option><option>Más de 3 años / compito</option></select>
           </div>
-          <label class="check"><input type="checkbox" id="bFirst" checked> Es mi primera clase en Tatami Norte (gratis)</label>
+          <label class="check"><input type="checkbox" id="bFirst" checked> Es mi primera clase en <span data-site="name">Tatami Norte</span> (gratis)</label>
           <div class="err" id="bErr" role="alert"></div>
           <button class="btn block" type="submit" id="bSubmit">Elegir fecha y reservar</button>
         </form>
@@ -159,13 +159,14 @@
   <div class="wrap foot">
     <div>
       <div class="foot-big">Nos vemos<br>en el tatami.</div>
-      <p>Av. Constitución 1480, Col. Centro. Estacionamiento para miembros.</p>
+      <p><span data-site="address.line">Av. Constitución 1480, Col. Centro</span>. <span data-site="address.note">Estacionamiento para miembros.</span></p>
+      <p><a data-site-href="maps" href="#">Cómo llegar</a></p>
     </div>
-    <div><h4>Horario de recepción</h4><ul><li>Lun a Vie · 6:00–22:00</li><li>Sábado · 8:00–14:00</li><li>Domingo · Open mat 10:00</li></ul></div>
-    <div><h4>Contacto</h4><ul><li>hola@tataminorte.mx</li><li>+52 55 4821 0930</li><li>@tataminorte</li></ul></div>
+    <div><h4>Horario de recepción</h4><ul data-site-list="hours"><li>Lun a Vie · 6:00–22:00</li><li>Sábado · 8:00–14:00</li><li>Domingo · Open mat 10:00</li></ul></div>
+    <div><h4>Contacto</h4><ul><li><a data-site-href="email" data-site="contact.email" href="#">hola@tataminorte.mx</a></li><li><a data-site-href="phone" data-site="contact.phone" href="#">+52 55 4821 0930</a></li><li><a data-site-href="whatsapp" href="#">WhatsApp</a></li><li><a data-site-href="instagram" href="#">Instagram</a></li><li><a data-site-href="facebook" href="#">Facebook</a></li><li><a data-site-href="tiktok" href="#">TikTok</a></li></ul></div>
     <div><h4>Explora</h4><ul><li><a href="#disciplinas">Disciplinas</a></li><li><a href="#horario">Agendar clase</a></li><li><a href="#planes">Planes</a></li><li><a href="#blog">Blog</a></li></ul></div>
   </div>
-  <div class="wrap foot-base"><span>© 2026 Tatami Norte</span><span>Respeto · Disciplina · Constancia</span></div>
+  <div class="wrap foot-base"><span>© <span data-site="year">2026</span> <span data-site="name">Tatami Norte</span></span><span data-site="motto">Respeto · Disciplina · Constancia</span></div>
 </footer>
 
 <div class="modal" id="articleModal" hidden role="dialog" aria-modal="true" aria-labelledby="artTitle">
@@ -189,7 +190,7 @@
         <div class="field"><label for="pStart">Fecha de inicio</label><input id="pStart" type="date"></div>
         <div class="err" id="pErr" role="alert"></div>
         <button class="btn block" type="submit">Continuar al pago</button>
-        <p class="secure">El pago se procesa en la pasarela segura (Stripe o Mercado Pago). Tatami Norte no guarda datos de tarjeta.</p>
+        <p class="secure">El pago se procesa en la pasarela segura (Stripe o Mercado Pago). <span data-site="name">Tatami Norte</span> no guarda datos de tarjeta.</p>
       </form>
       <div id="payDone" class="stack" hidden>
         <div class="notice"><strong>Vista previa.</strong> En el sitio publicado, este botón abre el checkout de la pasarela de pago con el plan y el periodo ya seleccionados. Aquí no se realiza ningún cobro.</div>
@@ -201,10 +202,13 @@
 
 <div class="toast" id="toast" hidden role="status"></div>
 
+<script src="site.config.js"></script>
+<script src="js/site.js"></script>
 <script src="js/booking.js"></script>
 <script>
 (function(){
   const $ = (s, r=document) => r.querySelector(s);
+  const S = window.SITE, NAME = S.config.name, EMAIL = S.get('contact.email');
   const store = {
     get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
     set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
@@ -331,7 +335,7 @@
     const notes=[
       `Teléfono: ${$('#bPhone').value.trim()||'—'}`,
       `Experiencia: ${$('#bLevel').value}`,
-      $('#bFirst').checked?'Primera clase (gratis)':'Ya entrena en Tatami Norte'
+      $('#bFirst').checked?'Primera clase (gratis)':`Ya entrena en ${NAME}`
     ].join(' · ');
     Booking.open({kind:picked.kind, weekday:WEEKDAY[picked.day], time:picked.time, name, email, notes});
   });
@@ -350,7 +354,7 @@
     toast('Reserva confirmada');
   });
   Booking.onFail(()=>{
-    $('#bErr').textContent='No pudimos abrir el calendario de reservas. Intenta de nuevo o escríbenos a hola@tataminorte.mx.';
+    $('#bErr').textContent=`No pudimos abrir el calendario de reservas. Intenta de nuevo${EMAIL?' o escríbenos a '+EMAIL:''}.`;
   });
 
   // next class in hero
@@ -375,8 +379,8 @@
     $('#plans').innerHTML=PLANS.map(p=>`<article class="plan${p.feat?' feat':''}">
       ${p.feat?'<span class="badge">Más elegido</span>':''}
       <h3>${p.name}</h3><p class="for">${p.for}</p>
-      <div class="price"><b>$${price(p)}</b><span>USD / mes</span></div>
-      <div class="price-note">${cycle==='anual'?`Pago anual de $${price(p)*12} · ahorras $${(p.m-price(p))*12}`:'Facturación mensual'}</div>
+      <div class="price"><b>${S.money(price(p))}</b><span>${S.currency} / mes</span></div>
+      <div class="price-note">${cycle==='anual'?`Pago anual de ${S.money(price(p)*12)} · ahorras ${S.money((p.m-price(p))*12)}`:'Facturación mensual'}</div>
       <ul>${p.feats.map(f=>`<li>${f}</li>`).join('')}</ul>
       <button class="btn${p.feat?'':' ghost'}" data-plan="${p.id}">Suscribirme</button>
     </article>`).join('');
@@ -404,8 +408,8 @@
     const total=cycle==='mes'?price(payPlan):price(payPlan)*12;
     $('#payTitle').textContent='Plan '+payPlan.name;
     $('#paySum').innerHTML=`<div><span>Periodo</span><span>${cycle==='mes'?'Mensual':'Anual (12 meses)'}</span></div>
-      <div><span>Inscripción</span><span>$0</span></div>
-      <div><span>Total hoy</span><span class="tot">$${total} USD</span></div>`;
+      <div><span>Inscripción</span><span>${S.money(0)}</span></div>
+      <div><span>Total hoy</span><span class="tot">${S.money(total)} ${S.currency}</span></div>`;
     $('#payForm').hidden=false; $('#payDone').hidden=true; $('#pErr').textContent='';
     const d=new Date(); d.setDate(d.getDate()+1); $('#pStart').value=d.toISOString().slice(0,10);
     openModal($('#payModal'));
@@ -436,13 +440,13 @@
      ex:'La diferencia entre bajar de categoría y deshidratarte. Un calendario de 8 semanas que sí funciona.',
      body:[['p','Casi todos los errores con el peso vienen de dejarlo para la última semana. Si necesitas bajar más del 5% de tu peso corporal en siete días, estás en la categoría equivocada.'],
        ['h','Semanas 8 a 2'],['p','Déficit moderado de 300 a 500 kcal diarias, proteína alta (2 g por kilo) y el mismo volumen de entrenamiento. La meta es llegar a 3% de tu categoría una semana antes.'],
-       ['h','Última semana'],['p','Reducción gradual de sodio y fibra y ajuste de agua bajo supervisión. En Tatami Norte el corte final solo se hace con acompañamiento del equipo del plan Competidor.']]},
+       ['h','Última semana'],['p',`Reducción gradual de sodio y fibra y ajuste de agua bajo supervisión. En ${NAME} el corte final solo se hace con acompañamiento del equipo del plan Competidor.`]]},
     {id:4,cat:'Mentalidad',letter:'OSS',title:'Tu cinturón importa menos de lo que crees',date:'1 sep 2026',read:'5 min',author:'Diego Lara',
      ex:'Por qué medir tu progreso en rounds entrenados y no en grados te hace mejor peleador.',
      body:[['p','Un cinturón es una fotografía de tu nivel el día que te lo dieron. Tu progreso real se mide en otra unidad: rounds entrenados con intención.'],
        ['p','Te proponemos llevar un registro simple: cuántos rounds hiciste, qué posición trabajaste y qué salió mal. Tres meses de ese diario dicen más que cualquier grado.'],
        ['h','Constancia sobre intensidad'],['p','Tres clases por semana durante un año te llevan más lejos que seis clases por semana durante dos meses seguidos de una lesión.']]},
-    {id:5,cat:'Noticias',letter:'7',title:'Siete medallas en el Open Regional de Jiu-Jitsu',date:'25 ago 2026',read:'3 min',author:'Equipo Tatami Norte',
+    {id:5,cat:'Noticias',letter:'7',title:'Siete medallas en el Open Regional de Jiu-Jitsu',date:'25 ago 2026',read:'3 min',author:`Equipo ${NAME}`,
      ex:'Tres oros, dos platas y dos bronces entre cinturones blancos, azules y master.',
      body:[['p','El equipo competidor viajó con once atletas y regresó con siete medallas. Destacan los oros de Valeria Cruz (azul, pluma) y de Ramón Ibarra (master 2, pesado), ambos por sumisión.'],
        ['p','El próximo objetivo es el Nacional de noviembre. Las clases de preparación para competidores son martes y jueves a las 20:30 y están abiertas a cualquier miembro con permiso de su profesor.']]},

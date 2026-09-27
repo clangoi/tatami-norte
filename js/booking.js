@@ -2,14 +2,14 @@
    Tatami Norte · Reservas con Cal.com
    Carga el embed de Cal.com y expone window.TNBooking para que
    cualquier página abra la reserva de una clase.
-   Configuración: edita CAL_CONFIG (ver CAL-SETUP.md).
+   El usuario de Cal.com se configura en site.config.js → booking.
+   Aquí solo van los slugs de cada clase (ver CAL-SETUP.md).
    ========================================================== */
 (function(){
+  const site = (window.SITE_CONFIG && window.SITE_CONFIG.booking) || {};
   const CAL_CONFIG = {
-    // Tu usuario (o equipo) de Cal.com: cal.com/<username>
-    username: "",
-    // Cal.com en la nube. Cambia solo si usas Cal.com autoalojado.
-    origin: "https://app.cal.com",
+    username: site.calUsername || "",
+    origin: site.calOrigin || "https://app.cal.com",
     // Un tipo de evento por clase. La clave es la que usa el horario del sitio,
     // el valor es el slug del tipo de evento en Cal.com.
     events: {

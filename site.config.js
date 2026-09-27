@@ -11,49 +11,57 @@
 window.SITE_CONFIG = {
 
   /* ---- Identidad ---- */
-  name: "Tatami Norte",
-  initial: "T",                                  // letra del logo en el menú
+  name: "Club de Deportes de Combate Kizuna",
+  shortName: "Kizuna",                           // nombre corto para el menú
+  initial: "K",                                  // letra del logo en el menú
   motto: "Respeto · Disciplina · Constancia",
-  description: "Academia de Jiu-Jitsu, Muay Thai, Boxeo y MMA. Agenda tu primera clase gratis, elige tu plan y lee el blog del dojo.",
+  description: "Club de Deportes de Combate Kizuna en Santiago: BJJ Gi, BJJ No-Gi, Judo y preparación física. Reserva tu clase en línea.",
 
   /* ---- Contacto ---- */
   contact: {
-    email: "hola@tataminorte.mx",
-    phone: "+52 55 4821 0930",
-    whatsapp: "525548210930",                    // solo dígitos con código de país
-    instagram: "tataminorte",                    // sin @
+    email: "contacto@hccombat.com",
+    phone: "+56 9 4796 6805",
+    whatsapp: "56947966805",                     // solo dígitos con código de país
+    instagram: "",                               // sin @
     facebook: "",
     tiktok: ""
   },
 
   /* ---- Ubicación ---- */
   address: {
-    line: "Av. Constitución 1480, Col. Centro",
-    city: "",
-    note: "Estacionamiento para miembros.",
-    mapsUrl: ""                                  // enlace de Google Maps
+    line: "Av. Portugal 412, Oficina 605",
+    city: "Santiago, RM",
+    note: "",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Av.+Portugal+412,+Santiago,+Chile"
   },
 
-  /* ---- Horario de recepción ---- */
+  /* ---- Horario (pie de página) ---- */
   hours: [
-    "Lun a Vie · 6:00–22:00",
-    "Sábado · 8:00–14:00",
-    "Domingo · Open mat 10:00"
+    "Clases según el calendario de reservas",
+    "Consultas por correo o WhatsApp"
   ],
 
   /* ---- Cifras de la portada ---- */
   stats: [
-    { value: "42",     label: "clases por semana" },
-    { value: "6",      label: "profesores cinturón negro" },
-    { value: "380 m²", label: "de tatami" }
+    { value: "4",     label: "disciplinas" },
+    { value: "44 m²", label: "de tatami" }
   ],
 
   /* ---- Moneda de los planes ---- */
   currency: {
-    code: "USD",
+    code: "CLP",
     symbol: "$",
-    locale: "es-MX"
+    locale: "es-CL"
   },
+
+  /* ---- Precios mensuales de los planes ----
+     Número sin puntos (ej. 45000). null = muestra "Consultar". */
+  prices: {
+    base: null,
+    ilim: null,
+    comp: null
+  },
+  annualDiscount: 0.2,                           // descuento del pago anual (0.2 = 20%)
 
   /* ---- Reservas (Cal.com) · ver CAL-SETUP.md ---- */
   booking: {

@@ -1,5 +1,5 @@
 /* ==========================================================
-   Tatami Norte · Componentes
+   Kizuna · Componentes
    Bloques que pueden aparecer en varias páginas: disciplinas,
    cinturones, horario y reservas, planes y blog.
    ========================================================== */
@@ -70,6 +70,7 @@
 .plan li::before{content:"";flex:0 0 12px;height:3px;background:var(--bronze);margin-top:12px}
 .price{display:flex;align-items:baseline;gap:6px}
 .price b{font:900 72px/1 var(--display);font-variant-numeric:tabular-nums}
+.price b.ask{font-size:52px}
 .price span{font:600 15px/1 var(--label);letter-spacing:.1em;text-transform:uppercase;color:var(--steel)}
 .price-note{font-size:14px;color:var(--steel);margin-top:-10px;min-height:20px}
 /* Plan destacado */

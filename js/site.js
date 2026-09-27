@@ -1,5 +1,5 @@
 /* ==========================================================
-   Tatami Norte · Datos del sitio
+   Kizuna · Datos del sitio
    Lee site.config.js y llena la página. Marca los elementos así:
 
    data-site="contact.email"        → escribe el valor como texto

@@ -16,7 +16,7 @@
 
   const BELTS = {
     blanco: {
-      name: "Blanco", grade: "6° kyu", cls: "w",
+      name: "Blanco", grade: "6° kyu", img: "white",
       intro: "Lo que aprendes con cinturón blanco para rendir el examen a amarillo.",
       groups: [
         { title: "Nage-waza · Proyecciones", items: [
@@ -40,7 +40,7 @@
       ]
     },
     amarillo: {
-      name: "Amarillo", grade: "5° kyu", cls: "y",
+      name: "Amarillo", grade: "5° kyu", img: "yellow",
       intro: "Lo que aprendes con cinturón amarillo para rendir el examen a naranja.",
       groups: [
         { title: "Nage-waza · Proyecciones", items: [
@@ -64,7 +64,7 @@
       ]
     },
     naranja: {
-      name: "Naranja", grade: "4° kyu", cls: "o",
+      name: "Naranja", grade: "4° kyu", img: "orange",
       intro: "Lo que aprendes con cinturón naranja para rendir el examen a verde.",
       groups: [
         { title: "Nage-waza · Proyecciones", items: [
@@ -90,7 +90,7 @@
       ]
     },
     verde: {
-      name: "Verde", grade: "3° kyu", cls: "g",
+      name: "Verde", grade: "3° kyu", img: "green",
       intro: "Lo que aprendes con cinturón verde para rendir el examen a azul.",
       groups: [
         { title: "Nage-waza · Proyecciones", items: [
@@ -108,7 +108,7 @@
       ]
     },
     azul: {
-      name: "Azul", grade: "2° kyu", cls: "b",
+      name: "Azul", grade: "2° kyu", img: "blue",
       intro: "Lo que aprendes con cinturón azul para rendir el examen a café.",
       groups: [
         { title: "Nage-waza · Proyecciones", items: [
@@ -126,7 +126,7 @@
       ]
     },
     cafe: {
-      name: "Café", grade: "1° kyu", cls: "br",
+      name: "Café", grade: "1° kyu", img: "brown",
       intro: "Lo que aprendes con cinturón café para rendir el examen a negro.",
       groups: [
         { title: "Nage-waza · Proyecciones", items: [
@@ -147,7 +147,7 @@
       ]
     },
     negro: {
-      name: "Negro", grade: "1er dan", cls: "k",
+      name: "Negro", grade: "1er dan", img: "black",
       intro: "El examen a 1er dan sigue el reglamento de dan de la Federación. Estas son las dos kata del Kodokan que se preparan para el grado.",
       groups: [
         { title: "Kata", items: [
@@ -167,8 +167,9 @@
 
   const esc = s => s.replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 
-  function play(name, id){
-    player.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1" title="${esc(name)} · Kodokan" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  // En bucle: YouTube solo repite si el mismo video va también en "playlist".
+  function play(name, id, autoplay = true){
+    player.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=${autoplay ? 1 : 0}&loop=1&playlist=${id}&rel=0&playsinline=1" title="${esc(name)} · Kodokan" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
     nowTitle.textContent = name;
     ytLink.href = `https://www.youtube.com/watch?v=${id}`;
     modal.querySelectorAll(".tech-item[aria-pressed]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.id === id && b.dataset.name === name)));
@@ -176,8 +177,9 @@
 
   function render(key){
     const b = BELTS[key];
-    $("[data-tech-belt]").className = `belt ${b.cls}`;
-    $("[data-tech-belt]").textContent = b.name;
+    const belt = $("[data-tech-belt]");
+    belt.src = `assets/images/content/${b.img}_belt.webp`;
+    belt.alt = `Cinturón ${b.name.toLowerCase()}`;
     $("#techTitle").innerHTML = `${esc(b.name)} <small>${esc(b.grade)}</small>`;
     $("[data-tech-intro]").textContent = b.intro;
 
@@ -194,7 +196,7 @@
     }).join("");
 
     const first = b.groups.flatMap(g => g.items).find(i => i[1]);
-    play(first[0], first[1]);
+    play(first[0], first[1], false); // se muestra sin reproducir hasta que elijan una técnica
   }
 
   function open(key){

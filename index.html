@@ -22,6 +22,8 @@
     <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks">Menú</button>
     <div class="nav-links" id="navLinks">
       <a href="#disciplinas">Disciplinas</a>
+      <a href="judo.html">Judo</a>
+      <a href="bjj.html">BJJ</a>
       <a href="#horario">Horario</a>
       <a href="#planes">Planes</a>
       <a href="#blog">Blog</a>
@@ -65,23 +67,34 @@
       <p>Grappling con y sin gi, Judo y preparación física pensada para el tatami. Además, sala libre para randoris entre clases.</p>
     </div>
     <div class="disc-grid">
-      <article class="disc"><span class="tag">Grappling · Con gi</span><h3>BJJ Gi</h3><p>Guardias, pasajes, raspados y sumisiones usando agarres en solapa y manga. Cada clase cierra con rounds de rodada.</p><div class="specs"><span>Gi</span><span>Todos los niveles</span></div></article>
-      <article class="disc"><span class="tag">Grappling · Sin gi</span><h3>BJJ No-Gi</h3><p>El mismo Jiu-Jitsu con control de cuerpo: underhooks, llaves de pierna y un ritmo más rápido.</p><div class="specs"><span>Rashguard y short</span><span>Todos los niveles</span></div></article>
-      <article class="disc"><span class="tag">Proyecciones · Con judogi</span><h3>Judo</h3><p>Caídas, agarres y proyecciones de pie, con trabajo de suelo (ne-waza). Termina con randori.</p><div class="specs"><span>Judogi</span><span>Todos los niveles</span></div></article>
+      <article class="disc"><span class="tag">Grappling · Con gi</span><h3><a class="disc-link" href="bjj.html">BJJ Gi</a></h3><p>Guardias, pasajes, raspados y sumisiones usando agarres en solapa y manga. Cada clase cierra con rounds de rodada.</p><div class="specs"><span>Gi</span><span>Todos los niveles</span></div></article>
+      <article class="disc"><span class="tag">Grappling · Sin gi</span><h3><a class="disc-link" href="bjj.html#no-gi">BJJ No-Gi</a></h3><p>El mismo Jiu-Jitsu con control de cuerpo: underhooks, llaves de pierna y un ritmo más rápido.</p><div class="specs"><span>Rashguard y short</span><span>Todos los niveles</span></div></article>
+      <article class="disc"><span class="tag">Proyecciones · Con judogi</span><h3><a class="disc-link" href="judo.html">Judo</a></h3><p>Caídas, agarres y proyecciones de pie, con trabajo de suelo (ne-waza). Termina con randori.</p><div class="specs"><span>Judogi</span><span>Todos los niveles</span></div></article>
       <article class="disc"><span class="tag">Preparación física</span><h3>Físico</h3><p>Fuerza, agarre, movilidad y resistencia adaptados a las artes marciales, para rendir más y lesionarte menos.</p><div class="specs"><span>Ropa deportiva</span><span>Todos los niveles</span></div></article>
     </div>
 
-    <div class="belts">
-      <h3>Tu camino en BJJ<small>Tiempo de referencia por cinturón en BJJ, entrenando 3 veces por semana.</small></h3>
-      <div>
-        <div class="belt-track" role="list">
-          <div class="belt w" role="listitem">Blanco</div>
-          <div class="belt b" role="listitem">Azul</div>
-          <div class="belt p" role="listitem">Morado</div>
-          <div class="belt br" role="listitem">Marrón</div>
-          <div class="belt k" role="listitem">Negro</div>
-        </div>
-        <div class="belt-years"><span>1–2 años</span><span>2–3 años</span><span>2–3 años</span><span>1–2 años</span><span>~10 años total</span></div>
+  </div>
+</section>
+
+<section class="dojo" id="dojo">
+  <div class="wrap dojo-grid">
+    <figure class="dojo-photo">
+      <picture>
+        <source type="image/webp" srcset="assets/images/content/dojo-720.webp 720w, assets/images/content/dojo.webp 1086w" sizes="(max-width: 860px) 92vw, 44vw">
+        <img src="assets/images/content/dojo.jpg" srcset="assets/images/content/dojo-720.jpg 720w, assets/images/content/dojo.jpg 1086w" sizes="(max-width: 860px) 92vw, 44vw" width="1086" height="1448" loading="lazy" decoding="async" alt="Sala de entrenamiento del club: tatami negro, paredes acolchadas y ventanas altas">
+      </picture>
+    </figure>
+    <div class="dojo-copy">
+      <div class="eyebrow">El dojo</div>
+      <h2>Un tatami<br>para entrenar<br>en serio</h2>
+      <p>Piso de tatami completo, paredes protegidas y ventanas que dan luz y ventilación. Un espacio pensado para grupos reducidos, donde el profesor ve y corrige a cada alumno.</p>
+      <dl class="dojo-facts">
+        <div><dt>Superficie</dt><dd data-site="stats.1.value">44 m²</dd></div>
+        <div><dt>Dirección</dt><dd><span data-site="address.line">Av. Portugal 412, Oficina 605</span><br><span data-site="address.city">Santiago, RM</span></dd></div>
+      </dl>
+      <div class="hero-cta">
+        <a class="btn" href="#horario">Reservar clase gratis</a>
+        <a class="btn ghost" data-site-href="maps" href="#">Cómo llegar</a>
       </div>
     </div>
   </div>
@@ -99,17 +112,17 @@
         <ul class="first-steps">
           <li><b>Es gratis.</b> Reserva como cualquier clase y avísanos al llegar.</li>
           <li><b>Llega 10 minutos antes</b> para registrarte y calentar.</li>
-          <li><b>Trae</b> ropa deportiva sin cierres, agua y sandalias. Si aún no tienes gi o judogi, ven con ropa deportiva.</li>
+          <li><b>Trae</b> agua y sandalias. Si aún no tienes gi o judogi, ven con ropa deportiva sin cierres.</li>
           <li><b>¿Dudas?</b> Escríbenos a <a data-site-href="email" data-site="contact.email" href="#">contacto@hccombat.com</a>.</li>
         </ul>
-        <div class="confirm" id="bConfirm" hidden>
+        <div class="confirm" data-cal-confirm hidden>
           <div class="eyebrow">Reserva confirmada</div>
-          <div class="code" id="bCode"></div>
-          <p id="bConfirmTxt"></p>
+          <div class="code" data-cal-confirm-date></div>
+          <p data-cal-confirm-text></p>
         </div>
-        <div class="my-bookings" id="myBookings" hidden>
+        <div class="my-bookings" data-cal-mine hidden>
           <h4>Tus reservas</h4>
-          <div id="mbList"></div>
+          <div data-cal-mine-list></div>
         </div>
       </aside>
       <div class="cal-shell">
@@ -117,7 +130,7 @@
         <div class="cal-box" data-cal-inline>
           <p class="cal-loading">Cargando calendario…</p>
         </div>
-        <div class="notice" id="bSetup" hidden><strong>Reservas en línea no disponibles por ahora.</strong> Aparta tu lugar escribiendo a <span data-site="contact.email">contacto@hccombat.com</span> o al <span data-site="contact.phone">+56 9 4796 6805</span>.</div>
+        <div class="notice" data-cal-fallback hidden><strong>Reservas en línea no disponibles por ahora.</strong> Aparta tu lugar escribiendo a <span data-site="contact.email">contacto@hccombat.com</span> o al <span data-site="contact.phone">+56 9 4796 6805</span>.</div>
       </div>
     </div>
   </div>
@@ -155,9 +168,9 @@
       <p data-site="address.note"></p>
       <p><a data-site-href="maps" href="#">Cómo llegar</a></p>
     </div>
-    <div><h4>Horario</h4><ul data-site-list="hours"><li>Lun a Vie · 6:00–22:00</li><li>Sábado · 8:00–14:00</li><li>Domingo · Open mat 10:00</li></ul></div>
+    <div><h4>Horario</h4><ul data-site-list="hours"><li>Clases según el calendario de reservas</li><li>Consultas por correo o WhatsApp</li></ul></div>
     <div><h4>Contacto</h4><ul><li><a data-site-href="email" data-site="contact.email" href="#">contacto@hccombat.com</a></li><li><a data-site-href="phone" data-site="contact.phone" href="#">+56 9 4796 6805</a></li><li><a data-site-href="whatsapp" href="#">WhatsApp</a></li><li><a data-site-href="instagram" href="#">Instagram</a></li><li><a data-site-href="facebook" href="#">Facebook</a></li><li><a data-site-href="tiktok" href="#">TikTok</a></li></ul></div>
-    <div><h4>Explora</h4><ul><li><a href="#disciplinas">Disciplinas</a></li><li><a href="#horario">Agendar clase</a></li><li><a href="#planes">Planes</a></li><li><a href="#blog">Blog</a></li></ul></div>
+    <div><h4>Explora</h4><ul><li><a href="judo.html">Judo</a></li><li><a href="bjj.html">BJJ</a></li><li><a href="#horario">Agendar clase</a></li><li><a href="#planes">Planes</a></li><li><a href="#blog">Blog</a></li></ul></div>
   </div>
   <div class="wrap foot-base"><span>© <span data-site="year">2026</span> <span data-site="name">Club de Deportes de Combate Kizuna</span></span><span data-site="motto">Respeto · Disciplina · Constancia</span></div>
 </footer>
@@ -209,11 +222,6 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2800); }
 
-  /* nav */
-  const menuBtn=$('#menuBtn'), links=$('#navLinks');
-  menuBtn.addEventListener('click',()=>{const o=links.classList.toggle('open');menuBtn.setAttribute('aria-expanded',o);});
-  links.addEventListener('click',e=>{if(e.target.closest('a')){links.classList.remove('open');menuBtn.setAttribute('aria-expanded',false);}});
-
   /* strip */
   const words=['BJJ Gi','BJJ No-Gi','Judo','Físico','Randori','Sala libre','Competición','Ukemi','Sumisión'];
   $('#strip').innerHTML=[...words,...words].map(w=>`<span>${w}</span>`).join('');
@@ -240,44 +248,10 @@
   },1000);
   drawClock();
 
-  /* booking (Cal.com en la página) */
-  const Booking=window.TNBooking;
-  // Reservas hechas desde este navegador (Cal.com guarda las reales y envía los correos).
-  // Se descartan las que ya pasaron.
-  let bookings=store.get('tn_cal_bookings',[]).filter(b=>new Date(b.endTime||b.startTime)>new Date());
-  store.set('tn_cal_bookings',bookings);
+  /* reservas (Cal.com en la página) */
   const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
-  const fmtDate=iso=>new Date(iso).toLocaleString('es-MX',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
-
-  function renderMine(){
-    $('#myBookings').hidden=!bookings.length;
-    $('#mbList').innerHTML=bookings.map(b=>`<div class="mb">
-      <span>${esc(b.title||'Clase')} · ${esc(fmtDate(b.startTime))}</span>
-      <a class="mb-link" href="${esc(Booking.manageUrl(b.uid))}" target="_blank" rel="noopener">Cambiar o cancelar</a>
-    </div>`).join('');
-  }
-
-  if(!Booking.mount($('#booking'))){
-    $('.cal-box').hidden=true;
-    $('#bSetup').hidden=false;
-  }
-  Booking.onSuccess(data=>{
-    if(!data.uid||!data.startTime) return;
-    if(!bookings.some(b=>b.uid===data.uid)){
-      bookings.push({uid:data.uid,title:data.title,startTime:data.startTime,endTime:data.endTime});
-      bookings.sort((a,b)=>new Date(a.startTime)-new Date(b.startTime));
-      store.set('tn_cal_bookings',bookings);
-    }
-    $('#bCode').textContent=fmtDate(data.startTime);
-    $('#bConfirmTxt').textContent=`${data.title||'Tu clase'} está confirmada. Te enviamos los detalles por correo. Llega 10 minutos antes.`;
-    $('#bConfirm').hidden=false;
-    renderMine();
-    toast('Reserva confirmada');
-  });
-  Booking.onFail(()=>{
-    $('#bSetup').hidden=false;
-  });
-  renderMine();
+  window.TNBooking.mount($('#booking'));
+  window.TNBooking.onSuccess(()=>toast('Reserva confirmada'));
 
   /* plans */
   const PLANS=[

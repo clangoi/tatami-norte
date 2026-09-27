@@ -42,3 +42,13 @@ Vercel publica la nueva versión en menos de un minuto.
 ## Si el calendario no carga
 
 Si `calUsername` está vacío, `classes` no tiene elementos o Cal.com no responde, la sección muestra un aviso con el correo y el teléfono de `site.config.js` para reservar por mensaje.
+
+## Calendario en otras páginas
+
+Las páginas de disciplina muestran solo sus clases. En `judo.html` y `bjj.html`, al final:
+
+```js
+TNBooking.mount(document.getElementById('booking'), { slugs: ['judo'] });
+```
+
+Copia la sección `#booking` de cualquiera de esas páginas y cambia los `slugs` para crear otra.

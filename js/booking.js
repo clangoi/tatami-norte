@@ -1,10 +1,9 @@
 /* ==========================================================
    Reservas con Cal.com (calendario en la página)
    Usuario y clases se configuran en site.config.js → booking.
-   Uso:
-     <div data-cal-tabs></div>      pestañas por clase (opcional)
-     <div data-cal-inline></div>    donde va el calendario
-     TNBooking.mount()              los llena
+   Uso (ver el marcado completo en index.html → #booking):
+     TNBooking.mount(seccion)                     todas las clases
+     TNBooking.mount(seccion, {slugs:["judo"]})   solo algunas
    Expone window.TNBooking.
    ========================================================== */
 (function(){
@@ -76,13 +75,41 @@
     return el;
   }
 
-  function show(container, slug){
-    const cls = classes.find(c => c.slug === slug) || classes[0];
+  function show(container, list, slug){
+    const cls = list.find(c => c.slug === slug) || list[0];
     if (!cls) return;
-    Object.values(mounted).forEach(el => { el.hidden = el.dataset.slug !== cls.slug; });
+    Object.values(mounted).forEach(el => { if (container.contains(el)) el.hidden = el.dataset.slug !== cls.slug; });
     if (!mounted[cls.slug]) mountInline(container, cls);
     const loading = container.querySelector(".cal-loading");
     if (loading) loading.remove();
+  }
+
+  /* ---- Reservas hechas desde este navegador ----
+     Cal.com guarda las reales y envía los correos; aquí solo se recuerdan
+     para mostrar "Tus reservas". Se descartan las que ya pasaron. */
+  const STORE_KEY = "tn_cal_bookings";
+  function readBookings(){
+    try {
+      const list = JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
+      return list.filter(b => new Date(b.endTime || b.startTime) > new Date());
+    } catch (e) { return []; }
+  }
+  function saveBookings(list){ try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch (e) {} }
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmtDate = iso => new Date(iso).toLocaleString((window.SITE_CONFIG?.currency?.locale) || "es-CL",
+    { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+  const manageUrl = uid => `${origin}/booking/${encodeURIComponent(uid)}`;
+
+  function renderMine(root){
+    const wrap = root.querySelector("[data-cal-mine]");
+    const list = root.querySelector("[data-cal-mine-list]");
+    if (!wrap || !list) return;
+    const bookings = readBookings();
+    wrap.hidden = !bookings.length;
+    list.innerHTML = bookings.map(b => `<div class="mb">
+      <span>${esc(b.title || "Clase")} · ${esc(fmtDate(b.startTime))}</span>
+      <a class="mb-link" href="${esc(manageUrl(b.uid))}" target="_blank" rel="noopener">Cambiar o cancelar</a>
+    </div>`).join("");
   }
 
   window.TNBooking = {
@@ -90,15 +117,29 @@
     classes,
     origin,
 
-    /* Llena [data-cal-tabs] y [data-cal-inline] dentro de root */
-    mount(root = document){
+    /* Arma la sección de reservas dentro de root:
+         [data-cal-tabs]        pestañas (se ocultan si hay una sola clase)
+         [data-cal-inline]      calendario
+         [data-cal-fallback]    aviso si Cal.com no está disponible
+         [data-cal-confirm]     confirmación (con [data-cal-confirm-date] y [data-cal-confirm-text])
+         [data-cal-mine]        "Tus reservas" (con [data-cal-mine-list])
+       opts.slugs: limita las clases a mostrar, por ejemplo ["judo"]. */
+    mount(root = document, opts = {}){
       const container = root.querySelector("[data-cal-inline]");
       const tabs = root.querySelector("[data-cal-tabs]");
-      if (!container || !configured) return false;
+      const fallback = root.querySelector("[data-cal-fallback]");
+      const list = opts.slugs ? classes.filter(c => opts.slugs.includes(c.slug)) : classes;
+
+      renderMine(root);
+      if (!container || !configured || !list.length) {
+        if (container) container.hidden = true;
+        if (fallback) fallback.hidden = false;
+        return false;
+      }
 
       if (tabs) {
-        tabs.hidden = classes.length < 2;
-        tabs.replaceChildren(...classes.map((c, i) => {
+        tabs.hidden = list.length < 2;
+        tabs.replaceChildren(...list.map((c, i) => {
           const b = document.createElement("button");
           b.type = "button";
           b.textContent = c.label || c.slug;
@@ -110,17 +151,35 @@
           const b = e.target.closest("[data-slug]");
           if (!b) return;
           tabs.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
-          show(container, b.dataset.slug);
+          show(container, list, b.dataset.slug);
         });
       }
-      show(container, classes[0].slug);
+      show(container, list, list[0].slug);
+
+      successHandlers.push(data => {
+        if (!data.uid || !data.startTime) return;
+        const bookings = readBookings();
+        if (!bookings.some(b => b.uid === data.uid)) {
+          bookings.push({ uid: data.uid, title: data.title, startTime: data.startTime, endTime: data.endTime });
+          bookings.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+          saveBookings(bookings);
+        }
+        const confirm = root.querySelector("[data-cal-confirm]");
+        if (confirm) {
+          const d = confirm.querySelector("[data-cal-confirm-date]");
+          const t = confirm.querySelector("[data-cal-confirm-text]");
+          if (d) d.textContent = fmtDate(data.startTime);
+          if (t) t.textContent = `${data.title || "Tu clase"} está confirmada. Te enviamos los detalles por correo. Llega 10 minutos antes.`;
+          confirm.hidden = false;
+        }
+        renderMine(root);
+      });
+      failHandlers.push(() => { if (fallback) fallback.hidden = false; });
       return true;
     },
 
     onSuccess(fn){ successHandlers.push(fn); },
     onFail(fn){ failHandlers.push(fn); },
-
-    // Página de Cal.com donde la persona puede cancelar o cambiar su reserva
-    manageUrl(uid){ return `${origin}/booking/${encodeURIComponent(uid)}`; }
+    manageUrl
   };
 })();

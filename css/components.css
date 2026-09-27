@@ -19,7 +19,7 @@
 .belts{margin-top:56px;display:grid;grid-template-columns:220px 1fr;gap:32px;align-items:center}
 .belts h3{font-size:34px}
 .belts small{display:block;font:500 15px/1.4 var(--body);text-transform:none;color:var(--steel);margin-top:10px;letter-spacing:0}
-.belt-track{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.belt-track{display:grid;grid-template-columns:repeat(var(--n,5),1fr);gap:6px}
 .belt{position:relative;height:40px;display:flex;align-items:center;padding-inline:12px;font:700 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--cream)}
 .belt::after{content:"";position:absolute;right:14px;top:0;bottom:0;width:26px;background:#111}
 .belt.w{background:#ECE8DD;color:var(--navy)}
@@ -28,12 +28,35 @@
 .belt.br{background:#6A4428}
 .belt.k{background:#0e0e10}
 .belt.k::after{background:#B3262A}
-.belt-years{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px;font:600 13px/1.2 var(--label);letter-spacing:.08em;text-transform:uppercase;color:var(--steel)}
+/* Colores de Judo (kyu) */
+.belt.y{background:#E4C23B;color:var(--navy)}
+.belt.o{background:#DC7A2E;color:var(--navy)}
+.belt.g{background:#3E8A4F}
+.belt-track.plain .belt::after{display:none}
+.belt-years{display:grid;grid-template-columns:repeat(var(--n,5),1fr);gap:6px;margin-top:10px;font:600 13px/1.2 var(--label);letter-spacing:.08em;text-transform:uppercase;color:var(--steel)}
 @media (max-width:760px){
   .belts{grid-template-columns:1fr}
   .belt{font-size:11px;padding-inline:6px}
   .belt::after{width:12px;right:6px}
 }
+
+/* ---- Lista de grados (cinturón + requisitos) ---- */
+.grades{list-style:none;padding:0;margin:0;border-top:1px solid var(--line)}
+.grade{display:grid;grid-template-columns:150px 1fr;gap:24px;padding:22px 0;border-bottom:1px solid var(--line);align-items:start}
+.grade .belt{height:34px;font-size:12px}
+.grade-body h3{font-size:30px;font-weight:800}
+.grade-body h3 small{font:600 13px/1 var(--label);letter-spacing:.14em;color:var(--steel);margin-left:10px;vertical-align:middle}
+.grade-body ul{margin:10px 0 0;padding-left:18px;color:var(--text-soft);display:flex;flex-direction:column;gap:4px;font-size:16px}
+.grade-body ul li::marker{color:var(--bronze)}
+.light .grades,.light .grade{border-color:var(--line-light)}
+.light .grade-body ul{color:var(--text-soft-light)}
+@media (max-width:620px){.grade{grid-template-columns:1fr;gap:12px}.grade .belt{max-width:180px}}
+.source{margin-top:20px;font-size:14px;color:var(--steel)}
+
+/* ---- Enlace en el título de una tarjeta ---- */
+.disc-link{text-decoration:none}
+.disc-link::after{content:" →";color:var(--gold);transition:margin .2s}
+.disc-link:hover{color:var(--gold)}
 
 /* ---- Reservas: calendario de Cal.com en la página ---- */
 .cal-grid{display:grid;grid-template-columns:minmax(260px,.7fr) 1.3fr;gap:32px;align-items:start}

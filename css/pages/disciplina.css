@@ -1,0 +1,30 @@
+/* ==========================================================
+   Kizuna · Páginas de disciplina (judo.html, bjj.html)
+   ========================================================== */
+
+/* Cabecera: etiquetas rápidas y botones */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.chip{border:1px solid var(--line);padding:9px 12px;font:600 13px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--cream)}
+.chip.gold{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.cta-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px}
+.page-head-word{position:absolute;right:-1vw;bottom:-4vw;font:900 clamp(140px,22vw,320px)/.8 var(--display);color:transparent;-webkit-text-stroke:2px rgba(214,189,140,.1);pointer-events:none;user-select:none;text-transform:uppercase}
+.page-head{position:relative;overflow:hidden}
+.page-head .wrap{position:relative}
+
+/* Comparación lado a lado (Gi / No-Gi) */
+.versus{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:760px){.versus{grid-template-columns:1fr}}
+.vs-card{border:1px solid var(--line);padding:32px 28px;display:flex;flex-direction:column;gap:16px;scroll-margin-top:calc(var(--nav-h) + 16px)}
+.vs-card h3{font-size:48px}
+.vs-card .tag{font:600 13px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.vs-card p{color:var(--text-soft)}
+.vs-card dl{display:grid;grid-template-columns:auto 1fr;gap:10px 18px;margin:6px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:16px}
+.vs-card dt{font:600 13px/1.6 var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--steel)}
+.vs-card dd{margin:0}
+
+/* Lista de grados sin la punta negra de BJJ */
+.grades.plain .belt::after{display:none}
+
+/* Reserva sobre fondo oscuro */
+.sec:not(.light) .cal-grid .panel{background:var(--navy-2)}
+.sec:not(.light) .cal-box{border:1px solid var(--line)}

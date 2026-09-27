@@ -42,7 +42,7 @@
 .dojo-grid{display:grid;grid-template-columns:5fr 6fr;gap:clamp(32px,6vw,80px);align-items:center}
 .dojo-photo{margin:0;position:relative}
 .dojo-photo::before{content:"";position:absolute;inset:18px -18px -18px 18px;border:1px solid var(--bronze);pointer-events:none}
-.dojo-photo img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 78%;position:relative;filter:saturate(.9) contrast(1.05)}
+.dojo-photo img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 78%;position:relative}
 .dojo-copy h2{font-size:clamp(46px,6vw,84px);font-weight:900;margin-top:16px}
 .dojo-copy > p{max-width:44ch;color:var(--text-soft);margin-top:22px}
 .dojo-facts{display:grid;grid-template-columns:auto 1fr;gap:28px;margin:30px 0 0;padding-top:24px;border-top:1px solid var(--line)}

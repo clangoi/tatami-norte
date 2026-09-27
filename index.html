@@ -26,7 +26,7 @@
       <a href="bjj.html">BJJ</a>
       <a href="#horario">Horario</a>
       <a href="#planes">Planes</a>
-      <a href="#blog">Blog</a>
+      <a href="blog.html">Blog</a>
       <a class="btn small" href="#horario">Clase gratis</a>
     </div>
   </div>
@@ -153,20 +153,20 @@
 <section class="sec light" id="blog">
   <div class="wrap">
     <div class="sec-head">
-      <div><div class="eyebrow">Blog del dojo</div><h2>Técnica, mente<br>y resultados</h2></div>
-      <div class="filters" id="filters" role="group" aria-label="Filtrar por categoría"></div>
+      <div><div class="eyebrow">Blog del dojo</div><h2>Técnica, mente<br>y tatami</h2></div>
+      <a class="btn dark" href="blog.html">Ver todo el blog</a>
     </div>
-    <div class="posts" id="posts"></div>
+    <div class="posts" data-blog-latest="3" data-base=""></div>
   </div>
 </section>
 
 <section class="sec ig" id="instagram">
   <div class="wrap">
     <div class="sec-head">
-      <div><div class="eyebrow">Instagram</div><h2 class="ig-handle">@<span data-site="contact.instagram">clubkizunajudo</span></h2></div>
+      <div><div class="eyebrow">Instagram</div><h2 class="ig-handle">@<span data-site="contact.instagram">hc.combat</span></h2></div>
       <div class="ig-head-side">
         <p>Entrenamientos, randoris y la vida del club en el tatami.</p>
-        <a class="btn ghost" data-site-href="instagram" href="https://instagram.com/clubkizunajudo">Seguir en Instagram</a>
+        <a class="btn ghost" data-site-href="instagram" href="https://instagram.com/hc.combat">Seguir en Instagram</a>
       </div>
     </div>
     <div class="ig-grid" data-ig-grid></div>
@@ -183,18 +183,10 @@
     </div>
     <div><h4>Horario</h4><ul data-site-list="hours"><li>Clases según el calendario de reservas</li><li>Consultas por correo o WhatsApp</li></ul></div>
     <div><h4>Contacto</h4><ul><li><a data-site-href="email" data-site="contact.email" href="#">contacto@hccombat.com</a></li><li><a data-site-href="phone" data-site="contact.phone" href="#">+56 9 4796 6805</a></li><li><a data-site-href="whatsapp" href="#">WhatsApp</a></li><li><a data-site-href="instagram" href="#">Instagram</a></li><li><a data-site-href="facebook" href="#">Facebook</a></li><li><a data-site-href="tiktok" href="#">TikTok</a></li></ul></div>
-    <div><h4>Explora</h4><ul><li><a href="judo.html">Judo</a></li><li><a href="bjj.html">BJJ</a></li><li><a href="#horario">Agendar clase</a></li><li><a href="#planes">Planes</a></li><li><a href="#blog">Blog</a></li></ul></div>
+    <div><h4>Explora</h4><ul><li><a href="judo.html">Judo</a></li><li><a href="bjj.html">BJJ</a></li><li><a href="#horario">Agendar clase</a></li><li><a href="#planes">Planes</a></li><li><a href="blog.html">Blog</a></li></ul></div>
   </div>
   <div class="wrap foot-base"><span>© <span data-site="year">2026</span> <span data-site="name">Club de Deportes de Combate Kizuna</span></span><span data-site="motto">Respeto · Disciplina · Constancia</span></div>
 </footer>
-
-<div class="modal" id="articleModal" hidden role="dialog" aria-modal="true" aria-labelledby="artTitle">
-  <div class="modal-card">
-    <button class="modal-close" data-close aria-label="Cerrar">×</button>
-    <div class="article-head"><div class="eyebrow" id="artCat"></div><h2 id="artTitle"></h2><div class="meta" id="artMeta"></div></div>
-    <div class="article-body" id="artBody"></div>
-  </div>
-</div>
 
 <div class="modal" id="payModal" hidden role="dialog" aria-modal="true" aria-labelledby="payTitle">
   <div class="modal-card dark">
@@ -225,6 +217,8 @@
 <script src="js/site.js"></script>
 <script src="js/booking.js"></script>
 <script src="js/instagram.js"></script>
+<script src="js/posts.js"></script>
+<script src="js/blog.js"></script>
 <script>
 (function(){
   const $ = (s, r=document) => r.querySelector(s);
@@ -343,62 +337,6 @@
     $('#payForm').hidden=true; $('#payDone').hidden=false;
   });
 
-  /* blog */
-  const POSTS=[
-    {id:1,cat:'Principiantes',letter:'BJJ',title:'Cómo sobrevivir tu primera clase de Jiu-Jitsu',date:'22 sep 2026',read:'6 min',author:`Equipo ${NAME}`,
-     ex:'Qué llevar, qué esperar en la rodada y por qué nadie espera que sepas nada el primer día.',
-     body:[['p','La primera clase impone más de lo que debería. Vas a ver gente rodando en el suelo, oír golpes de palmada y no entender la mitad de los términos. Es normal. Todos los cinturones negros de la academia pasaron por ese mismo día.'],
-       ['h','Qué llevar'],['p','Ropa deportiva sin cierres ni bolsillos, una playera ajustada, agua y sandalias para caminar fuera del tatami. Si no tienes gi, ven con ropa deportiva. Corta tus uñas de manos y pies: es la primera regla de higiene.'],
-       ['h','Cómo es la clase'],['p','Calentamiento de 15 minutos con movimientos propios del Jiu-Jitsu (escapes de cadera, rolls), luego técnica en parejas y al final la rodada. En tu primera clase no haces rodada libre: tu profesor te asigna rounds posicionales con alguien de experiencia.'],
-       ['h','La palmada'],['p','Si una posición te duele o no puedes respirar, das dos palmadas a tu compañero o al tatami. Tu compañero suelta de inmediato. Hacerlo a tiempo no es rendirse, es la forma en que entrenas mañana también.']]},
-    {id:2,cat:'Técnica',letter:'JU',title:'Ukemi: en Judo primero aprendes a caer',date:'15 sep 2026',read:'6 min',author:`Equipo ${NAME}`,
-     ex:'Las cuatro caídas básicas y por qué te protegen dentro y fuera del tatami.',
-     body:[['p','Antes de proyectar a alguien, en Judo aprendes a que te proyecten. Las caídas (ukemi) reparten el impacto entre brazos, espalda y piernas para que la cabeza y las articulaciones no reciban el golpe.'],
-       ['h','Ushiro ukemi: hacia atrás'],['p','Barbilla al pecho, espalda redonda y los dos brazos golpean el tatami a unos 45° del cuerpo. Es la primera que se practica y la que más usarás.'],
-       ['h','Yoko ukemi: de lado'],['p','Una pierna cruza, caes sobre el costado y golpea el brazo del mismo lado. Es la caída de la mayoría de las proyecciones de cadera y pierna.'],
-       ['h','Mae ukemi y zenpo kaiten'],['p','Hacia el frente sobre los antebrazos, y la caída rodando sobre el hombro. Se trabajan cuando las dos primeras ya salen sin pensar.'],
-       ['p','Las primeras semanas vas a repetir caídas en cada calentamiento. Es normal y es lo que te permite hacer randori sin miedo después.']]},
-    {id:3,cat:'Nutrición',letter:'KG',title:'Cortar peso sin perder potencia',date:'8 sep 2026',read:'7 min',author:`Equipo ${NAME}`,
-     ex:'La diferencia entre bajar de categoría y deshidratarte. Un calendario de 8 semanas que sí funciona.',
-     body:[['p','Casi todos los errores con el peso vienen de dejarlo para la última semana. Si necesitas bajar más del 5% de tu peso corporal en siete días, estás en la categoría equivocada.'],
-       ['h','Semanas 8 a 2'],['p','Déficit moderado de 300 a 500 kcal diarias, proteína alta (2 g por kilo) y el mismo volumen de entrenamiento. La meta es llegar a 3% de tu categoría una semana antes.'],
-       ['h','Última semana'],['p',`Reducción gradual de sodio y fibra y ajuste de agua bajo supervisión. En ${NAME} el corte final solo se hace con acompañamiento del equipo del plan Competidor.`]]},
-    {id:4,cat:'Mentalidad',letter:'OSS',title:'Tu cinturón importa menos de lo que crees',date:'1 sep 2026',read:'5 min',author:`Equipo ${NAME}`,
-     ex:'Por qué medir tu progreso en rounds entrenados y no en grados te hace mejor peleador.',
-     body:[['p','Un cinturón es una fotografía de tu nivel el día que te lo dieron. Tu progreso real se mide en otra unidad: rounds entrenados con intención.'],
-       ['p','Te proponemos llevar un registro simple: cuántos rounds hiciste, qué posición trabajaste y qué salió mal. Tres meses de ese diario dicen más que cualquier grado.'],
-       ['h','Constancia sobre intensidad'],['p','Tres clases por semana durante un año te llevan más lejos que seis clases por semana durante dos meses seguidos de una lesión.']]},
-    {id:6,cat:'Físico',letter:'FX',title:'Tres ejercicios de agarre para grappling',date:'18 ago 2026',read:'5 min',author:`Equipo ${NAME}`,
-     ex:'Si se te cansan los antebrazos a mitad del randori, empieza por aquí.',
-     body:[['p','En BJJ con gi y en Judo, el agarre decide quién controla. Unos antebrazos fuertes te dejan sostener la solapa y la manga sin quemarte en el primer minuto.'],
-       ['h','Colgarse de una toalla o un gi'],['p','Pasa una toalla o un gi viejo por la barra y cuélgate agarrando la tela. Empieza con 3 series de 20 segundos y sube de 5 en 5.'],
-       ['h','Remo con agarre de tela'],['p','El mismo agarre, pero en un remo invertido o con mancuerna. Trabajas espalda y antebrazo al mismo tiempo, como cuando jalas a tu compañero.'],
-       ['h','Caminata de granjero'],['p','Carga pesada en cada mano y camina 30 metros sin soltar. Es simple, se nota rápido y también fortalece el core.'],
-       ['p','Dos sesiones por semana bastan. No las hagas justo antes de una clase: llega con los antebrazos frescos.']]}
-  ];
-  const CATS=['Todo',...new Set(POSTS.map(p=>p.cat))];
-  let curCat='Todo';
-  function renderFilters(){
-    $('#filters').innerHTML=CATS.map(c=>`<button type="button" aria-pressed="${c===curCat}" data-cat="${c}">${c}</button>`).join('');
-  }
-  function renderPosts(){
-    const list=POSTS.filter(p=>curCat==='Todo'||p.cat===curCat);
-    $('#posts').innerHTML=list.map((p,i)=>`<button class="post${i===0&&list.length>2?' lead':''}" data-post="${p.id}">
-      <div class="cover"><div class="pat pat-${p.id%4}"></div><span class="big" aria-hidden="true">${p.letter}</span><span class="cat">${p.cat}</span></div>
-      <span class="meta">${p.date} · ${p.read} de lectura</span>
-      <h3>${p.title}</h3><p class="ex">${p.ex}</p>
-    </button>`).join('');
-  }
-  $('#filters').addEventListener('click',e=>{const b=e.target.closest('[data-cat]'); if(!b) return; curCat=b.dataset.cat; renderFilters(); renderPosts();});
-  $('#posts').addEventListener('click',e=>{
-    const b=e.target.closest('[data-post]'); if(!b) return;
-    const p=POSTS.find(x=>x.id===+b.dataset.post);
-    $('#artCat').textContent=p.cat; $('#artTitle').textContent=p.title;
-    $('#artMeta').textContent=`${p.author} · ${p.date} · ${p.read}`;
-    $('#artBody').innerHTML=p.body.map(([t,x])=>t==='h'?`<h4>${x}</h4>`:`<p>${x}</p>`).join('');
-    openModal($('#articleModal'));
-  });
-  renderFilters(); renderPosts();
 })();
 </script>
 </body>

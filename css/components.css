@@ -119,7 +119,10 @@
 .posts{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:32px}
 @media (max-width:900px){.posts{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:580px){.posts{grid-template-columns:1fr}}
-.post{display:flex;flex-direction:column;gap:14px;cursor:pointer;background:none;border:0;padding:0;text-align:left;color:inherit;font:inherit}
+.post{display:flex;flex-direction:column;gap:14px;cursor:pointer;background:none;border:0;padding:0;text-align:left;color:inherit;font:inherit;text-decoration:none}
+.posts .empty{color:var(--text-soft-light)}
+.blog-filters{margin-bottom:8px}
+.sec:not(.light) .post .ex{color:var(--text-soft)}
 .post.lead{grid-column:span 2}
 @media (max-width:580px){.post.lead{grid-column:auto}}
 .post h3{font-size:32px;font-weight:800;transition:color .2s}

@@ -22,7 +22,7 @@ window.SITE_CONFIG = {
     email: "contacto@hccombat.com",
     phone: "+56 9 4796 6805",
     whatsapp: "56947966805",                     // solo dígitos con código de país
-    instagram: "clubkizunajudo",                 // sin @
+    instagram: "hc.combat",                      // sin @
     facebook: "",
     tiktok: ""
   },
@@ -69,7 +69,7 @@ window.SITE_CONFIG = {
      2. Pega aquí su URL (https://feeds.behold.so/...).
      Sin URL, la sección muestra solo el botón para seguir la cuenta. */
   instagramFeed: {
-    url: "",
+    url: "https://feeds.behold.so/28TiHXcDICsBycxHv8Ke",
     count: 6                                     // el plan gratuito entrega hasta 6
   },
 

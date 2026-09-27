@@ -3,19 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="" data-site-meta>
+<meta name="description" content="Blog del Club de Deportes de Combate Kizuna: técnica de Judo y BJJ, preparación física, nutrición y mentalidad para deportes de combate.">
 <meta name="theme-color" content="#1B2338">
-<!--
-  Plantilla para páginas nuevas de Club de Deportes de Combate Kizuna.
-  1. Copia este archivo y renómbralo (ej. horarios.html).
-  2. Cambia el <title>, la cabecera y el contenido de <main>.
-  3. Marca el enlace activo del menú con aria-current="page".
-  4. Si la página necesita estilos propios, crea css/pages/<nombre>.css
-     y enlázalo después de components.css.
-  5. Nombre, contacto, dirección y horario salen de site.config.js:
-     usa data-site="..." en el HTML (ver js/site.js).
--->
-<title data-site-title="Página">Página · Club de Deportes de Combate Kizuna</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="Blog">
+<meta property="og:description" content="Blog del Club de Deportes de Combate Kizuna: técnica de Judo y BJJ, preparación física, nutrición y mentalidad para deportes de combate.">
+<title data-site-title="Blog">Blog · Club de Deportes de Combate Kizuna</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
@@ -23,6 +16,7 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/disciplina.css">
 </head>
 <body>
 <nav class="nav" aria-label="Principal">
@@ -35,37 +29,26 @@
       <a href="bjj.html">BJJ</a>
       <a href="index.html#horario">Horario</a>
       <a href="index.html#planes">Planes</a>
-      <a href="blog.html">Blog</a>
+      <a href="blog.html" aria-current="page">Blog</a>
       <a class="btn small" href="index.html#horario">Clase gratis</a>
     </div>
   </div>
 </nav>
 
 <header class="page-head">
+  <div class="page-head-word" aria-hidden="true">Blog</div>
   <div class="wrap">
-    <div class="eyebrow">Sección</div>
-    <h1>Título de la página</h1>
-    <p>Una o dos líneas que expliquen qué encuentra aquí la persona.</p>
+    <div class="eyebrow">Blog del dojo</div>
+    <h1>Técnica, mente<br>y tatami</h1>
+    <p>Artículos del club sobre Judo, BJJ, preparación física y lo que pasa antes, durante y después de entrenar.</p>
   </div>
 </header>
 
 <main>
-  <section class="sec">
-    <div class="wrap">
-      <div class="sec-head">
-        <div><div class="eyebrow">Subtítulo</div><h2>Sección oscura</h2></div>
-        <p>Texto de apoyo.</p>
-      </div>
-    </div>
-  </section>
-
   <section class="sec light">
     <div class="wrap">
-      <div class="sec-head">
-        <div><div class="eyebrow">Subtítulo</div><h2>Sección clara</h2></div>
-        <p>Texto de apoyo.</p>
-      </div>
-      <a class="btn dark" href="index.html#horario">Agendar clase</a>
+      <div class="filters blog-filters" data-blog-filters role="group" aria-label="Filtrar por categoría"></div>
+      <div class="posts" data-blog-list data-base=""></div>
     </div>
   </section>
 </main>
@@ -87,5 +70,7 @@
 
 <script src="site.config.js"></script>
 <script src="js/site.js"></script>
+<script src="js/posts.js"></script>
+<script src="js/blog.js"></script>
 </body>
 </html>

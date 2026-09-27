@@ -95,3 +95,6 @@ body.modal-open{overflow:hidden}
 
 /* ---- Aviso flotante ---- */
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--gold);color:var(--navy);font:700 15px/1.2 var(--label);letter-spacing:.1em;text-transform:uppercase;padding:14px 20px;z-index:90;max-width:calc(100% - 32px)}
+
+/* Separador entre dos secciones oscuras seguidas */
+.sec:not(.light) + .sec:not(.light){border-top:1px solid var(--line)}

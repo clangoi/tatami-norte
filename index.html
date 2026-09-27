@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Academia de Jiu-Jitsu, Muay Thai, Boxeo y MMA. Agenda tu primera clase gratis, elige tu plan y lee el blog del dojo.">
+<meta name="theme-color" content="#1B2338">
+<title>Tatami Norte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/home.css">
+</head>
+<body>
+<nav class="nav" aria-label="Principal">
+  <div class="wrap">
+    <a class="brand" href="#inicio"><span class="brand-mark">T</span><span class="brand-name">Tatami Norte</span></a>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks">Menú</button>
+    <div class="nav-links" id="navLinks">
+      <a href="#disciplinas">Disciplinas</a>
+      <a href="#horario">Horario</a>
+      <a href="#planes">Planes</a>
+      <a href="#blog">Blog</a>
+      <a class="btn small" href="#horario">Clase gratis</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="inicio">
+  <div class="hero-bg-word" aria-hidden="true">OSS</div>
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Jiu-Jitsu · Muay Thai · Boxeo · MMA</div>
+      <h1>Entra al<br><span class="gold">tatami.</span><br><span class="outline">Sal distinto.</span></h1>
+      <p class="hero-lede">Academia de artes marciales y deportes de combate con clases para principiantes, competidores y niños. Tu primera clase es gratis.</p>
+      <div class="hero-cta">
+        <a class="btn" href="#horario">Agendar clase</a>
+        <a class="btn ghost" href="#planes">Ver planes</a>
+      </div>
+      <div class="hero-meta">
+        <div><b>42</b>clases por semana</div>
+        <div><b>6</b>profesores cinturón negro</div>
+        <div><b>380 m²</b>de tatami</div>
+      </div>
+    </div>
+    <aside class="clock" aria-label="Reloj de rounds en vivo">
+      <div class="clock-top"><span class="live">Sparring en curso</span><span id="roundLbl">Round 3 / 5</span></div>
+      <div class="clock-time" id="clockTime">05:00</div>
+      <div class="clock-phase" id="clockPhase">Pelea</div>
+      <div class="rounds" id="roundBars"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="clock-next"><span>Siguiente clase</span><strong id="nextClass">Muay Thai · 19:00</strong></div>
+    </aside>
+  </div>
+</header>
+
+<div class="strip" aria-hidden="true"><div class="strip-inner" id="strip"></div></div>
+
+<section class="sec" id="disciplinas">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">Disciplinas</div><h2>Elige tu estilo<br>de pelea</h2></div>
+      <p>Cada programa tiene currículo por niveles. Empiezas con fundamentos y avanzas a sparring cuando tu profesor lo aprueba.</p>
+    </div>
+    <div class="disc-grid">
+      <article class="disc"><span class="tag">Grappling · Gi y No-Gi</span><h3>Jiu-Jitsu Brasileño</h3><p>Derribos, guardias, pasajes y sumisiones. Cada clase cierra con 5 rounds de rodada de 5 minutos.</p><div class="specs"><span>90 min</span><span>14 clases/sem</span></div></article>
+      <article class="disc"><span class="tag">Striking · 8 armas</span><h3>Muay Thai</h3><p>Puños, patadas, codos, rodillas y clinch. Trabajo en pads con compañero y sacos pesados.</p><div class="specs"><span>75 min</span><span>12 clases/sem</span></div></article>
+      <article class="disc"><span class="tag">Striking · Puños</span><h3>Boxeo</h3><p>Guardia, juego de piernas, esquivas y combinaciones. Rounds de 3 minutos con 1 de descanso.</p><div class="specs"><span>60 min</span><span>10 clases/sem</span></div></article>
+      <article class="disc"><span class="tag">Mixto · Jaula</span><h3>MMA</h3><p>Transiciones entre striking, lucha y suelo. Requiere 6 meses en otra disciplina o evaluación.</p><div class="specs"><span>90 min</span><span>6 clases/sem</span></div></article>
+    </div>
+
+    <div class="belts">
+      <h3>Tu camino en BJJ<small>Tiempo promedio por cinturón en nuestra academia, entrenando 3 veces por semana.</small></h3>
+      <div>
+        <div class="belt-track" role="list">
+          <div class="belt w" role="listitem">Blanco</div>
+          <div class="belt b" role="listitem">Azul</div>
+          <div class="belt p" role="listitem">Morado</div>
+          <div class="belt br" role="listitem">Marrón</div>
+          <div class="belt k" role="listitem">Negro</div>
+        </div>
+        <div class="belt-years"><span>1–2 años</span><span>2–3 años</span><span>2–3 años</span><span>1–2 años</span><span>~10 años total</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec light" id="horario">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">Horario y reservas</div><h2>Agenda tu clase</h2></div>
+      <p>Elige el día, reserva tu lugar y llega 10 minutos antes. Si es tu primera vez, la clase no tiene costo y te prestamos guantes o gi.</p>
+    </div>
+    <div class="book-grid">
+      <div>
+        <div class="days" role="tablist" aria-label="Día de la semana" id="days"></div>
+        <div class="slots" id="slots" role="tabpanel"></div>
+      </div>
+      <div class="panel" id="bookPanel">
+        <h3>Reservar lugar</h3>
+        <p class="hint">Selecciona una clase del horario para continuar.</p>
+        <div class="picked-class" id="pickedClass">Ninguna clase seleccionada.</div>
+        <form id="bookForm" novalidate>
+          <div class="field"><label for="bName">Nombre completo</label><input id="bName" autocomplete="name" placeholder="Ej. Andrea Ruiz"></div>
+          <div class="row2">
+            <div class="field"><label for="bEmail">Correo</label><input id="bEmail" type="email" autocomplete="email" placeholder="tu@correo.com"></div>
+            <div class="field"><label for="bPhone">Teléfono</label><input id="bPhone" type="tel" autocomplete="tel" placeholder="55 1234 5678"></div>
+          </div>
+          <div class="field"><label for="bLevel">Experiencia</label>
+            <select id="bLevel"><option>Nunca he entrenado</option><option>Menos de 1 año</option><option>1 a 3 años</option><option>Más de 3 años / compito</option></select>
+          </div>
+          <label class="check"><input type="checkbox" id="bFirst" checked> Es mi primera clase en Tatami Norte (gratis)</label>
+          <div class="err" id="bErr" role="alert"></div>
+          <button class="btn block" type="submit" id="bSubmit">Confirmar reserva</button>
+        </form>
+        <div class="confirm" id="bConfirm" hidden>
+          <div class="eyebrow">Reserva confirmada</div>
+          <div class="code" id="bCode"></div>
+          <p id="bConfirmTxt"></p>
+        </div>
+        <div class="my-bookings" id="myBookings" hidden>
+          <h4>Tus reservas</h4>
+          <div id="mbList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="planes">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">Membresías</div><h2>Planes de<br>suscripción</h2></div>
+      <div class="toggle" role="group" aria-label="Periodo de pago">
+        <button type="button" aria-pressed="true" data-cycle="mes">Mensual</button>
+        <button type="button" aria-pressed="false" data-cycle="anual">Anual <em>−20%</em></button>
+      </div>
+    </div>
+    <div class="plans" id="plans"></div>
+    <p class="plans-foot">Sin cuota de inscripción. Cancela o pausa tu membresía desde tu cuenta con 7 días de anticipación. Hermanos y familia: 15% de descuento en la segunda membresía.</p>
+  </div>
+</section>
+
+<section class="sec light" id="blog">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">Blog del dojo</div><h2>Técnica, mente<br>y resultados</h2></div>
+      <div class="filters" id="filters" role="group" aria-label="Filtrar por categoría"></div>
+    </div>
+    <div class="posts" id="posts"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <div>
+      <div class="foot-big">Nos vemos<br>en el tatami.</div>
+      <p>Av. Constitución 1480, Col. Centro. Estacionamiento para miembros.</p>
+    </div>
+    <div><h4>Horario de recepción</h4><ul><li>Lun a Vie · 6:00–22:00</li><li>Sábado · 8:00–14:00</li><li>Domingo · Open mat 10:00</li></ul></div>
+    <div><h4>Contacto</h4><ul><li>hola@tataminorte.mx</li><li>+52 55 4821 0930</li><li>@tataminorte</li></ul></div>
+    <div><h4>Explora</h4><ul><li><a href="#disciplinas">Disciplinas</a></li><li><a href="#horario">Agendar clase</a></li><li><a href="#planes">Planes</a></li><li><a href="#blog">Blog</a></li></ul></div>
+  </div>
+  <div class="wrap foot-base"><span>© 2026 Tatami Norte</span><span>Respeto · Disciplina · Constancia</span></div>
+</footer>
+
+<div class="modal" id="articleModal" hidden role="dialog" aria-modal="true" aria-labelledby="artTitle">
+  <div class="modal-card">
+    <button class="modal-close" data-close aria-label="Cerrar">×</button>
+    <div class="article-head"><div class="eyebrow" id="artCat"></div><h2 id="artTitle"></h2><div class="meta" id="artMeta"></div></div>
+    <div class="article-body" id="artBody"></div>
+  </div>
+</div>
+
+<div class="modal" id="payModal" hidden role="dialog" aria-modal="true" aria-labelledby="payTitle">
+  <div class="modal-card dark">
+    <button class="modal-close" data-close aria-label="Cerrar">×</button>
+    <div class="pay">
+      <div class="eyebrow">Suscripción</div>
+      <h3 id="payTitle"></h3>
+      <div class="sum" id="paySum"></div>
+      <form id="payForm" novalidate>
+        <div class="field"><label for="pName">Nombre del titular de la membresía</label><input id="pName" autocomplete="name"></div>
+        <div class="field"><label for="pEmail">Correo</label><input id="pEmail" type="email" autocomplete="email"></div>
+        <div class="field"><label for="pStart">Fecha de inicio</label><input id="pStart" type="date"></div>
+        <div class="err" id="pErr" role="alert"></div>
+        <button class="btn block" type="submit">Continuar al pago</button>
+        <p class="secure">El pago se procesa en la pasarela segura (Stripe o Mercado Pago). Tatami Norte no guarda datos de tarjeta.</p>
+      </form>
+      <div id="payDone" class="stack" hidden>
+        <div class="notice"><strong>Vista previa.</strong> En el sitio publicado, este botón abre el checkout de la pasarela de pago con el plan y el periodo ya seleccionados. Aquí no se realiza ningún cobro.</div>
+        <button class="btn ghost block" data-close>Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(function(){
+  const $ = (s, r=document) => r.querySelector(s);
+  const store = {
+    get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  };
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2800); }
+
+  /* nav */
+  const menuBtn=$('#menuBtn'), links=$('#navLinks');
+  menuBtn.addEventListener('click',()=>{const o=links.classList.toggle('open');menuBtn.setAttribute('aria-expanded',o);});
+  links.addEventListener('click',e=>{if(e.target.closest('a')){links.classList.remove('open');menuBtn.setAttribute('aria-expanded',false);}});
+
+  /* strip */
+  const words=['Jiu-Jitsu','Muay Thai','Boxeo','MMA','Kids','Open Mat','Sparring','Competición','Acondicionamiento'];
+  $('#strip').innerHTML=[...words,...words].map(w=>`<span>${w}</span>`).join('');
+
+  /* round clock: 5 rounds of 5:00 with 1:00 rest */
+  const ROUND=300, REST=60;
+  let rIdx=2, phase='fight', left=187;
+  const bars=[...$('#roundBars').children];
+  function drawClock(){
+    const m=String(Math.floor(left/60)).padStart(2,'0'), s=String(left%60).padStart(2,'0');
+    $('#clockTime').textContent=`${m}:${s}`;
+    $('#clockPhase').textContent= phase==='fight' ? 'Pelea' : 'Descanso';
+    $('#clockPhase').classList.toggle('rest', phase!=='fight');
+    $('#roundLbl').textContent=`Round ${rIdx+1} / 5`;
+    bars.forEach((b,i)=>{b.className= i<rIdx ? 'done' : (i===rIdx ? 'now' : '');});
+  }
+  setInterval(()=>{
+    left--;
+    if(left<0){
+      if(phase==='fight'){ phase='rest'; left=REST; }
+      else { phase='fight'; left=ROUND; rIdx=(rIdx+1)%5; }
+    }
+    drawClock();
+  },1000);
+  drawClock();
+
+  /* schedule */
+  const DAYS=[['lun','Lun'],['mar','Mar'],['mie','Mié'],['jue','Jue'],['vie','Vie'],['sab','Sáb']];
+  const T={
+    bjj:['Jiu-Jitsu Gi','Prof. Mariana Ochoa · Negro 2°'],
+    nogi:['Jiu-Jitsu No-Gi','Prof. Diego Lara · Negro 1°'],
+    mt:['Muay Thai','Kru Arturo Peña'],
+    box:['Boxeo','Coach Sofía Treviño'],
+    mma:['MMA','Coach Iván Robles'],
+    kids:['Kids Jiu-Jitsu (6–12)','Prof. Mariana Ochoa'],
+    fund:['Fundamentos BJJ','Prof. Diego Lara · Negro 1°'],
+    open:['Open Mat','Todos los niveles']
+  };
+  const plan={
+    lun:[['07:00','bjj',20],['17:00','kids',16],['18:30','mt',18],['20:00','bjj',24]],
+    mar:[['07:00','box',14],['18:00','fund',20],['19:00','mt',18],['20:30','mma',12]],
+    mie:[['07:00','bjj',20],['17:00','kids',16],['18:30','box',16],['20:00','nogi',24]],
+    jue:[['07:00','mt',14],['18:00','fund',20],['19:00','mt',18],['20:30','mma',12]],
+    vie:[['07:00','nogi',20],['18:00','box',16],['19:30','bjj',24]],
+    sab:[['09:00','kids',16],['10:30','mt',20],['12:00','open',30]]
+  };
+  // seeded "taken" counts so the schedule looks lived-in
+  const seed={};
+  Object.entries(plan).forEach(([d,list])=>list.forEach(([t,k,cap],i)=>{
+    const n=(d.charCodeAt(0)*7+i*13+t.charCodeAt(1)*3)%cap; seed[`${d}|${t}`]=Math.min(cap, Math.round(n*0.9)+3);
+  }));
+  seed['mar|20:30']=12; // sold out example
+
+  let bookings=store.get('tn_bookings',[]);
+  const todayIdx=Math.min(Math.max(new Date().getDay()-1,0),5);
+  let curDay=DAYS[todayIdx][0];
+  let picked=null;
+
+  function taken(d,t){ return seed[`${d}|${t}`] + bookings.filter(b=>b.day===d&&b.time===t).length; }
+
+  function renderDays(){
+    $('#days').innerHTML=DAYS.map(([k,l])=>`<button class="day" role="tab" aria-selected="${k===curDay}" data-day="${k}" id="tab-${k}">${l}<small>${plan[k].length} clases</small></button>`).join('');
+  }
+  function renderSlots(){
+    $('#slots').innerHTML=plan[curDay].map(([t,k,cap])=>{
+      const tk=taken(curDay,t), full=tk>=cap, free=Math.max(cap-tk,0);
+      const mine=bookings.some(b=>b.day===curDay&&b.time===t);
+      const isPicked=picked&&picked.day===curDay&&picked.time===t;
+      return `<div class="slot${isPicked?' picked':''}">
+        <div class="slot-time">${t}</div>
+        <div><div class="slot-name">${T[k][0]}</div><div class="slot-sub">${T[k][1]}</div></div>
+        <div class="cap${full?' full':''}">${full?'Lleno':free+' lugares'}<span class="bar"><i style="width:${Math.min(tk/cap,1)*100}%"></i></span></div>
+        <button class="btn small dark" data-pick="${t}|${k}" ${full||mine?'disabled':''}>${mine?'Reservado':'Reservar'}</button>
+      </div>`;
+    }).join('');
+  }
+  function renderPicked(){
+    const box=$('#pickedClass');
+    if(!picked){ box.textContent='Ninguna clase seleccionada.'; return; }
+    const dl=DAYS.find(d=>d[0]===picked.day)[1];
+    box.innerHTML=`<strong>${T[picked.kind][0]}</strong>${dl} · ${picked.time} · ${T[picked.kind][1]}`;
+  }
+  function renderMine(){
+    const wrap=$('#myBookings');
+    wrap.hidden=!bookings.length;
+    $('#mbList').innerHTML=bookings.map((b,i)=>{
+      const dl=DAYS.find(d=>d[0]===b.day)[1];
+      return `<div class="mb"><span>${esc(dl)} ${esc(b.time)} · ${esc(T[b.kind][0])} <span class="text-muted">(${esc(b.code)})</span></span><button data-cancel="${i}">Cancelar</button></div>`;
+    }).join('');
+  }
+  $('#days').addEventListener('click',e=>{const b=e.target.closest('[data-day]'); if(!b) return; curDay=b.dataset.day; renderDays(); renderSlots();});
+  $('#slots').addEventListener('click',e=>{
+    const b=e.target.closest('[data-pick]'); if(!b||b.disabled) return;
+    const [time,kind]=b.dataset.pick.split('|');
+    picked={day:curDay,time,kind};
+    $('#bConfirm').hidden=true; $('#bErr').textContent='';
+    renderSlots(); renderPicked();
+    if(window.innerWidth<940) $('#bookPanel').scrollIntoView({behavior:'smooth',block:'start'});
+    $('#bName').focus({preventScroll:true});
+  });
+  $('#mbList').addEventListener('click',e=>{
+    const b=e.target.closest('[data-cancel]'); if(!b) return;
+    bookings.splice(+b.dataset.cancel,1); store.set('tn_bookings',bookings);
+    renderSlots(); renderMine(); toast('Reserva cancelada');
+  });
+  const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+  $('#bookForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const name=$('#bName').value.trim(), email=$('#bEmail').value.trim(), err=$('#bErr');
+    if(!picked){ err.textContent='Elige una clase del horario antes de confirmar.'; return; }
+    if(name.length<3){ err.textContent='Escribe tu nombre completo.'; $('#bName').focus(); return; }
+    if(!emailOk(email)){ err.textContent='Revisa tu correo: lo usamos para enviarte la confirmación.'; $('#bEmail').focus(); return; }
+    err.textContent='';
+    const code='TN-'+Math.floor(1000+Math.random()*9000);
+    bookings.push({...picked,code,name}); store.set('tn_bookings',bookings);
+    const dl=DAYS.find(d=>d[0]===picked.day)[1];
+    $('#bCode').textContent=code;
+    $('#bConfirmTxt').textContent=`${T[picked.kind][0]}, ${dl} a las ${picked.time}. ${$('#bFirst').checked?'Tu primera clase es gratis. ':''}Llega 10 minutos antes y muestra este código en recepción.`;
+    $('#bConfirm').hidden=false;
+    picked=null; renderSlots(); renderPicked(); renderMine();
+    toast('Reserva confirmada');
+  });
+
+  // next class in hero
+  (function(){
+    const now=new Date(), hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    const d=DAYS[todayIdx][0];
+    const nx=plan[d].find(([t])=>t>hm) || plan[DAYS[(todayIdx+1)%6][0]][0];
+    $('#nextClass').textContent=`${T[nx[1]][0]} · ${nx[0]}`;
+  })();
+
+  renderDays(); renderSlots(); renderPicked(); renderMine();
+
+  /* plans */
+  const PLANS=[
+    {id:'base',name:'Base',for:'Para empezar con una disciplina y crear el hábito.',m:45,feats:['1 disciplina a elegir','2 clases por semana','Acceso a Fundamentos','Evaluación de cinturón semestral']},
+    {id:'ilim',name:'Ilimitado',for:'Entrena todo lo que quieras, en todas las disciplinas.',m:79,feat:true,feats:['Todas las disciplinas','Clases ilimitadas','Open mat de domingo','10% en tienda del dojo']},
+    {id:'comp',name:'Competidor',for:'Para quien prepara torneos o peleas amateur.',m:119,feats:['Todo lo del plan Ilimitado','4 clases privadas al mes','Plan de fuerza y acondicionamiento','Esquina en torneos y corte de peso guiado']}
+  ];
+  let cycle='mes';
+  const price=p=>cycle==='mes'?p.m:Math.round(p.m*0.8);
+  function renderPlans(){
+    $('#plans').innerHTML=PLANS.map(p=>`<article class="plan${p.feat?' feat':''}">
+      ${p.feat?'<span class="badge">Más elegido</span>':''}
+      <h3>${p.name}</h3><p class="for">${p.for}</p>
+      <div class="price"><b>$${price(p)}</b><span>USD / mes</span></div>
+      <div class="price-note">${cycle==='anual'?`Pago anual de $${price(p)*12} · ahorras $${(p.m-price(p))*12}`:'Facturación mensual'}</div>
+      <ul>${p.feats.map(f=>`<li>${f}</li>`).join('')}</ul>
+      <button class="btn${p.feat?'':' ghost'}" data-plan="${p.id}">Suscribirme</button>
+    </article>`).join('');
+  }
+  document.querySelectorAll('.toggle button').forEach(b=>b.addEventListener('click',()=>{
+    cycle=b.dataset.cycle;
+    document.querySelectorAll('.toggle button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    renderPlans();
+  }));
+  renderPlans();
+
+  /* modals */
+  let lastFocus=null;
+  function openModal(m){ lastFocus=document.activeElement; m.hidden=false; document.body.classList.add('modal-open'); m.querySelector('.modal-close').focus(); }
+  function closeModal(m){ m.hidden=true; document.body.classList.remove('modal-open'); if(lastFocus) lastFocus.focus(); }
+  document.querySelectorAll('.modal').forEach(m=>{
+    m.addEventListener('click',e=>{ if(e.target===m||e.target.closest('[data-close]')) closeModal(m); });
+  });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.modal:not([hidden])').forEach(closeModal); });
+
+  let payPlan=null;
+  $('#plans').addEventListener('click',e=>{
+    const b=e.target.closest('[data-plan]'); if(!b) return;
+    payPlan=PLANS.find(p=>p.id===b.dataset.plan);
+    const total=cycle==='mes'?price(payPlan):price(payPlan)*12;
+    $('#payTitle').textContent='Plan '+payPlan.name;
+    $('#paySum').innerHTML=`<div><span>Periodo</span><span>${cycle==='mes'?'Mensual':'Anual (12 meses)'}</span></div>
+      <div><span>Inscripción</span><span>$0</span></div>
+      <div><span>Total hoy</span><span class="tot">$${total} USD</span></div>`;
+    $('#payForm').hidden=false; $('#payDone').hidden=true; $('#pErr').textContent='';
+    const d=new Date(); d.setDate(d.getDate()+1); $('#pStart').value=d.toISOString().slice(0,10);
+    openModal($('#payModal'));
+  });
+  $('#payForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const n=$('#pName').value.trim(), m=$('#pEmail').value.trim();
+    if(n.length<3){ $('#pErr').textContent='Escribe el nombre de quien va a entrenar.'; return; }
+    if(!emailOk(m)){ $('#pErr').textContent='Revisa el correo: ahí llegan tus recibos.'; return; }
+    $('#payForm').hidden=true; $('#payDone').hidden=false;
+  });
+
+  /* blog */
+  const POSTS=[
+    {id:1,cat:'Principiantes',letter:'BJJ',title:'Cómo sobrevivir tu primera clase de Jiu-Jitsu',date:'22 sep 2026',read:'6 min',author:'Mariana Ochoa',
+     ex:'Qué llevar, qué esperar en la rodada y por qué nadie espera que sepas nada el primer día.',
+     body:[['p','La primera clase impone más de lo que debería. Vas a ver gente rodando en el suelo, oír golpes de palmada y no entender la mitad de los términos. Es normal. Todos los cinturones negros de la academia pasaron por ese mismo día.'],
+       ['h','Qué llevar'],['p','Ropa deportiva sin cierres ni bolsillos, una playera ajustada, agua y sandalias para caminar fuera del tatami. Si no tienes gi, te prestamos uno. Corta tus uñas de manos y pies: es la primera regla de higiene.'],
+       ['h','Cómo es la clase'],['p','Calentamiento de 15 minutos con movimientos propios del Jiu-Jitsu (escapes de cadera, rolls), luego técnica en parejas y al final la rodada. En tu primera clase no haces rodada libre: tu profesor te asigna rounds posicionales con alguien de experiencia.'],
+       ['h','La palmada'],['p','Si una posición te duele o no puedes respirar, das dos palmadas a tu compañero o al tatami. Tu compañero suelta de inmediato. Hacerlo a tiempo no es rendirse, es la forma en que entrenas mañana también.']]},
+    {id:2,cat:'Técnica',letter:'MT',title:'El clinch de Muay Thai en cuatro posiciones',date:'15 sep 2026',read:'8 min',author:'Arturo Peña',
+     ex:'Doble collar, underhook, brazo controlado y cuerpo a cuerpo: cuándo usar cada uno y cómo salir.',
+     body:[['p','El clinch es donde se ganan muchas peleas de Muay Thai y donde más se pierden los peleadores nuevos. Bien trabajado, te deja golpear con rodillas y desbalancear sin gastar energía.'],
+       ['h','1. Doble collar'],['p','Manos una sobre otra en la nuca del rival, codos juntos hacia el pecho. Desde aquí tiras hacia abajo y subes la rodilla. Si los codos se abren, pierdes control.'],
+       ['h','2. Underhook'],['p','Un brazo por debajo de la axila del rival. Es la posición para girarlo y sacarlo de balance hacia tu lado dominante.'],
+       ['h','3 y 4. Brazo controlado y cuerpo a cuerpo'],['p','Controlar un brazo te abre rodillas al cuerpo del lado libre. El cuerpo a cuerpo, con cadera pegada, sirve para descansar y cortar la distancia en el último minuto de un round cerrado.']]},
+    {id:3,cat:'Nutrición',letter:'KG',title:'Cortar peso sin perder potencia',date:'8 sep 2026',read:'7 min',author:'Iván Robles',
+     ex:'La diferencia entre bajar de categoría y deshidratarte. Un calendario de 8 semanas que sí funciona.',
+     body:[['p','Casi todos los errores con el peso vienen de dejarlo para la última semana. Si necesitas bajar más del 5% de tu peso corporal en siete días, estás en la categoría equivocada.'],
+       ['h','Semanas 8 a 2'],['p','Déficit moderado de 300 a 500 kcal diarias, proteína alta (2 g por kilo) y el mismo volumen de entrenamiento. La meta es llegar a 3% de tu categoría una semana antes.'],
+       ['h','Última semana'],['p','Reducción gradual de sodio y fibra y ajuste de agua bajo supervisión. En Tatami Norte el corte final solo se hace con acompañamiento del equipo del plan Competidor.']]},
+    {id:4,cat:'Mentalidad',letter:'OSS',title:'Tu cinturón importa menos de lo que crees',date:'1 sep 2026',read:'5 min',author:'Diego Lara',
+     ex:'Por qué medir tu progreso en rounds entrenados y no en grados te hace mejor peleador.',
+     body:[['p','Un cinturón es una fotografía de tu nivel el día que te lo dieron. Tu progreso real se mide en otra unidad: rounds entrenados con intención.'],
+       ['p','Te proponemos llevar un registro simple: cuántos rounds hiciste, qué posición trabajaste y qué salió mal. Tres meses de ese diario dicen más que cualquier grado.'],
+       ['h','Constancia sobre intensidad'],['p','Tres clases por semana durante un año te llevan más lejos que seis clases por semana durante dos meses seguidos de una lesión.']]},
+    {id:5,cat:'Noticias',letter:'7',title:'Siete medallas en el Open Regional de Jiu-Jitsu',date:'25 ago 2026',read:'3 min',author:'Equipo Tatami Norte',
+     ex:'Tres oros, dos platas y dos bronces entre cinturones blancos, azules y master.',
+     body:[['p','El equipo competidor viajó con once atletas y regresó con siete medallas. Destacan los oros de Valeria Cruz (azul, pluma) y de Ramón Ibarra (master 2, pesado), ambos por sumisión.'],
+       ['p','El próximo objetivo es el Nacional de noviembre. Las clases de preparación para competidores son martes y jueves a las 20:30 y están abiertas a cualquier miembro con permiso de su profesor.']]},
+    {id:6,cat:'Técnica',letter:'BX',title:'Tres combinaciones de boxeo para tu primer sparring',date:'18 ago 2026',read:'6 min',author:'Sofía Treviño',
+     ex:'Jab-cross-gancho, jab al cuerpo y el contraataque con cross: simples, seguras y difíciles de leer.',
+     body:[['p','En tu primer sparring vas a olvidar la mitad de lo que sabes. Por eso conviene llevar pocas herramientas y muy practicadas.'],
+       ['h','1-2-3'],['p','Jab, cross y gancho de mano adelantada. La clave es regresar la guardia después del gancho, no quedarte admirando el golpe.'],
+       ['h','Jab al cuerpo'],['p','Baja el nivel doblando rodillas, no la cintura. Obliga a tu compañero a bajar las manos y te abre la cabeza para la siguiente entrada.']]}
+  ];
+  const CATS=['Todo',...new Set(POSTS.map(p=>p.cat))];
+  let curCat='Todo';
+  function renderFilters(){
+    $('#filters').innerHTML=CATS.map(c=>`<button type="button" aria-pressed="${c===curCat}" data-cat="${c}">${c}</button>`).join('');
+  }
+  function renderPosts(){
+    const list=POSTS.filter(p=>curCat==='Todo'||p.cat===curCat);
+    $('#posts').innerHTML=list.map((p,i)=>`<button class="post${i===0&&list.length>2?' lead':''}" data-post="${p.id}">
+      <div class="cover"><div class="pat pat-${p.id%4}"></div><span class="big" aria-hidden="true">${p.letter}</span><span class="cat">${p.cat}</span></div>
+      <span class="meta">${p.date} · ${p.read} de lectura</span>
+      <h3>${p.title}</h3><p class="ex">${p.ex}</p>
+    </button>`).join('');
+  }
+  $('#filters').addEventListener('click',e=>{const b=e.target.closest('[data-cat]'); if(!b) return; curCat=b.dataset.cat; renderFilters(); renderPosts();});
+  $('#posts').addEventListener('click',e=>{
+    const b=e.target.closest('[data-post]'); if(!b) return;
+    const p=POSTS.find(x=>x.id===+b.dataset.post);
+    $('#artCat').textContent=p.cat; $('#artTitle').textContent=p.title;
+    $('#artMeta').textContent=`${p.author} · ${p.date} · ${p.read}`;
+    $('#artBody').innerHTML=p.body.map(([t,x])=>t==='h'?`<h4>${x}</h4>`:`<p>${x}</p>`).join('');
+    openModal($('#articleModal'));
+  });
+  renderFilters(); renderPosts();
+})();
+</script>
+</body>
+</html>

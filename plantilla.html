@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Tatami Norte, academia de artes marciales y deportes de combate.">
+<meta name="theme-color" content="#1B2338">
+<!--
+  Plantilla para páginas nuevas de Tatami Norte.
+  1. Copia este archivo y renómbralo (ej. horarios.html).
+  2. Cambia el <title>, la cabecera y el contenido de <main>.
+  3. Marca el enlace activo del menú con aria-current="page".
+  4. Si la página necesita estilos propios, crea css/pages/<nombre>.css
+     y enlázalo después de components.css.
+-->
+<title>Página · Tatami Norte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+<nav class="nav" aria-label="Principal">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="brand-mark">T</span><span class="brand-name">Tatami Norte</span></a>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks">Menú</button>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html#disciplinas">Disciplinas</a>
+      <a href="index.html#horario">Horario</a>
+      <a href="index.html#planes">Planes</a>
+      <a href="index.html#blog">Blog</a>
+      <a class="btn small" href="index.html#horario">Clase gratis</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-head">
+  <div class="wrap">
+    <div class="eyebrow">Sección</div>
+    <h1>Título de la página</h1>
+    <p>Una o dos líneas que expliquen qué encuentra aquí la persona.</p>
+  </div>
+</header>
+
+<main>
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="eyebrow">Subtítulo</div><h2>Sección oscura</h2></div>
+        <p>Texto de apoyo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec light">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="eyebrow">Subtítulo</div><h2>Sección clara</h2></div>
+        <p>Texto de apoyo.</p>
+      </div>
+      <a class="btn dark" href="index.html#horario">Agendar clase</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div>
+      <div class="foot-big">Nos vemos<br>en el tatami.</div>
+      <p>Av. Constitución 1480, Col. Centro. Estacionamiento para miembros.</p>
+    </div>
+    <div><h4>Horario de recepción</h4><ul><li>Lun a Vie · 6:00–22:00</li><li>Sábado · 8:00–14:00</li><li>Domingo · Open mat 10:00</li></ul></div>
+    <div><h4>Contacto</h4><ul><li>hola@tataminorte.mx</li><li>+52 55 4821 0930</li><li>@tataminorte</li></ul></div>
+    <div><h4>Explora</h4><ul><li><a href="index.html#disciplinas">Disciplinas</a></li><li><a href="index.html#horario">Agendar clase</a></li><li><a href="index.html#planes">Planes</a></li><li><a href="index.html#blog">Blog</a></li></ul></div>
+  </div>
+  <div class="wrap foot-base"><span>© 2026 Tatami Norte</span><span>Respeto · Disciplina · Constancia</span></div>
+</footer>
+
+<script>
+  // Menú móvil
+  (function(){
+    var btn=document.getElementById('menuBtn'), links=document.getElementById('navLinks');
+    btn.addEventListener('click',function(){var o=links.classList.toggle('open');btn.setAttribute('aria-expanded',o);});
+  })();
+</script>
+</body>
+</html>

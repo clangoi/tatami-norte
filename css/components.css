@@ -1,0 +1,136 @@
+/* ==========================================================
+   Tatami Norte · Componentes
+   Bloques que pueden aparecer en varias páginas: disciplinas,
+   cinturones, horario y reservas, planes y blog.
+   ========================================================== */
+
+/* ---- Tarjetas de disciplina ---- */
+.disc-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.disc{padding:30px 26px 28px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:14px;transition:background .25s}
+.disc:hover{background:var(--navy-2)}
+.disc .tag{font:600 13px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--steel)}
+.disc h3{font-size:44px;font-weight:800}
+.disc p{color:var(--text-soft);font-size:16px;flex:1}
+.disc .specs{display:flex;gap:18px;font:600 14px/1.2 var(--label);letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+@media (max-width:980px){.disc-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.disc-grid{grid-template-columns:1fr}}
+
+/* ---- Progresión de cinturones ---- */
+.belts{margin-top:56px;display:grid;grid-template-columns:220px 1fr;gap:32px;align-items:center}
+.belts h3{font-size:34px}
+.belts small{display:block;font:500 15px/1.4 var(--body);text-transform:none;color:var(--steel);margin-top:10px;letter-spacing:0}
+.belt-track{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.belt{position:relative;height:40px;display:flex;align-items:center;padding-inline:12px;font:700 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--cream)}
+.belt::after{content:"";position:absolute;right:14px;top:0;bottom:0;width:26px;background:#111}
+.belt.w{background:#ECE8DD;color:var(--navy)}
+.belt.b{background:#2F5DA8}
+.belt.p{background:#6B3E8E}
+.belt.br{background:#6A4428}
+.belt.k{background:#0e0e10}
+.belt.k::after{background:#B3262A}
+.belt-years{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px;font:600 13px/1.2 var(--label);letter-spacing:.08em;text-transform:uppercase;color:var(--steel)}
+@media (max-width:760px){
+  .belts{grid-template-columns:1fr}
+  .belt{font-size:11px;padding-inline:6px}
+  .belt::after{width:12px;right:6px}
+}
+
+/* ---- Horario y reservas ---- */
+.book-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:start}
+@media (max-width:940px){.book-grid{grid-template-columns:1fr}}
+.days{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.day{flex:1 0 auto;min-width:64px;background:transparent;border:1px solid rgba(27,35,56,.2);color:var(--navy);padding:12px 10px;font:700 15px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.day small{display:block;font:500 12px/1 var(--label);letter-spacing:.08em;margin-top:6px;color:#6b7080}
+.day[aria-selected="true"]{background:var(--navy);color:var(--cream);border-color:var(--navy)}
+.day[aria-selected="true"] small{color:var(--gold)}
+.slots{margin-top:16px;display:flex;flex-direction:column}
+.slot{display:grid;grid-template-columns:90px 1fr auto auto;gap:18px;align-items:center;padding:18px 4px;border-bottom:1px solid var(--line-light)}
+.slot.picked{background:rgba(214,189,140,.25)}
+.slot-time{font:800 26px/1 var(--display);font-variant-numeric:tabular-nums}
+.slot-name{font-weight:600;font-size:17px}
+.slot-sub{font-size:14px;color:var(--text-muted-light)}
+.cap{font:600 13px/1 var(--label);letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted-light);text-align:right;white-space:nowrap}
+.cap .bar{display:block;width:80px;height:4px;background:rgba(27,35,56,.12);margin-top:6px;margin-left:auto}
+.cap .bar i{display:block;height:100%;background:var(--bronze)}
+.cap.full{color:var(--danger-light)}
+@media (max-width:560px){
+  .slot{grid-template-columns:70px 1fr;row-gap:10px}
+  .slot-time{font-size:22px}
+  .cap{text-align:left}
+  .cap .bar{margin-left:0}
+  .slot .btn{justify-self:end}
+}
+.picked-class{border:1px dashed var(--line);padding:14px 16px;margin-bottom:18px;font-size:15px;color:var(--text-soft)}
+.picked-class strong{display:block;color:var(--cream);font:800 24px/1.1 var(--display);text-transform:uppercase}
+.confirm{border:1px solid var(--gold);padding:20px;margin-top:20px}
+.confirm .code{font:800 34px/1 var(--display);color:var(--gold);letter-spacing:.06em;margin:6px 0 8px}
+.my-bookings{margin-top:26px}
+.my-bookings h4{font:700 14px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--steel);margin:0 0 10px}
+.mb{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--navy-3);font-size:15px}
+.mb button{background:none;border:0;color:var(--steel);font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;text-decoration:underline}
+.mb button:hover{color:var(--gold)}
+
+/* ---- Planes de suscripción ---- */
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+@media (max-width:920px){.plans{grid-template-columns:1fr;max-width:520px}}
+.plan{border:1px solid var(--line);padding:32px 28px;display:flex;flex-direction:column;gap:18px;background:var(--navy)}
+.plan h3{font-size:40px}
+.plan .for{font-size:15px;color:var(--text-soft);min-height:48px}
+.plan ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;flex:1}
+.plan li{display:flex;gap:10px;font-size:16px}
+.plan li::before{content:"";flex:0 0 12px;height:3px;background:var(--bronze);margin-top:12px}
+.price{display:flex;align-items:baseline;gap:6px}
+.price b{font:900 72px/1 var(--display);font-variant-numeric:tabular-nums}
+.price span{font:600 15px/1 var(--label);letter-spacing:.1em;text-transform:uppercase;color:var(--steel)}
+.price-note{font-size:14px;color:var(--steel);margin-top:-10px;min-height:20px}
+/* Plan destacado */
+.plan.feat{background:var(--gold);color:var(--navy);border-color:var(--gold);position:relative}
+.plan.feat .badge{position:absolute;top:-13px;left:28px;background:var(--navy);color:var(--gold);font:700 12px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;padding:7px 10px}
+.plan.feat .for{color:#3d3526}
+.plan.feat .price span,.plan.feat .price-note{color:#5a4a2e}
+.plan.feat li::before{background:var(--navy)}
+.plan.feat .btn{background:var(--navy);color:var(--gold);border-color:var(--navy)}
+.plan.feat .btn:hover{background:var(--ink)}
+.plans-foot{margin-top:28px;color:var(--steel);font-size:15px}
+
+/* Resumen de pago */
+.pay{padding:40px clamp(20px,5vw,36px) 32px}
+.pay h3{font-size:44px}
+.sum{margin:20px 0 24px;border-block:1px solid var(--navy-3)}
+.sum div{display:flex;justify-content:space-between;padding:12px 0;font-size:16px;font-variant-numeric:tabular-nums}
+.sum div+div{border-top:1px solid var(--navy-3)}
+.sum .tot{font:800 26px/1 var(--display);color:var(--gold)}
+.secure{margin-top:14px;font-size:14px;color:var(--steel);text-align:center}
+
+/* ---- Blog: tarjetas ---- */
+.posts{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:32px}
+@media (max-width:900px){.posts{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:580px){.posts{grid-template-columns:1fr}}
+.post{display:flex;flex-direction:column;gap:14px;cursor:pointer;background:none;border:0;padding:0;text-align:left;color:inherit;font:inherit}
+.post.lead{grid-column:span 2}
+@media (max-width:580px){.post.lead{grid-column:auto}}
+.post h3{font-size:32px;font-weight:800;transition:color .2s}
+.post.lead h3{font-size:clamp(34px,4vw,50px)}
+.post:hover h3{color:var(--bronze)}
+.post .ex{color:var(--text-soft-light);font-size:16px}
+.post .meta{font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;color:#7a7f8c}
+
+/* Portada tipográfica de cada artículo */
+.cover{aspect-ratio:16/10;max-width:100%;position:relative;overflow:hidden;background:var(--navy);display:flex;align-items:flex-end;padding:18px}
+.post.lead .cover{aspect-ratio:16/8.6}
+.cover .pat{position:absolute;inset:0;opacity:.9}
+.cover .big{position:absolute;right:-8px;top:-14px;font:900 150px/.8 var(--display);color:transparent;-webkit-text-stroke:2px rgba(214,189,140,.35);text-transform:uppercase}
+.post.lead .cover .big{font-size:240px}
+.post:hover .cover .big{-webkit-text-stroke-color:var(--gold)}
+.cover .cat{position:relative;background:var(--gold);color:var(--navy);font:700 12px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;padding:7px 10px}
+.pat-0{background:repeating-linear-gradient(135deg,var(--navy) 0 18px,var(--navy-2) 18px 20px)}
+.pat-1{background:radial-gradient(circle at 20% 80%,rgba(169,139,94,.33),transparent 50%),var(--navy)}
+.pat-2{background:repeating-linear-gradient(90deg,var(--navy) 0 30px,#1f2840 30px 60px)}
+.pat-3{background:linear-gradient(160deg,var(--navy-3),var(--navy) 60%)}
+
+/* ---- Blog: artículo ---- */
+.article-head{background:var(--navy);color:var(--cream);padding:48px clamp(20px,5vw,48px) 32px}
+.article-head h2{font-size:clamp(38px,6vw,64px);margin-top:14px}
+.article-head .meta{margin-top:18px;font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--steel)}
+.article-body{padding:32px clamp(20px,5vw,48px) 48px;display:flex;flex-direction:column;gap:18px;font-size:18px;line-height:1.7}
+.article-body h4{font:800 26px/1.1 var(--display);text-transform:uppercase;margin:10px 0 -6px}

@@ -1,0 +1,42 @@
+/* ==========================================================
+   Tatami Norte · Tokens
+   Colores, tipografías y medidas. Cambia aquí y se actualiza
+   todo el sitio.
+   ========================================================== */
+:root{
+  color-scheme: dark;
+
+  /* Paleta de marca */
+  --navy:#1B2338;
+  --cream:#F6F2E7;
+  --steel:#888D95;
+  --bronze:#A98B5E;
+  --gold:#D6BD8C;
+
+  /* Derivados del azul marino */
+  --navy-2:#222c45;   /* superficie elevada */
+  --navy-3:#2b3654;   /* bordes y campos */
+  --ink:#141a2b;      /* fondo más profundo */
+
+  /* Texto secundario */
+  --text-soft:#cfcabd;       /* sobre fondo oscuro */
+  --text-soft-light:#4c5264; /* sobre fondo crema */
+  --text-muted-light:#5d6273;
+
+  /* Líneas y estados */
+  --line: rgba(214,189,140,.22);
+  --line-light: rgba(27,35,56,.14);
+  --danger:#f0a39b;
+  --danger-light:#a33;
+
+  /* Tipografías */
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --label:"Barlow Condensed","Arial Narrow",sans-serif;
+
+  /* Medidas */
+  --wrap:1180px;
+  --gutter:clamp(16px,4vw,40px);
+  --nav-h:68px;
+  --notch:10px; /* esquina recortada de botones */
+}

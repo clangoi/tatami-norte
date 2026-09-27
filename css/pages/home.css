@@ -34,3 +34,5 @@
 .rounds span.now{background:var(--gold)}
 .clock-next{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);font-size:15px;color:var(--text-soft);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .clock-next strong{color:var(--cream);font-weight:600}
+.clock-next a{text-decoration:none}
+.clock-next a:hover strong{color:var(--gold)}

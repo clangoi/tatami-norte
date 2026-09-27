@@ -57,7 +57,12 @@ window.SITE_CONFIG = {
 
   /* ---- Reservas (Cal.com) · ver CAL-SETUP.md ---- */
   booking: {
-    calUsername: "",                             // cal.com/<usuario>
-    calOrigin: "https://app.cal.com"
+    calUsername: "hccombat",                     // cal.com/<usuario>
+    calOrigin: "https://app.cal.com",
+    // Una pestaña por clase. slug = la parte final de la URL en Cal.com
+    // (cal.com/hccombat/judo → "judo"). Agrega una línea por cada clase nueva.
+    classes: [
+      { label: "Judo", slug: "judo" }
+    ]
   }
 };

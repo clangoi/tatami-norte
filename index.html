@@ -52,7 +52,7 @@
       <div class="clock-time" id="clockTime">05:00</div>
       <div class="clock-phase" id="clockPhase">Pelea</div>
       <div class="rounds" id="roundBars"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="clock-next"><span>Siguiente clase</span><strong id="nextClass">Muay Thai · 19:00</strong></div>
+      <div class="clock-next"><span>Tu primera clase</span><a href="#horario"><strong>Gratis · Reservar</strong></a></div>
     </aside>
   </div>
 </header>
@@ -92,31 +92,17 @@
   <div class="wrap">
     <div class="sec-head">
       <div><div class="eyebrow">Horario y reservas</div><h2>Agenda tu clase</h2></div>
-      <p>Elige el día, reserva tu lugar y llega 10 minutos antes. Si es tu primera vez, la clase no tiene costo y te prestamos guantes o gi.</p>
+      <p>Elige la clase, el día y la hora. Te llega un correo con la confirmación y un enlace para cambiar o cancelar.</p>
     </div>
-    <div class="book-grid">
-      <div>
-        <div class="days" role="tablist" aria-label="Día de la semana" id="days"></div>
-        <div class="slots" id="slots" role="tabpanel"></div>
-      </div>
-      <div class="panel" id="bookPanel">
-        <h3>Reservar lugar</h3>
-        <p class="hint">Elige una clase del horario, completa tus datos y confirma la fecha. Te llegará un correo con la confirmación.</p>
-        <div class="notice" id="bSetup" hidden><strong>Reservas en línea en configuración.</strong> Mientras tanto, reserva escribiendo a <span data-site="contact.email">hola@tataminorte.mx</span> o al <span data-site="contact.phone">+52 55 4821 0930</span>.</div>
-        <div class="picked-class" id="pickedClass">Ninguna clase seleccionada.</div>
-        <form id="bookForm" novalidate>
-          <div class="field"><label for="bName">Nombre completo</label><input id="bName" autocomplete="name" placeholder="Ej. Andrea Ruiz"></div>
-          <div class="row2">
-            <div class="field"><label for="bEmail">Correo</label><input id="bEmail" type="email" autocomplete="email" placeholder="tu@correo.com"></div>
-            <div class="field"><label for="bPhone">Teléfono</label><input id="bPhone" type="tel" autocomplete="tel" placeholder="55 1234 5678"></div>
-          </div>
-          <div class="field"><label for="bLevel">Experiencia</label>
-            <select id="bLevel"><option>Nunca he entrenado</option><option>Menos de 1 año</option><option>1 a 3 años</option><option>Más de 3 años / compito</option></select>
-          </div>
-          <label class="check"><input type="checkbox" id="bFirst" checked> Es mi primera clase en <span data-site="name">Tatami Norte</span> (gratis)</label>
-          <div class="err" id="bErr" role="alert"></div>
-          <button class="btn block" type="submit" id="bSubmit">Elegir fecha y reservar</button>
-        </form>
+    <div class="cal-grid" id="booking">
+      <aside class="panel">
+        <h3>Tu primera clase</h3>
+        <ul class="first-steps">
+          <li><b>Es gratis.</b> Reserva como cualquier clase y avísanos al llegar.</li>
+          <li><b>Llega 10 minutos antes</b> para registrarte y calentar.</li>
+          <li><b>Trae</b> ropa deportiva sin cierres, agua y sandalias. Si no tienes judogi, te prestamos uno.</li>
+          <li><b>¿Dudas?</b> Escríbenos a <a data-site-href="email" data-site="contact.email" href="#">hola@tataminorte.mx</a>.</li>
+        </ul>
         <div class="confirm" id="bConfirm" hidden>
           <div class="eyebrow">Reserva confirmada</div>
           <div class="code" id="bCode"></div>
@@ -126,6 +112,13 @@
           <h4>Tus reservas</h4>
           <div id="mbList"></div>
         </div>
+      </aside>
+      <div class="cal-shell">
+        <div class="filters cal-tabs" data-cal-tabs role="group" aria-label="Clase" hidden></div>
+        <div class="cal-box" data-cal-inline>
+          <p class="cal-loading">Cargando calendario…</p>
+        </div>
+        <div class="notice" id="bSetup" hidden><strong>Reservas en línea no disponibles por ahora.</strong> Aparta tu lugar escribiendo a <span data-site="contact.email">hola@tataminorte.mx</span> o al <span data-site="contact.phone">+52 55 4821 0930</span>.</div>
       </div>
     </div>
   </div>
@@ -208,7 +201,7 @@
 <script>
 (function(){
   const $ = (s, r=document) => r.querySelector(s);
-  const S = window.SITE, NAME = S.config.name, EMAIL = S.get('contact.email');
+  const S = window.SITE, NAME = S.config.name;
   const store = {
     get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
     set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
@@ -247,99 +240,27 @@
   },1000);
   drawClock();
 
-  /* schedule */
-  const DAYS=[['lun','Lun'],['mar','Mar'],['mie','Mié'],['jue','Jue'],['vie','Vie'],['sab','Sáb']];
-  const T={
-    bjj:['Jiu-Jitsu Gi','Prof. Mariana Ochoa · Negro 2°'],
-    nogi:['Jiu-Jitsu No-Gi','Prof. Diego Lara · Negro 1°'],
-    mt:['Muay Thai','Kru Arturo Peña'],
-    box:['Boxeo','Coach Sofía Treviño'],
-    mma:['MMA','Coach Iván Robles'],
-    kids:['Kids Jiu-Jitsu (6–12)','Prof. Mariana Ochoa'],
-    fund:['Fundamentos BJJ','Prof. Diego Lara · Negro 1°'],
-    open:['Open Mat','Todos los niveles']
-  };
-  const plan={
-    lun:[['07:00','bjj',20],['17:00','kids',16],['18:30','mt',18],['20:00','bjj',24]],
-    mar:[['07:00','box',14],['18:00','fund',20],['19:00','mt',18],['20:30','mma',12]],
-    mie:[['07:00','bjj',20],['17:00','kids',16],['18:30','box',16],['20:00','nogi',24]],
-    jue:[['07:00','mt',14],['18:00','fund',20],['19:00','mt',18],['20:30','mma',12]],
-    vie:[['07:00','nogi',20],['18:00','box',16],['19:30','bjj',24]],
-    sab:[['09:00','kids',16],['10:30','mt',20],['12:00','open',30]]
-  };
-  const WEEKDAY={lun:1,mar:2,mie:3,jue:4,vie:5,sab:6};
+  /* booking (Cal.com en la página) */
   const Booking=window.TNBooking;
-
   // Reservas hechas desde este navegador (Cal.com guarda las reales y envía los correos).
   // Se descartan las que ya pasaron.
   let bookings=store.get('tn_cal_bookings',[]).filter(b=>new Date(b.endTime||b.startTime)>new Date());
   store.set('tn_cal_bookings',bookings);
-  const todayIdx=Math.min(Math.max(new Date().getDay()-1,0),5);
-  let curDay=DAYS[todayIdx][0];
-  let picked=null;
-
+  const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
   const fmtDate=iso=>new Date(iso).toLocaleString('es-MX',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
 
-  function renderDays(){
-    $('#days').innerHTML=DAYS.map(([k,l])=>`<button class="day" role="tab" aria-selected="${k===curDay}" data-day="${k}" id="tab-${k}">${l}<small>${plan[k].length} clases</small></button>`).join('');
-  }
-  function renderSlots(){
-    $('#slots').innerHTML=plan[curDay].map(([t,k,cap])=>{
-      const isPicked=picked&&picked.day===curDay&&picked.time===t;
-      return `<div class="slot${isPicked?' picked':''}">
-        <div class="slot-time">${t}</div>
-        <div><div class="slot-name">${T[k][0]}</div><div class="slot-sub">${T[k][1]}</div></div>
-        <div class="cap">Cupo ${cap}</div>
-        <button class="btn small dark" data-pick="${t}|${k}">${isPicked?'Elegida':'Reservar'}</button>
-      </div>`;
-    }).join('');
-  }
-  function renderPicked(){
-    const box=$('#pickedClass');
-    if(!picked){ box.textContent='Ninguna clase seleccionada.'; return; }
-    const dl=DAYS.find(d=>d[0]===picked.day)[1];
-    box.innerHTML=`<strong>${T[picked.kind][0]}</strong>${dl} · ${picked.time} · ${T[picked.kind][1]}`;
-  }
   function renderMine(){
-    const wrap=$('#myBookings');
-    wrap.hidden=!bookings.length;
+    $('#myBookings').hidden=!bookings.length;
     $('#mbList').innerHTML=bookings.map(b=>`<div class="mb">
       <span>${esc(b.title||'Clase')} · ${esc(fmtDate(b.startTime))}</span>
       <a class="mb-link" href="${esc(Booking.manageUrl(b.uid))}" target="_blank" rel="noopener">Cambiar o cancelar</a>
     </div>`).join('');
   }
 
-  if(!Booking.configured){
+  if(!Booking.mount($('#booking'))){
+    $('.cal-box').hidden=true;
     $('#bSetup').hidden=false;
-    $('#bSubmit').disabled=true;
   }
-  $('#days').addEventListener('click',e=>{const b=e.target.closest('[data-day]'); if(!b) return; curDay=b.dataset.day; renderDays(); renderSlots();});
-  $('#slots').addEventListener('click',e=>{
-    const b=e.target.closest('[data-pick]'); if(!b||b.disabled) return;
-    const [time,kind]=b.dataset.pick.split('|');
-    picked={day:curDay,time,kind};
-    $('#bConfirm').hidden=true; $('#bErr').textContent='';
-    renderSlots(); renderPicked();
-    if(window.innerWidth<940) $('#bookPanel').scrollIntoView({behavior:'smooth',block:'start'});
-    $('#bName').focus({preventScroll:true});
-  });
-  const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
-  $('#bookForm').addEventListener('submit',e=>{
-    e.preventDefault();
-    const name=$('#bName').value.trim(), email=$('#bEmail').value.trim(), err=$('#bErr');
-    if(!Booking.configured){ err.textContent='Las reservas en línea aún no están activas. Escríbenos para apartar tu lugar.'; return; }
-    if(!picked){ err.textContent='Elige una clase del horario antes de continuar.'; return; }
-    if(name.length<3){ err.textContent='Escribe tu nombre completo.'; $('#bName').focus(); return; }
-    if(!emailOk(email)){ err.textContent='Revisa tu correo: ahí te llega la confirmación.'; $('#bEmail').focus(); return; }
-    err.textContent='';
-    const notes=[
-      `Teléfono: ${$('#bPhone').value.trim()||'—'}`,
-      `Experiencia: ${$('#bLevel').value}`,
-      $('#bFirst').checked?'Primera clase (gratis)':`Ya entrena en ${NAME}`
-    ].join(' · ');
-    Booking.open({kind:picked.kind, weekday:WEEKDAY[picked.day], time:picked.time, name, email, notes});
-  });
-
   Booking.onSuccess(data=>{
     if(!data.uid||!data.startTime) return;
     if(!bookings.some(b=>b.uid===data.uid)){
@@ -348,24 +269,15 @@
       store.set('tn_cal_bookings',bookings);
     }
     $('#bCode').textContent=fmtDate(data.startTime);
-    $('#bConfirmTxt').textContent=`${data.title||'Tu clase'} está confirmada. Te enviamos los detalles por correo. ${$('#bFirst').checked?'Tu primera clase es gratis. ':''}Llega 10 minutos antes.`;
+    $('#bConfirmTxt').textContent=`${data.title||'Tu clase'} está confirmada. Te enviamos los detalles por correo. Llega 10 minutos antes.`;
     $('#bConfirm').hidden=false;
-    picked=null; renderSlots(); renderPicked(); renderMine();
+    renderMine();
     toast('Reserva confirmada');
   });
   Booking.onFail(()=>{
-    $('#bErr').textContent=`No pudimos abrir el calendario de reservas. Intenta de nuevo${EMAIL?' o escríbenos a '+EMAIL:''}.`;
+    $('#bSetup').hidden=false;
   });
-
-  // next class in hero
-  (function(){
-    const now=new Date(), hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-    const d=DAYS[todayIdx][0];
-    const nx=plan[d].find(([t])=>t>hm) || plan[DAYS[(todayIdx+1)%6][0]][0];
-    $('#nextClass').textContent=`${T[nx[1]][0]} · ${nx[0]}`;
-  })();
-
-  renderDays(); renderSlots(); renderPicked(); renderMine();
+  renderMine();
 
   /* plans */
   const PLANS=[

@@ -11,18 +11,18 @@
 window.SITE_CONFIG = {
 
   /* ---- Identidad ---- */
-  name: "Club de Deportes de Combate Kizuna",
+  name: "Escuela de Artes Marciales Kizuna",
   shortName: "Kizuna",                           // nombre corto para el menú
   initial: "K",                                  // letra del logo en el menú
   motto: "Respeto · Disciplina · Constancia",
-  description: "Club de Deportes de Combate Kizuna en Santiago: BJJ Gi, BJJ No-Gi, Judo y preparación física. Reserva tu clase en línea.",
+  description: "Escuela de Artes Marciales Kizuna en Santiago: BJJ Gi, BJJ No-Gi, Judo y preparación física. Reserva tu clase en línea.",
 
   /* ---- Contacto ---- */
   contact: {
     email: "contacto@hccombat.com",
     phone: "+56 9 4796 6805",
     whatsapp: "56947966805",                     // solo dígitos con código de país
-    instagram: "hc.combat",                      // sin @
+    instagram: "escuela.kizuna",                 // sin @
     facebook: "",
     tiktok: ""
   },

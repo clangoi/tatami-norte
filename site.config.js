@@ -22,7 +22,7 @@ window.SITE_CONFIG = {
     email: "contacto@hccombat.com",
     phone: "+56 9 4796 6805",
     whatsapp: "56947966805",                     // solo dígitos con código de país
-    instagram: "",                               // sin @
+    instagram: "clubkizunajudo",                 // sin @
     facebook: "",
     tiktok: ""
   },
@@ -62,6 +62,16 @@ window.SITE_CONFIG = {
     comp: null
   },
   annualDiscount: 0.2,                           // descuento del pago anual (0.2 = 20%)
+
+  /* ---- Fotos de Instagram en la portada (Behold) ----
+     1. Entra a behold.so, conecta la cuenta de Instagram y crea un
+        feed de tipo "JSON".
+     2. Pega aquí su URL (https://feeds.behold.so/...).
+     Sin URL, la sección muestra solo el botón para seguir la cuenta. */
+  instagramFeed: {
+    url: "",
+    count: 6                                     // el plan gratuito entrega hasta 6
+  },
 
   /* ---- Reservas (Cal.com) · ver CAL-SETUP.md ---- */
   booking: {

@@ -69,7 +69,7 @@ window.SITE_CONFIG = {
      2. Pega aquí su URL (https://feeds.behold.so/...).
      Sin URL, la sección muestra solo el botón para seguir la cuenta. */
   instagramFeed: {
-    url: "https://feeds.behold.so/28TiHXcDICsBycxHv8Ke",
+    url: "https://feeds.behold.so/TLliuxq76nn5STiVhwCw",
     count: 6                                     // el plan gratuito entrega hasta 6
   },
 

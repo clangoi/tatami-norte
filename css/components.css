@@ -63,12 +63,13 @@
 .picked-class{border:1px dashed var(--line);padding:14px 16px;margin-bottom:18px;font-size:15px;color:var(--text-soft)}
 .picked-class strong{display:block;color:var(--cream);font:800 24px/1.1 var(--display);text-transform:uppercase}
 .confirm{border:1px solid var(--gold);padding:20px;margin-top:20px}
-.confirm .code{font:800 34px/1 var(--display);color:var(--gold);letter-spacing:.06em;margin:6px 0 8px}
+.confirm .code{font:800 clamp(26px,3vw,32px)/1.05 var(--display);color:var(--gold);letter-spacing:.03em;text-transform:uppercase;margin:8px 0 10px}
 .my-bookings{margin-top:26px}
 .my-bookings h4{font:700 14px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--steel);margin:0 0 10px}
 .mb{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--navy-3);font-size:15px}
-.mb button{background:none;border:0;color:var(--steel);font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;text-decoration:underline}
-.mb button:hover{color:var(--gold)}
+.mb span:first-letter{text-transform:uppercase}
+.mb-link{flex:none;color:var(--steel);font:600 13px/1.2 var(--label);letter-spacing:.12em;text-transform:uppercase;text-align:right}
+.mb-link:hover{color:var(--gold)}
 
 /* ---- Planes de suscripción ---- */
 .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}

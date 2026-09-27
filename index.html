@@ -101,7 +101,8 @@
       </div>
       <div class="panel" id="bookPanel">
         <h3>Reservar lugar</h3>
-        <p class="hint">Selecciona una clase del horario para continuar.</p>
+        <p class="hint">Elige una clase del horario, completa tus datos y confirma la fecha. Te llegará un correo con la confirmación.</p>
+        <div class="notice" id="bSetup" hidden><strong>Reservas en línea en configuración.</strong> Mientras tanto, reserva escribiendo a hola@tataminorte.mx o al +52 55 4821 0930.</div>
         <div class="picked-class" id="pickedClass">Ninguna clase seleccionada.</div>
         <form id="bookForm" novalidate>
           <div class="field"><label for="bName">Nombre completo</label><input id="bName" autocomplete="name" placeholder="Ej. Andrea Ruiz"></div>
@@ -114,7 +115,7 @@
           </div>
           <label class="check"><input type="checkbox" id="bFirst" checked> Es mi primera clase en Tatami Norte (gratis)</label>
           <div class="err" id="bErr" role="alert"></div>
-          <button class="btn block" type="submit" id="bSubmit">Confirmar reserva</button>
+          <button class="btn block" type="submit" id="bSubmit">Elegir fecha y reservar</button>
         </form>
         <div class="confirm" id="bConfirm" hidden>
           <div class="eyebrow">Reserva confirmada</div>
@@ -200,6 +201,7 @@
 
 <div class="toast" id="toast" hidden role="status"></div>
 
+<script src="js/booking.js"></script>
 <script>
 (function(){
   const $ = (s, r=document) => r.querySelector(s);
@@ -261,33 +263,30 @@
     vie:[['07:00','nogi',20],['18:00','box',16],['19:30','bjj',24]],
     sab:[['09:00','kids',16],['10:30','mt',20],['12:00','open',30]]
   };
-  // seeded "taken" counts so the schedule looks lived-in
-  const seed={};
-  Object.entries(plan).forEach(([d,list])=>list.forEach(([t,k,cap],i)=>{
-    const n=(d.charCodeAt(0)*7+i*13+t.charCodeAt(1)*3)%cap; seed[`${d}|${t}`]=Math.min(cap, Math.round(n*0.9)+3);
-  }));
-  seed['mar|20:30']=12; // sold out example
+  const WEEKDAY={lun:1,mar:2,mie:3,jue:4,vie:5,sab:6};
+  const Booking=window.TNBooking;
 
-  let bookings=store.get('tn_bookings',[]);
+  // Reservas hechas desde este navegador (Cal.com guarda las reales y envía los correos).
+  // Se descartan las que ya pasaron.
+  let bookings=store.get('tn_cal_bookings',[]).filter(b=>new Date(b.endTime||b.startTime)>new Date());
+  store.set('tn_cal_bookings',bookings);
   const todayIdx=Math.min(Math.max(new Date().getDay()-1,0),5);
   let curDay=DAYS[todayIdx][0];
   let picked=null;
 
-  function taken(d,t){ return seed[`${d}|${t}`] + bookings.filter(b=>b.day===d&&b.time===t).length; }
+  const fmtDate=iso=>new Date(iso).toLocaleString('es-MX',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
 
   function renderDays(){
     $('#days').innerHTML=DAYS.map(([k,l])=>`<button class="day" role="tab" aria-selected="${k===curDay}" data-day="${k}" id="tab-${k}">${l}<small>${plan[k].length} clases</small></button>`).join('');
   }
   function renderSlots(){
     $('#slots').innerHTML=plan[curDay].map(([t,k,cap])=>{
-      const tk=taken(curDay,t), full=tk>=cap, free=Math.max(cap-tk,0);
-      const mine=bookings.some(b=>b.day===curDay&&b.time===t);
       const isPicked=picked&&picked.day===curDay&&picked.time===t;
       return `<div class="slot${isPicked?' picked':''}">
         <div class="slot-time">${t}</div>
         <div><div class="slot-name">${T[k][0]}</div><div class="slot-sub">${T[k][1]}</div></div>
-        <div class="cap${full?' full':''}">${full?'Lleno':free+' lugares'}<span class="bar"><i style="width:${Math.min(tk/cap,1)*100}%"></i></span></div>
-        <button class="btn small dark" data-pick="${t}|${k}" ${full||mine?'disabled':''}>${mine?'Reservado':'Reservar'}</button>
+        <div class="cap">Cupo ${cap}</div>
+        <button class="btn small dark" data-pick="${t}|${k}">${isPicked?'Elegida':'Reservar'}</button>
       </div>`;
     }).join('');
   }
@@ -300,10 +299,15 @@
   function renderMine(){
     const wrap=$('#myBookings');
     wrap.hidden=!bookings.length;
-    $('#mbList').innerHTML=bookings.map((b,i)=>{
-      const dl=DAYS.find(d=>d[0]===b.day)[1];
-      return `<div class="mb"><span>${esc(dl)} ${esc(b.time)} · ${esc(T[b.kind][0])} <span class="text-muted">(${esc(b.code)})</span></span><button data-cancel="${i}">Cancelar</button></div>`;
-    }).join('');
+    $('#mbList').innerHTML=bookings.map(b=>`<div class="mb">
+      <span>${esc(b.title||'Clase')} · ${esc(fmtDate(b.startTime))}</span>
+      <a class="mb-link" href="${esc(Booking.manageUrl(b.uid))}" target="_blank" rel="noopener">Cambiar o cancelar</a>
+    </div>`).join('');
+  }
+
+  if(!Booking.configured){
+    $('#bSetup').hidden=false;
+    $('#bSubmit').disabled=true;
   }
   $('#days').addEventListener('click',e=>{const b=e.target.closest('[data-day]'); if(!b) return; curDay=b.dataset.day; renderDays(); renderSlots();});
   $('#slots').addEventListener('click',e=>{
@@ -315,27 +319,38 @@
     if(window.innerWidth<940) $('#bookPanel').scrollIntoView({behavior:'smooth',block:'start'});
     $('#bName').focus({preventScroll:true});
   });
-  $('#mbList').addEventListener('click',e=>{
-    const b=e.target.closest('[data-cancel]'); if(!b) return;
-    bookings.splice(+b.dataset.cancel,1); store.set('tn_bookings',bookings);
-    renderSlots(); renderMine(); toast('Reserva cancelada');
-  });
   const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
   $('#bookForm').addEventListener('submit',e=>{
     e.preventDefault();
     const name=$('#bName').value.trim(), email=$('#bEmail').value.trim(), err=$('#bErr');
-    if(!picked){ err.textContent='Elige una clase del horario antes de confirmar.'; return; }
+    if(!Booking.configured){ err.textContent='Las reservas en línea aún no están activas. Escríbenos para apartar tu lugar.'; return; }
+    if(!picked){ err.textContent='Elige una clase del horario antes de continuar.'; return; }
     if(name.length<3){ err.textContent='Escribe tu nombre completo.'; $('#bName').focus(); return; }
-    if(!emailOk(email)){ err.textContent='Revisa tu correo: lo usamos para enviarte la confirmación.'; $('#bEmail').focus(); return; }
+    if(!emailOk(email)){ err.textContent='Revisa tu correo: ahí te llega la confirmación.'; $('#bEmail').focus(); return; }
     err.textContent='';
-    const code='TN-'+Math.floor(1000+Math.random()*9000);
-    bookings.push({...picked,code,name}); store.set('tn_bookings',bookings);
-    const dl=DAYS.find(d=>d[0]===picked.day)[1];
-    $('#bCode').textContent=code;
-    $('#bConfirmTxt').textContent=`${T[picked.kind][0]}, ${dl} a las ${picked.time}. ${$('#bFirst').checked?'Tu primera clase es gratis. ':''}Llega 10 minutos antes y muestra este código en recepción.`;
+    const notes=[
+      `Teléfono: ${$('#bPhone').value.trim()||'—'}`,
+      `Experiencia: ${$('#bLevel').value}`,
+      $('#bFirst').checked?'Primera clase (gratis)':'Ya entrena en Tatami Norte'
+    ].join(' · ');
+    Booking.open({kind:picked.kind, weekday:WEEKDAY[picked.day], time:picked.time, name, email, notes});
+  });
+
+  Booking.onSuccess(data=>{
+    if(!data.uid||!data.startTime) return;
+    if(!bookings.some(b=>b.uid===data.uid)){
+      bookings.push({uid:data.uid,title:data.title,startTime:data.startTime,endTime:data.endTime});
+      bookings.sort((a,b)=>new Date(a.startTime)-new Date(b.startTime));
+      store.set('tn_cal_bookings',bookings);
+    }
+    $('#bCode').textContent=fmtDate(data.startTime);
+    $('#bConfirmTxt').textContent=`${data.title||'Tu clase'} está confirmada. Te enviamos los detalles por correo. ${$('#bFirst').checked?'Tu primera clase es gratis. ':''}Llega 10 minutos antes.`;
     $('#bConfirm').hidden=false;
     picked=null; renderSlots(); renderPicked(); renderMine();
     toast('Reserva confirmada');
+  });
+  Booking.onFail(()=>{
+    $('#bErr').textContent='No pudimos abrir el calendario de reservas. Intenta de nuevo o escríbenos a hola@tataminorte.mx.';
   });
 
   // next class in hero

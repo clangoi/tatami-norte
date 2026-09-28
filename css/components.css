@@ -56,7 +56,13 @@
 /* ---- Enlace en el título de una tarjeta ---- */
 .disc-link{text-decoration:none}
 .disc-link::after{content:" →";color:var(--gold);transition:margin .2s}
-.disc-link:hover{color:var(--gold)}
+/* Toda la tarjeta es clickeable: el enlace del título la cubre completa */
+.disc{position:relative}
+.disc:has(.disc-link){cursor:pointer}
+.disc-link::before{content:"";position:absolute;inset:0;z-index:1}
+.disc-link:focus-visible{outline:none}
+.disc:has(.disc-link:focus-visible){outline:3px solid var(--gold);outline-offset:-3px}
+.disc:has(.disc-link):hover .disc-link{color:var(--gold)}
 
 /* ---- Reservas: calendario de Cal.com en la página ---- */
 .cal-grid{display:grid;grid-template-columns:minmax(260px,.7fr) 1.3fr;gap:32px;align-items:start}

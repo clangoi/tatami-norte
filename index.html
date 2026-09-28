@@ -70,7 +70,7 @@
       <article class="disc"><span class="tag">Grappling · Con gi</span><h3><a class="disc-link" href="bjj.html">BJJ Gi</a></h3><p>Guardias, pasajes, raspados y sumisiones usando agarres en solapa y manga. Cada clase cierra con rounds de rodada.</p><div class="specs"><span>Gi</span><span>Todos los niveles</span></div></article>
       <article class="disc"><span class="tag">Grappling · Sin gi</span><h3><a class="disc-link" href="bjj.html#no-gi">BJJ No-Gi</a></h3><p>El mismo Jiu-Jitsu con control de cuerpo: underhooks, llaves de pierna y un ritmo más rápido.</p><div class="specs"><span>Rashguard y short</span><span>Todos los niveles</span></div></article>
       <article class="disc"><span class="tag">Proyecciones · Con judogi</span><h3><a class="disc-link" href="judo.html">Judo</a></h3><p>Caídas, agarres y proyecciones de pie, con trabajo de suelo (ne-waza). Termina con randori.</p><div class="specs"><span>Judogi</span><span>Todos los niveles</span></div></article>
-      <article class="disc"><span class="tag">Preparación física</span><h3>Físico</h3><p>Fuerza, agarre, movilidad y resistencia adaptados a las artes marciales, para rendir más y lesionarte menos.</p><div class="specs"><span>Ropa deportiva</span><span>Todos los niveles</span></div></article>
+      <article class="disc"><span class="tag">Preparación física</span><h3><a class="disc-link" href="#horario" data-pick="fisico">Físico</a></h3><p>Fuerza, agarre, movilidad y resistencia adaptados a las artes marciales, para rendir más y lesionarte menos.</p><div class="specs"><span>Ropa deportiva</span><span>Todos los niveles</span></div></article>
     </div>
 
   </div>
@@ -259,6 +259,11 @@
   /* reservas (Cal.com en la página) */
   const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
   window.TNBooking.mount($('#booking'));
+  // Enlaces con data-pick (p. ej. la tarjeta Físico) abren esa pestaña del calendario
+  document.querySelectorAll('a[data-pick]').forEach(a=>a.addEventListener('click',()=>{
+    const tab=$(`#booking [data-cal-tabs] [data-slug="${a.dataset.pick}"]`);
+    if(tab) tab.click();
+  }));
   window.TNBooking.onSuccess(()=>toast('Reserva confirmada'));
 
   /* plans */

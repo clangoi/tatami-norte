@@ -18,23 +18,10 @@
 <link rel="stylesheet" href="../css/layout.css">
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/pages/articulo.css">
+<script src="../js/components.js"></script>
 </head>
 <body>
-<nav class="nav" aria-label="Principal">
-  <div class="wrap">
-    <a class="brand" href="../index.html"><span class="brand-mark" data-site="initial">K</span><span class="brand-name" data-site="shortName">Kizuna</span></a>
-    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks">Menú</button>
-    <div class="nav-links" id="navLinks">
-      <a href="../index.html#disciplinas">Disciplinas</a>
-      <a href="../judo.html">Judo</a>
-      <a href="../bjj.html">BJJ</a>
-      <a href="../index.html#horario">Horario</a>
-      <a href="../index.html#planes">Planes</a>
-      <a href="../blog.html" aria-current="page">Blog</a>
-      <a class="btn small" href="../index.html#reservas">Clase gratis</a>
-    </div>
-  </div>
-</nav>
+<site-nav current="blog"></site-nav>
 
 <header class="post-hero">
   <div class="pat pat-2"></div>
@@ -82,20 +69,7 @@
   </section>
 </main>
 
-<footer>
-  <div class="wrap foot">
-    <div>
-      <div class="foot-big">Nos vemos<br>en el tatami.</div>
-      <p><span data-site="address.line">Av. Portugal 412, Oficina 605</span>, <span data-site="address.city">Santiago, RM</span></p>
-      <p data-site="address.note"></p>
-      <p><a data-site-href="maps" href="#">Cómo llegar</a></p>
-    </div>
-    <div><h4>Horario</h4><ul data-site-list="hours"><li>Clases según el calendario de reservas</li><li>Consultas por correo o WhatsApp</li></ul></div>
-    <div><h4>Contacto</h4><ul><li><a data-site-href="email" data-site="contact.email" href="#">contacto@hccombat.com</a></li><li><a data-site-href="phone" data-site="contact.phone" href="#">+56 9 4796 6805</a></li><li><a data-site-href="whatsapp" href="#">WhatsApp</a></li><li><a data-site-href="instagram" href="#">Instagram</a></li><li><a data-site-href="facebook" href="#">Facebook</a></li><li><a data-site-href="tiktok" href="#">TikTok</a></li></ul></div>
-    <div><h4>Explora</h4><ul><li><a href="../judo.html">Judo</a></li><li><a href="../bjj.html">BJJ</a></li><li><a href="../index.html#reservas">Agendar clase</a></li><li><a href="../index.html#planes">Planes</a></li><li><a href="../blog.html">Blog</a></li></ul></div>
-  </div>
-  <div class="wrap foot-base"><span>© <span data-site="year">2026</span> <span data-site="name">Escuela de Artes Marciales Kizuna</span></span><span data-site="motto">Respeto · Disciplina · Constancia</span></div>
-</footer>
+<site-footer current="blog"></site-footer>
 
 <script src="../site.config.js"></script>
 <script src="../js/site.js"></script>

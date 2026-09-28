@@ -2,10 +2,10 @@
    Kizuna · Datos del sitio
    Lee site.config.js y llena la página. Marca los elementos así:
 
-   data-site="contact.email"        → escribe el valor como texto
-   data-site-href="email"           → arma el enlace (email, phone,
-                                      whatsapp, instagram, facebook,
-                                      tiktok, maps)
+   data-site="contact.phone"        → escribe el valor como texto
+   data-site-href="whatsapp"        → arma el enlace (phone,
+                                      whatsapp, instagram, instagramDm,
+                                      facebook, tiktok, maps)
    data-site-list="hours"           → una <li> por elemento
    data-site-stats                  → cifras de la portada
    <title data-site-title="Blog">   → "Blog · <nombre>"
@@ -25,10 +25,10 @@
   const value = path => (path in computed ? computed[path] : get(path));
 
   const links = {
-    email:     () => C.contact?.email && `mailto:${C.contact.email}`,
     phone:     () => C.contact?.phone && `tel:${C.contact.phone.replace(/[^\d+]/g, "")}`,
     whatsapp:  () => C.contact?.whatsapp && `https://wa.me/${C.contact.whatsapp}`,
     instagram: () => C.contact?.instagram && `https://instagram.com/${C.contact.instagram}`,
+    instagramDm: () => C.contact?.instagram && `https://ig.me/m/${C.contact.instagram}`,   // mensaje directo
     facebook:  () => C.contact?.facebook && `https://facebook.com/${C.contact.facebook}`,
     tiktok:    () => C.contact?.tiktok && `https://tiktok.com/@${C.contact.tiktok}`,
     maps:      () => C.address?.mapsUrl

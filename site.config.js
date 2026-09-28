@@ -17,12 +17,13 @@ window.SITE_CONFIG = {
   motto: "Respeto · Disciplina · Constancia",
   description: "Escuela de Artes Marciales Kizuna en Santiago: BJJ Gi, BJJ No-Gi, Judo y preparación física. Reserva tu clase en línea.",
 
-  /* ---- Contacto ---- */
+  /* ---- Contacto ----
+     Los canales principales son Instagram y WhatsApp: el sitio invita
+     a escribir por mensaje directo de Instagram (ig.me). */
   contact: {
-    email: "contacto@hccombat.com",
     phone: "+56 9 4796 6805",
     whatsapp: "56947966805",                     // solo dígitos con código de país
-    instagram: "escuela.kizuna",                 // sin @
+    instagram: "clubkizuna",                     // sin @
     facebook: "",
     tiktok: ""
   },
@@ -37,8 +38,8 @@ window.SITE_CONFIG = {
 
   /* ---- Horario (pie de página) ---- */
   hours: [
-    "Clases según el calendario de reservas",
-    "Consultas por correo o WhatsApp"
+    "Revisa el calendario de reservas",
+    "Consultas por Instagram o WhatsApp"
   ],
 
   /* ---- Cifras de la portada ---- */

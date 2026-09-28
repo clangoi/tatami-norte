@@ -15,23 +15,10 @@
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/pages/disciplina.css">
+<script src="js/components.js"></script>
 </head>
 <body>
-<nav class="nav" aria-label="Principal">
-  <div class="wrap">
-    <a class="brand" href="index.html"><span class="brand-mark" data-site="initial">K</span><span class="brand-name" data-site="shortName">Kizuna</span></a>
-    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks">Menú</button>
-    <div class="nav-links" id="navLinks">
-      <a href="index.html#disciplinas">Disciplinas</a>
-      <a href="judo.html">Judo</a>
-      <a href="bjj.html" aria-current="page">BJJ</a>
-      <a href="index.html#horario">Horario</a>
-      <a href="index.html#planes">Planes</a>
-      <a href="blog.html">Blog</a>
-      <a class="btn small" href="#reservar">Clase gratis</a>
-    </div>
-  </div>
-</nav>
+<site-nav current="bjj" cta="#reservar"></site-nav>
 
 <header class="page-head">
   <div class="page-head-word" aria-hidden="true">OSS</div>
@@ -160,7 +147,7 @@
             <li><b>Es gratis.</b> Reserva como cualquier clase y avísanos al llegar.</li>
             <li><b>Llega 10 minutos antes</b> para registrarte y calentar.</li>
             <li><b>Trae</b> agua y sandalias. Si aún no tienes gi, ven con ropa deportiva sin cierres o toma la clase No-Gi.</li>
-            <li><b>¿Dudas?</b> Escríbenos a <a data-site-href="email" data-site="contact.email" href="#">contacto@hccombat.com</a>.</li>
+            <li><b>¿Dudas?</b> Mándanos un mensaje por Instagram a <a data-site-href="instagramDm" href="https://ig.me/m/clubkizuna">@<span data-site="contact.instagram">clubkizuna</span></a>.</li>
           </ul>
           <div class="confirm" data-cal-confirm hidden>
             <div class="eyebrow">Reserva confirmada</div>
@@ -177,27 +164,14 @@
           <div class="cal-box" data-cal-inline>
             <p class="cal-loading">Cargando calendario…</p>
           </div>
-          <div class="notice" data-cal-fallback hidden><strong>Reservas en línea no disponibles por ahora.</strong> Aparta tu lugar escribiendo a <span data-site="contact.email">contacto@hccombat.com</span> o al <span data-site="contact.phone">+56 9 4796 6805</span>.</div>
+          <div class="notice" data-cal-fallback hidden><strong>Reservas en línea no disponibles por ahora.</strong> Aparta tu lugar con un mensaje por Instagram a <a data-site-href="instagramDm" href="https://ig.me/m/clubkizuna">@<span data-site="contact.instagram">clubkizuna</span></a> o por <a data-site-href="whatsapp" href="#">WhatsApp</a> al <span data-site="contact.phone">+56 9 4796 6805</span>.</div>
         </div>
       </div>
     </div>
   </section>
 </main>
 
-<footer>
-  <div class="wrap foot">
-    <div>
-      <div class="foot-big">Nos vemos<br>en el tatami.</div>
-      <p><span data-site="address.line">Av. Portugal 412, Oficina 605</span>, <span data-site="address.city">Santiago, RM</span></p>
-      <p data-site="address.note"></p>
-      <p><a data-site-href="maps" href="#">Cómo llegar</a></p>
-    </div>
-    <div><h4>Horario</h4><ul data-site-list="hours"><li>Clases según el calendario de reservas</li><li>Consultas por correo o WhatsApp</li></ul></div>
-    <div><h4>Contacto</h4><ul><li><a data-site-href="email" data-site="contact.email" href="#">contacto@hccombat.com</a></li><li><a data-site-href="phone" data-site="contact.phone" href="#">+56 9 4796 6805</a></li><li><a data-site-href="whatsapp" href="#">WhatsApp</a></li><li><a data-site-href="instagram" href="#">Instagram</a></li><li><a data-site-href="facebook" href="#">Facebook</a></li><li><a data-site-href="tiktok" href="#">TikTok</a></li></ul></div>
-    <div><h4>Explora</h4><ul><li><a href="judo.html">Judo</a></li><li><a href="bjj.html">BJJ</a></li><li><a href="index.html#reservas">Agendar clase</a></li><li><a href="index.html#planes">Planes</a></li><li><a href="blog.html">Blog</a></li></ul></div>
-  </div>
-  <div class="wrap foot-base"><span>© <span data-site="year">2026</span> <span data-site="name">Escuela de Artes Marciales Kizuna</span></span><span data-site="motto">Respeto · Disciplina · Constancia</span></div>
-</footer>
+<site-footer current="bjj"></site-footer>
 
 <script src="site.config.js"></script>
 <script src="js/site.js"></script>

@@ -15,23 +15,10 @@
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/pages/disciplina.css">
+<script src="js/components.js"></script>
 </head>
 <body>
-<nav class="nav" aria-label="Principal">
-  <div class="wrap">
-    <a class="brand" href="index.html"><span class="brand-mark" data-site="initial">K</span><span class="brand-name" data-site="shortName">Kizuna</span></a>
-    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks">Menú</button>
-    <div class="nav-links" id="navLinks">
-      <a href="index.html#disciplinas">Disciplinas</a>
-      <a href="judo.html" aria-current="page">Judo</a>
-      <a href="bjj.html">BJJ</a>
-      <a href="index.html#horario">Horario</a>
-      <a href="index.html#planes">Planes</a>
-      <a href="blog.html">Blog</a>
-      <a class="btn small" href="#reservar">Clase gratis</a>
-    </div>
-  </div>
-</nav>
+<site-nav current="judo" cta="#reservar"></site-nav>
 
 <header class="page-head">
   <div class="page-head-word" aria-hidden="true">柔道</div>
@@ -42,7 +29,6 @@
     <div class="chips">
       <span class="chip">Judogi</span>
       <span class="chip">Todos los niveles</span>
-      <span class="chip">Grados de la Federación de Judo de Chile</span>
       <span class="chip gold">Primera clase gratis</span>
     </div>
     <div class="cta-row">
@@ -57,11 +43,11 @@
     <div class="wrap">
       <div class="sec-head">
         <div><div class="eyebrow">En el tatami</div><h2>Qué vas<br>a aprender</h2></div>
-        <p>Cada clase combina fundamentos, técnica en parejas y práctica libre. Las técnicas siguen el programa oficial de grados.</p>
+        <p>Cada clase combina fundamentos, técnica en parejas y práctica libre.</p>
       </div>
       <div class="disc-grid">
         <article class="disc"><span class="tag">Ukemi</span><h3>Caídas</h3><p>Hacia atrás, de lado, al frente y rodando. Es lo primero que se aprende y lo que te permite entrenar sin lesionarte.</p><div class="specs"><span>Ushiro · Yoko · Mae</span></div></article>
-        <article class="disc"><span class="tag">Kumikata · Kuzushi</span><h3>Agarre y desequilibrio</h3><p>Cómo tomar la solapa y la manga, y cómo sacar de balance al compañero antes de proyectarlo.</p><div class="specs"><span>Tsukuri · Kake</span></div></article>
+        <article class="disc"><span class="tag">Kumikata · Kuzushi</span><h3>Agarre y desequilibrio</h3><p>Cómo tomar solapa y manga, y cómo sacar de balance al compañero antes de proyectarlo.</p><div class="specs"><span>Kusushi · Tsukuri · Kake</span></div></article>
         <article class="disc"><span class="tag">Nage-waza</span><h3>Proyecciones</h3><p>Técnicas de pierna, cadera y brazo: O-soto-gari, De-ashi-barai, Ippon-seoi-nage, O-goshi y más.</p><div class="specs"><span>Ashi · Koshi · Te-waza</span></div></article>
         <article class="disc"><span class="tag">Katame-waza · Randori</span><h3>Suelo y práctica libre</h3><p>Inmovilizaciones como Kesa-gatame y Yoko-shiho-gatame, sus salidas, y randori para aplicarlo todo.</p><div class="specs"><span>Ne-waza · Randori</span></div></article>
       </div>
@@ -72,19 +58,19 @@
     <div class="wrap">
       <div class="sec-head">
         <div><div class="eyebrow">Grados kyu</div><h2>Del blanco<br>al negro</h2></div>
-        <p>Requisitos para adultos (desde 17 años) según el reglamento de la Federación Deportiva Nacional de Judo de Chile. Cada fila indica lo necesario para obtener ese cinturón; el profesor puede ajustar los tiempos y los objetivos físicos. Toca un cinturón para ver sus técnicas con los videos oficiales del Kodokan.</p>
+        <p>Requisitos para adultos (desde 17 años) según el reglamento de la Federación Deportiva Nacional de Judo de Chile. Toca un cinturón para ver sus técnicas con los videos oficiales del Kodokan.</p>
       </div>
       <ol class="grades plain">
         <li class="grade" data-belt="blanco">
           <div class="belt w">Blanco</div>
           <div class="grade-body"><h3>Blanco <small>6° kyu</small></h3>
-            <ul><li>Punto de partida: caídas, posturas, agarre y desplazamientos.</li><li>9 proyecciones del programa y las inmovilizaciones Kesa-gatame y Yoko-shiho-gatame.</li></ul>
+            <ul><li>Punto de partida: caídas, posturas, agarre y desplazamientos.</li><li>9 proyecciones y las inmovilizaciones Kesa-gatame y Yoko-shiho-gatame.</li></ul>
             <button type="button" class="grade-open">Ver técnicas</button></div>
         </li>
         <li class="grade" data-belt="amarillo">
           <div class="belt y">Amarillo</div>
           <div class="grade-body"><h3>Amarillo <small>5° kyu</small></h3>
-            <ul><li>Unos 6 meses de práctica (alrededor de 40 clases).</li><li>Las 9 técnicas del programa de blanco, por ambos lados.</li><li>Físico: 20 flexiones, 30 abdominales y 20 burpees en 60 segundos.</li></ul>
+            <ul><li>Unos 6 meses de práctica (alrededor de 40 clases).</li><li>Las 9 técnicas de blanco, por ambos lados.</li><li>Físico: 20 flexiones, 30 abdominales y 20 burpees en 60 segundos.</li></ul>
             <button type="button" class="grade-open">Ver técnicas</button></div>
         </li>
         <li class="grade" data-belt="naranja">
@@ -96,7 +82,7 @@
         <li class="grade" data-belt="verde">
           <div class="belt g">Verde</div>
           <div class="grade-body"><h3>Verde <small>3° kyu</small></h3>
-            <ul><li>Al menos 40 clases con cinturón naranja.</li><li>Combinaciones y contraataques; terminología y reglas de competencia.</li><li>10 puntos de competencia.</li><li>Físico: 30 flexiones, 45 abdominales y 27 burpees en 1 minuto.</li></ul>
+            <ul><li>Al menos 40 clases con cinturón naranja.</li><li>Combinaciones y contraataques. Terminología y reglas de competencia.</li><li>10 puntos de competencia.</li><li>Físico: 30 flexiones, 45 abdominales y 27 burpees en 1 minuto.</li></ul>
             <button type="button" class="grade-open">Ver técnicas</button></div>
         </li>
         <li class="grade" data-belt="azul">
@@ -118,7 +104,7 @@
             <button type="button" class="grade-open">Ver técnicas</button></div>
         </li>
       </ol>
-      <p class="source"><b>Puntos de competencia:</b> se ganan en torneos oficiales (2 por victoria ante un rango igual o superior, 1 ante un rango menor). Si no quieres competir, participar como voluntario en un torneo (árbitro, planillero u otro) suma 1 punto cada 2 horas. Fuente: Reglamento de ascenso grados kyu 2024–2028, Federación Deportiva Nacional de Judo de Chile.</p>
+      <p class="source"><b>Puntos de competencia:</b> se ganan en torneos oficiales (2 por victoria ante un rango igual o superior, 1 ante un rango menor). Si no quieres competir, participar como voluntario en un torneo (árbitro, planillero u otro) suma 1 punto cada 2 horas.</p>
     </div>
   </section>
 
@@ -143,9 +129,8 @@
           <h3>Tu primera clase</h3>
           <ul class="first-steps">
             <li><b>Es gratis.</b> Reserva como cualquier clase y avísanos al llegar.</li>
-            <li><b>Llega 10 minutos antes</b> para registrarte y calentar.</li>
             <li><b>Trae</b> agua y sandalias. Si aún no tienes judogi, ven con ropa deportiva sin cierres.</li>
-            <li><b>¿Dudas?</b> Escríbenos a <a data-site-href="email" data-site="contact.email" href="#">contacto@hccombat.com</a>.</li>
+            <li><b>¿Dudas?</b> Mándanos un mensaje por Instagram a <a data-site-href="instagramDm" href="https://ig.me/m/clubkizuna">@<span data-site="contact.instagram">clubkizuna</span></a>.</li>
           </ul>
           <div class="confirm" data-cal-confirm hidden>
             <div class="eyebrow">Reserva confirmada</div>
@@ -162,27 +147,14 @@
           <div class="cal-box" data-cal-inline>
             <p class="cal-loading">Cargando calendario…</p>
           </div>
-          <div class="notice" data-cal-fallback hidden><strong>Reservas en línea no disponibles por ahora.</strong> Aparta tu lugar escribiendo a <span data-site="contact.email">contacto@hccombat.com</span> o al <span data-site="contact.phone">+56 9 4796 6805</span>.</div>
+          <div class="notice" data-cal-fallback hidden><strong>Reservas en línea no disponibles por ahora.</strong> Aparta tu lugar con un mensaje por Instagram a <a data-site-href="instagramDm" href="https://ig.me/m/clubkizuna">@<span data-site="contact.instagram">clubkizuna</span></a> o por <a data-site-href="whatsapp" href="#">WhatsApp</a> al <span data-site="contact.phone">+56 9 4796 6805</span>.</div>
         </div>
       </div>
     </div>
   </section>
 </main>
 
-<footer>
-  <div class="wrap foot">
-    <div>
-      <div class="foot-big">Nos vemos<br>en el tatami.</div>
-      <p><span data-site="address.line">Av. Portugal 412, Oficina 605</span>, <span data-site="address.city">Santiago, RM</span></p>
-      <p data-site="address.note"></p>
-      <p><a data-site-href="maps" href="#">Cómo llegar</a></p>
-    </div>
-    <div><h4>Horario</h4><ul data-site-list="hours"><li>Clases según el calendario de reservas</li><li>Consultas por correo o WhatsApp</li></ul></div>
-    <div><h4>Contacto</h4><ul><li><a data-site-href="email" data-site="contact.email" href="#">contacto@hccombat.com</a></li><li><a data-site-href="phone" data-site="contact.phone" href="#">+56 9 4796 6805</a></li><li><a data-site-href="whatsapp" href="#">WhatsApp</a></li><li><a data-site-href="instagram" href="#">Instagram</a></li><li><a data-site-href="facebook" href="#">Facebook</a></li><li><a data-site-href="tiktok" href="#">TikTok</a></li></ul></div>
-    <div><h4>Explora</h4><ul><li><a href="judo.html">Judo</a></li><li><a href="bjj.html">BJJ</a></li><li><a href="index.html#reservas">Agendar clase</a></li><li><a href="index.html#planes">Planes</a></li><li><a href="blog.html">Blog</a></li></ul></div>
-  </div>
-  <div class="wrap foot-base"><span>© <span data-site="year">2026</span> <span data-site="name">Escuela de Artes Marciales Kizuna</span></span><span data-site="motto">Respeto · Disciplina · Constancia</span></div>
-</footer>
+<site-footer current="judo"></site-footer>
 
 <div class="modal" id="techModal" hidden role="dialog" aria-modal="true" aria-labelledby="techTitle">
   <div class="modal-card dark tech-card">

@@ -4,8 +4,9 @@
     {
       "name": "sitio",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "5173"],
-      "port": 5173
+      "runtimeArgs": ["-c", "import os, http.server as h; h.test(HandlerClass=h.SimpleHTTPRequestHandler, port=int(os.environ.get('PORT', 5173)))"],
+      "port": 5173,
+      "autoPort": true
     }
   ]
 }

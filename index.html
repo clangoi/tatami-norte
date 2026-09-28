@@ -276,17 +276,19 @@
   }));
   window.TNBooking.onSuccess(()=>toast('Reserva confirmada'));
 
-  /* plans */
-  const PLANS=[
+  /* plans: estos son los de respaldo; los editados en admin.html llegan
+     desde Firestore (js/content.js) y los reemplazan con TNPlans.set() */
+  let PLANS=[
     {id:'base',name:'Base',for:'Para empezar con una disciplina y crear el hábito.',feats:['1 disciplina a elegir','2 clases por semana','Evaluación de cinturón semestral']},
     {id:'ilim',name:'Ilimitado',for:'Entrena todo lo que quieras, en todas las disciplinas.',feat:true,feats:['Todas las disciplinas','Clases ilimitadas','Sala libre / Randoris','Físico incluido']},
     {id:'comp',name:'Competidor',for:'Para quien prepara torneos o peleas amateur.',feats:['Todo lo del plan Ilimitado','4 clases privadas al mes','Plan de fuerza y acondicionamiento','Esquina en torneos y corte de peso guiado']}
   ];
   // Precios desde site.config.js → prices (null = "Consultar")
   const PRICES=S.get('prices')||{}, DISCOUNT=S.get('annualDiscount')||0;
-  PLANS.forEach(p=>{ const v=PRICES[p.id]; p.m=(typeof v==='number'&&v>0)?v:null; });
-  const anyPrice=PLANS.some(p=>p.m!=null);
-  $('.toggle').hidden=!anyPrice;
+  const toPrice=v=>(typeof v==='number'&&v>0)?v:null;
+  PLANS.forEach(p=>{ p.m=toPrice(PRICES[p.id]); });
+  const syncToggle=()=>{ $('.toggle').hidden=!PLANS.some(p=>p.m!=null); };
+  syncToggle();
   if(DISCOUNT) $('.toggle em').textContent=`−${Math.round(DISCOUNT*100)}%`; else $('.toggle em').hidden=true;
   let cycle='mes';
   const price=p=>cycle==='mes'?p.m:Math.round(p.m*(1-DISCOUNT));
@@ -302,15 +304,15 @@
       const priced=p.m!=null;
       return `<article class="plan${p.feat?' feat':''}">
       ${p.feat?'<span class="badge">Más elegido</span>':''}
-      <h3>${p.name}</h3><p class="for">${p.for}</p>
+      <h3>${esc(p.name)}</h3><p class="for">${esc(p.for)}</p>
       ${priced
         ? `<div class="price"><b>${S.money(price(p))}</b><span>${S.currency} / mes</span></div>
            <div class="price-note">${cycle==='anual'?`Pago anual de ${S.money(price(p)*12)} · ahorras ${S.money((p.m-price(p))*12)}`:'Facturación mensual'}</div>`
         : `<div class="price"><b class="ask">Consultar</b></div>
            <div class="price-note">Escríbenos y te enviamos el valor.</div>`}
-      <ul>${p.feats.map(f=>`<li>${f}</li>`).join('')}</ul>
+      <ul>${p.feats.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>
       ${priced
-        ? `<button class="btn${p.feat?'':' ghost'}" data-plan="${p.id}">Suscribirme</button>`
+        ? `<button class="btn${p.feat?'':' ghost'}" data-plan="${esc(p.id)}">Suscribirme</button>`
         : `<a class="btn${p.feat?'':' ghost'}" href="${askUrl(p)}" target="_blank" rel="noopener">Consultar precio</a>`}
     </article>`;
     }).join('');
@@ -321,6 +323,13 @@
     renderPlans();
   }));
   renderPlans();
+  window.TNPlans={
+    set(list){
+      PLANS=list.map(p=>({id:p.id,name:p.name||'',for:p.for||'',feat:!!p.featured,feats:p.feats||[],m:toPrice(p.price)}));
+      syncToggle();
+      renderPlans();
+    }
+  };
 
   /* modals */
   let lastFocus=null;
@@ -354,5 +363,6 @@
 
 })();
 </script>
+<script type="module" src="js/content.js"></script>
 </body>
 </html>

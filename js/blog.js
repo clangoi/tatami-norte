@@ -9,9 +9,14 @@
 
    data-base: ruta hasta la raíz del sitio ("" en la raíz,
    "../" dentro de blog/).
+
+   Los artículos escritos en admin.html llegan después desde
+   Firestore (js/content.js) con TNBlog.add(lista).
    ========================================================== */
 (function(){
-  const all = (window.BLOG_POSTS || []).slice().sort((a, b) => b.date.localeCompare(a.date));
+  let all = [];
+  const setPosts = list => { all = list.slice().sort((a, b) => b.date.localeCompare(a.date)); };
+  setPosts(window.BLOG_POSTS || []);
   const locale = window.SITE_CONFIG?.currency?.locale || "es-CL";
 
   const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -19,21 +24,28 @@
   // Patrón de portada estable para cada artículo
   const pattern = slug => [...slug].reduce((n, c) => n + c.charCodeAt(0), 0) % 4;
 
+  // Los del panel se muestran todos con blog/articulo.html
+  const href = (p, base) => p.src === "db"
+    ? `${base}blog/articulo.html?p=${encodeURIComponent(p.slug)}`
+    : `${base}blog/${esc(p.slug)}.html`;
+
   function card(p, base, lead){
-    return `<a class="post${lead ? " lead" : ""}" href="${base}blog/${esc(p.slug)}.html">
-      <div class="cover"><div class="pat pat-${pattern(p.slug)}"></div><span class="big" aria-hidden="true">${esc(p.letter)}</span><span class="cat">${esc(p.cat)}</span></div>
+    return `<a class="post${lead ? " lead" : ""}" href="${href(p, base)}">
+      <div class="cover"><div class="pat pat-${p.pattern ?? pattern(p.slug)}"></div><span class="big" aria-hidden="true">${esc(p.letter)}</span><span class="cat">${esc(p.cat)}</span></div>
       <span class="meta">${fmtDate(p.date)} · ${p.read} min de lectura</span>
       <h3>${esc(p.title)}</h3><p class="ex">${esc(p.ex)}</p>
     </a>`;
   }
 
+  const renders = [];
+
   // Listado completo con filtros
   document.querySelectorAll("[data-blog-list]").forEach(el => {
     const base = el.dataset.base || "";
     const filters = document.querySelector("[data-blog-filters]");
-    const cats = ["Todo", ...new Set(all.map(p => p.cat))];
     let cur = "Todo";
     const render = () => {
+      const cats = ["Todo", ...new Set(all.map(p => p.cat))];
       const list = all.filter(p => cur === "Todo" || p.cat === cur);
       el.innerHTML = list.map((p, i) => card(p, base, i === 0 && list.length > 2)).join("") ||
         '<p class="empty">Todavía no hay artículos en esta categoría.</p>';
@@ -45,24 +57,46 @@
       cur = b.dataset.cat;
       render();
     });
-    render();
+    renders.push(render);
   });
 
   // Últimos N (portada)
   document.querySelectorAll("[data-blog-latest]").forEach(el => {
     const n = +el.dataset.blogLatest || 3;
-    el.innerHTML = all.slice(0, n).map(p => card(p, el.dataset.base || "", false)).join("");
+    renders.push(() => {
+      el.innerHTML = all.slice(0, n).map(p => card(p, el.dataset.base || "", false)).join("");
+    });
   });
 
   // Relacionados (al final de un artículo): primero la misma categoría
   document.querySelectorAll("[data-blog-related]").forEach(el => {
     const n = +el.dataset.blogRelated || 3;
-    const current = all.find(p => p.slug === el.dataset.current);
-    const others = all.filter(p => p.slug !== el.dataset.current);
-    const same = current ? others.filter(p => p.cat === current.cat) : [];
-    const list = [...same, ...others.filter(p => !same.includes(p))].slice(0, n);
-    el.innerHTML = list.map(p => card(p, el.dataset.base || "", false)).join("");
-    const wrap = el.closest("[data-blog-related-section]");
-    if (wrap && !list.length) wrap.hidden = true;
+    renders.push(() => {
+      const current = all.find(p => p.slug === el.dataset.current);
+      const others = all.filter(p => p.slug !== el.dataset.current);
+      const same = current ? others.filter(p => p.cat === current.cat) : [];
+      const list = [...same, ...others.filter(p => !same.includes(p))].slice(0, n);
+      el.innerHTML = list.map(p => card(p, el.dataset.base || "", false)).join("");
+      const wrap = el.closest("[data-blog-related-section]");
+      if (wrap) wrap.hidden = !list.length;
+    });
   });
+
+  const renderAll = () => renders.forEach(r => r());
+  renderAll();
+
+  window.TNBlog = {
+    // Suma artículos (p. ej. los de Firestore) y vuelve a dibujar.
+    // Si un slug ya existe como página en blog/, gana la página.
+    add(list){
+      const taken = new Set(all.map(p => p.slug));
+      setPosts([...all, ...list.filter(p => !taken.has(p.slug))]);
+      renderAll();
+    },
+    // Cambia el artículo actual de "Sigue leyendo" (blog/articulo.html)
+    setCurrent(slug){
+      document.querySelectorAll("[data-blog-related]").forEach(el => { el.dataset.current = slug; });
+      renderAll();
+    }
+  };
 })();

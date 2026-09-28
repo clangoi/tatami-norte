@@ -105,5 +105,17 @@ window.SITE_CONFIG = {
       { label: "Físico",    slug: "fisico",         tone: "acero",  page: "" },
       { label: "Sala libre / Randoris", slug: "sala-libre-randoris", tone: "linea", page: "" }
     ]
+  },
+
+  /* ---- Firebase (blog y planes editables desde admin.html) · ver ADMIN.md ----
+     Estos datos son públicos por diseño: la seguridad la dan las
+     reglas de Firestore (firestore.rules), no esta llave. */
+  firebase: {
+    apiKey: "AIzaSyB-BPwnUte7q5hTJJKU64IyirbbFOZXHVw",
+    authDomain: "kizuna-admin-25951.firebaseapp.com",
+    projectId: "kizuna-admin-25951",
+    storageBucket: "kizuna-admin-25951.firebasestorage.app",
+    messagingSenderId: "872289691724",
+    appId: "1:872289691724:web:dbaf2de87bd7ecd373ece9"
   }
 };

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="es">
+<head>
+<!--
+  PANEL DE ADMINISTRACIÓN (ver ADMIN.md)
+  Escribe artículos del blog y edita los planes. Los datos se guardan
+  en Firestore; el sitio los lee con js/content.js.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1B2338">
+<title data-site-title="Panel">Panel · Escuela de Artes Marciales Kizuna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/articulo.css">
+<link rel="stylesheet" href="css/pages/admin.css">
+</head>
+<body>
+<nav class="nav" aria-label="Panel">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="brand-mark" data-site="initial">K</span><span class="brand-name">Panel <span data-site="shortName">Kizuna</span></span></a>
+    <div class="adm-nav">
+      <span class="adm-user" id="who" hidden></span>
+      <a class="btn small ghost" href="index.html" target="_blank" rel="noopener">Ver sitio</a>
+      <button class="btn small ghost" id="logout" type="button" hidden>Salir</button>
+    </div>
+  </div>
+</nav>
+
+<main class="adm">
+
+  <!-- Cargando sesión -->
+  <section class="wrap adm-center" id="vLoading">
+    <p class="adm-loading">Conectando…</p>
+  </section>
+
+  <!-- Inicio de sesión -->
+  <section class="wrap adm-center" id="vLogin" hidden>
+    <form class="panel adm-login" id="loginForm" novalidate>
+      <h3>Entrar al panel</h3>
+      <p class="hint">Solo para el equipo de la escuela.</p>
+      <div class="field"><label for="lEmail">Correo</label><input id="lEmail" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="lPass">Contraseña</label><input id="lPass" type="password" autocomplete="current-password" required></div>
+      <div class="err" id="lErr" role="alert"></div>
+      <button class="btn block" type="submit">Entrar</button>
+      <button class="adm-link" id="forgot" type="button">Olvidé mi contraseña</button>
+    </form>
+  </section>
+
+  <!-- Sesión iniciada pero sin permiso -->
+  <section class="wrap adm-center" id="vDenied" hidden>
+    <div class="panel adm-login">
+      <h3>Sin permiso de admin</h3>
+      <p class="hint">Tu cuenta existe, pero todavía no está en la lista de administradores.</p>
+      <ol class="adm-steps">
+        <li>En Firebase abre <b>Firestore Database → Datos</b>.</li>
+        <li>Crea la colección <code>admins</code>.</li>
+        <li>Agrega un documento cuyo <b>ID</b> sea este UID:</li>
+      </ol>
+      <div class="adm-uid"><code id="uid"></code><button class="btn small ghost" id="copyUid" type="button">Copiar</button></div>
+      <p class="hint">Dale un campo <code>email</code> (texto) con tu correo y recarga esta página.</p>
+      <button class="btn ghost block" type="button" data-logout>Salir</button>
+    </div>
+  </section>
+
+  <!-- Panel -->
+  <section id="vApp" hidden>
+    <div class="wrap adm-head">
+      <div><div class="eyebrow">Administración</div><h1>Panel</h1></div>
+      <div class="filters" role="tablist" aria-label="Secciones">
+        <button type="button" role="tab" aria-pressed="true" data-tab="blog">Blog</button>
+        <button type="button" role="tab" aria-pressed="false" data-tab="plans">Planes</button>
+      </div>
+    </div>
+
+    <!-- ===== Blog ===== -->
+    <div class="wrap" data-view="blog">
+      <div id="postList">
+        <div class="adm-bar">
+          <h2>Artículos</h2>
+          <button class="btn" type="button" id="newPost">Nuevo artículo</button>
+        </div>
+        <div class="adm-rows" id="posts"></div>
+      </div>
+
+      <form id="postForm" class="adm-editor" hidden novalidate>
+        <div class="adm-bar">
+          <h2 id="postFormTitle">Nuevo artículo</h2>
+          <div class="adm-actions">
+            <button class="btn ghost" type="button" data-cancel>Cancelar</button>
+            <button class="btn" type="submit">Guardar</button>
+          </div>
+        </div>
+        <div class="adm-split">
+          <div>
+            <div class="field"><label for="fTitle">Título</label><input id="fTitle" maxlength="160" required></div>
+            <div class="field">
+              <label for="fSlug">Dirección</label>
+              <div class="adm-slug"><span>/blog/articulo?p=</span><input id="fSlug" pattern="[a-z0-9\-]+" maxlength="80" required></div>
+              <small class="adm-help">Solo minúsculas, números y guiones. No se puede cambiar después de guardar.</small>
+            </div>
+            <div class="field"><label for="fEx">Resumen</label><textarea id="fEx" rows="2" maxlength="300" placeholder="Una o dos líneas. Aparece en las tarjetas y en Google."></textarea></div>
+            <div class="row2">
+              <div class="field"><label for="fCat">Categoría</label><input id="fCat" list="cats" maxlength="30"><datalist id="cats"></datalist></div>
+              <div class="field"><label for="fDate">Fecha</label><input id="fDate" type="date" required></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label for="fLetter">Letras de portada</label><input id="fLetter" maxlength="3" placeholder="JU"></div>
+              <div class="field"><label for="fPat">Fondo de portada</label>
+                <select id="fPat"><option value="0">Rayas diagonales</option><option value="1">Brillo bronce</option><option value="2">Franjas</option><option value="3">Degradado</option></select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="fBody">Texto</label>
+              <div class="adm-tools" role="toolbar" aria-label="Formato">
+                <button type="button" data-md="h2" title="Subtítulo">Subtítulo</button>
+                <button type="button" data-md="bold" title="Negrita"><b>N</b></button>
+                <button type="button" data-md="italic" title="Cursiva"><i>C</i></button>
+                <button type="button" data-md="link" title="Enlace">Enlace</button>
+                <button type="button" data-md="ul" title="Lista">Lista</button>
+                <button type="button" data-md="quote" title="Cita">Cita</button>
+              </div>
+              <textarea id="fBody" rows="18" placeholder="Escribe aquí. Deja una línea en blanco entre párrafos."></textarea>
+              <small class="adm-help"><code>## Subtítulo</code> · <code>**negrita**</code> · <code>*cursiva*</code> · <code>[texto](https://…)</code> · <code>- lista</code> · <code>&gt; cita</code> · <span id="readInfo"></span></small>
+            </div>
+            <label class="check"><input type="checkbox" id="fPublished"> Publicado (si no, queda como borrador y no aparece en el sitio)</label>
+            <div class="err" id="postErr" role="alert"></div>
+          </div>
+          <div class="adm-preview" aria-label="Vista previa">
+            <div class="adm-preview-label">Vista previa</div>
+            <div class="posts adm-card-preview"><div class="post" id="pvCard"></div></div>
+            <div class="light adm-body-preview"><h1 class="adm-pv-title" id="pvTitle"></h1><div class="post-body" id="pvBody"></div></div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- ===== Planes ===== -->
+    <div class="wrap" data-view="plans" hidden>
+      <div id="planList">
+        <div class="adm-bar">
+          <h2>Planes de suscripción</h2>
+          <button class="btn" type="button" id="newPlan">Nuevo plan</button>
+        </div>
+        <p class="adm-help adm-note">El orden de esta lista es el orden en el sitio. Los planes ocultos no se muestran. El descuento anual se configura en <code>site.config.js</code>.</p>
+        <div class="adm-rows" id="plansRows"></div>
+      </div>
+
+      <form id="planForm" class="adm-editor" hidden novalidate>
+        <div class="adm-bar">
+          <h2 id="planFormTitle">Nuevo plan</h2>
+          <div class="adm-actions">
+            <button class="btn ghost" type="button" data-cancel>Cancelar</button>
+            <button class="btn" type="submit">Guardar</button>
+          </div>
+        </div>
+        <div class="adm-split">
+          <div>
+            <div class="field"><label for="gName">Nombre</label><input id="gName" maxlength="60" required></div>
+            <div class="field"><label for="gFor">Para quién es</label><input id="gFor" maxlength="140" placeholder="Para empezar con una disciplina y crear el hábito."></div>
+            <div class="field">
+              <label for="gPrice">Precio mensual (<span data-currency></span>)</label>
+              <input id="gPrice" inputmode="numeric" autocomplete="off" placeholder="Vacío = “Consultar”">
+              <small class="adm-help">Por ejemplo 45.000. Déjalo vacío para mostrar “Consultar precio”.</small>
+            </div>
+            <div class="field"><label for="gFeats">Qué incluye</label><textarea id="gFeats" rows="6" placeholder="Un beneficio por línea"></textarea></div>
+            <label class="check"><input type="checkbox" id="gFeatured"> Destacado (“Más elegido”)</label>
+            <label class="check"><input type="checkbox" id="gVisible" checked> Visible en el sitio</label>
+            <div class="err" id="planErr" role="alert"></div>
+          </div>
+          <div class="adm-preview" aria-label="Vista previa">
+            <div class="adm-preview-label">Vista previa</div>
+            <div class="plans adm-plan-preview" id="pvPlan"></div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script src="site.config.js"></script>
+<script src="js/site.js"></script>
+<script src="js/posts.js"></script>
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

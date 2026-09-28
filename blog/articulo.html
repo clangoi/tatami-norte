@@ -1,14 +1,19 @@
 <!doctype html>
 <html lang="es">
 <head>
+<!--
+  ARTÍCULO DEL PANEL (admin.html)
+  Muestra cualquier artículo guardado en Firestore: articulo.html?p=<slug>
+  No se edita a mano. Los artículos escritos a mano van en su propia página (ver BLOG.md).
+-->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Si se te cansan los antebrazos a mitad del randori, empieza por aquí.">
+<meta name="description" content="">
 <meta name="theme-color" content="#1B2338">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Tres ejercicios de agarre para grappling">
-<meta property="og:description" content="Si se te cansan los antebrazos a mitad del randori, empieza por aquí.">
-<title data-site-title="Tres ejercicios de agarre para grappling">Tres ejercicios de agarre para grappling · Escuela de Artes Marciales Kizuna</title>
+<meta property="og:title" content="">
+<meta property="og:description" content="">
+<title data-site-title="Blog">Blog · Escuela de Artes Marciales Kizuna</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
@@ -36,16 +41,16 @@
 </nav>
 
 <header class="post-hero">
-  <div class="pat pat-2"></div>
-  <span class="big" aria-hidden="true">FX</span>
+  <div class="pat pat-0" data-a="pat"></div>
+  <span class="big" aria-hidden="true" data-a="letter"></span>
   <div class="wrap">
     <a class="back" href="../blog.html">← Blog</a><br>
-    <span class="cat">Físico</span>
-    <h1>Tres ejercicios de agarre para grappling</h1>
-    <div class="post-meta">
+    <span class="cat" data-a="cat" hidden></span>
+    <h1 data-a="title">Cargando…</h1>
+    <div class="post-meta" data-a="meta" hidden>
       <span>Por <b>Equipo <span data-site="shortName">Kizuna</span></b></span>
-      <time datetime="2026-08-18">18 ago 2026</time>
-      <span>5 min de lectura</span>
+      <time data-a="date"></time>
+      <span data-a="read"></span>
     </div>
   </div>
 </header>
@@ -53,16 +58,7 @@
 <main>
   <article class="sec light">
     <div class="wrap">
-      <div class="post-body">
-        <p class="lede">En BJJ con gi y en Judo, el agarre decide quién controla. Unos antebrazos fuertes te dejan sostener la solapa y la manga sin quemarte en el primer minuto.</p>
-        <h2>Colgarse de una toalla o un gi</h2>
-        <p>Pasa una toalla o un gi viejo por la barra y cuélgate agarrando la tela. Empieza con 3 series de 20 segundos y sube de 5 en 5.</p>
-        <h2>Remo con agarre de tela</h2>
-        <p>El mismo agarre, pero en un remo invertido o con mancuerna. Trabajas espalda y antebrazo al mismo tiempo, como cuando jalas a tu compañero.</p>
-        <h2>Caminata de granjero</h2>
-        <p>Carga pesada en cada mano y camina 30 metros sin soltar. Es simple, se nota rápido y también fortalece el core.</p>
-        <p>Dos sesiones por semana bastan. No las hagas justo antes de una clase: llega con los antebrazos frescos.</p>
-      </div>
+      <div class="post-body" data-a="body"></div>
       <aside class="post-cta">
         <p>¿Lo probamos en el tatami?<span>Tu primera clase es gratis. Reserva en línea en un minuto.</span></p>
         <a class="btn dark" href="../index.html#reservas">Reservar clase</a>
@@ -70,13 +66,13 @@
     </div>
   </article>
 
-  <section class="sec" data-blog-related-section>
+  <section class="sec" data-blog-related-section hidden>
     <div class="wrap">
       <div class="sec-head">
         <div><div class="eyebrow">Blog</div><h2>Sigue leyendo</h2></div>
         <a class="btn ghost" href="../blog.html">Ver todo el blog</a>
       </div>
-      <div class="posts related" data-blog-related="3" data-base="../" data-current="ejercicios-de-agarre-grappling"></div>
+      <div class="posts related" data-blog-related="3" data-base="../" data-current=""></div>
     </div>
   </section>
 </main>
@@ -100,6 +96,6 @@
 <script src="../js/site.js"></script>
 <script src="../js/posts.js"></script>
 <script src="../js/blog.js"></script>
-<script type="module" src="../js/content.js"></script>
+<script type="module" src="../js/articulo.js"></script>
 </body>
 </html>

@@ -89,7 +89,7 @@
 .mb-link:hover{color:var(--gold)}
 
 /* ---- Planes de suscripción ---- */
-.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;align-items:stretch}
 @media (max-width:920px){.plans{grid-template-columns:1fr;max-width:520px}}
 .plan{border:1px solid var(--line);padding:32px 28px;display:flex;flex-direction:column;gap:18px;background:var(--navy)}
 .plan h3{font-size:40px}
@@ -219,3 +219,7 @@
 /* Selector de duración dentro de una clase (p. ej. Judo 1 h / 1 h 15) */
 .cal-variants{margin-top:-4px}
 .cal-variants button{font-size:12px;padding:8px 12px}
+/* Fecha bajo cada día y rango de la semana mostrada */
+.sch-date{display:block;margin-top:6px;font:500 12px/1 var(--label);letter-spacing:.1em;color:var(--steel)}
+.sch-list-day h3 .sch-date{display:inline;margin:0 0 0 8px;vertical-align:middle}
+.sch-range{margin:-24px 0 18px;color:var(--steel);font:600 14px/1 var(--label);letter-spacing:.14em;text-transform:uppercase}

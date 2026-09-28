@@ -23,7 +23,7 @@ window.SITE_CONFIG = {
   contact: {
     phone: "+56 9 4796 6805",
     whatsapp: "56947966805",                     // solo dígitos con código de país
-    instagram: "clubkizuna",                     // sin @
+    instagram: "clubkizunajudo",                 // sin @ · cambiar a "clubkizuna" cuando se renombre la cuenta
     facebook: "",
     tiktok: ""
   },
@@ -70,7 +70,7 @@ window.SITE_CONFIG = {
      2. Pega aquí su URL (https://feeds.behold.so/...).
      Sin URL, la sección muestra solo el botón para seguir la cuenta. */
   instagramFeed: {
-    url: "https://feeds.behold.so/TLliuxq76nn5STiVhwCw",
+    url: "https://feeds.behold.so/LXNWcDXcHb0Zzx0wsqWb",
     count: 6                                     // el plan gratuito entrega hasta 6
   },
 

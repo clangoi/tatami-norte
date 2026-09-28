@@ -113,3 +113,7 @@
 .adm-pay-side{text-align:right;font-size:14px;color:var(--text-soft);display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .adm-danger-link{color:var(--danger);margin:0;padding:0}
 .adm-danger-link:hover{color:var(--cream)}
+.adm-pays b.is-void{text-decoration:line-through;color:var(--steel)}
+.adm-pays .adm-tag{display:inline-block;margin:6px 0 2px}
+.adm-orphans{margin:10px 0 6px;display:flex;flex-direction:column;gap:14px}
+.adm-orphans .adm-pays li{border-color:rgba(214,189,140,.25)}

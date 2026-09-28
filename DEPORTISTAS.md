@@ -56,7 +56,7 @@ Reservar solo exige tener cuenta y perfil completo (nombre, apellido y teléfono
 
 ## Límites actuales
 
-- **Los pagos se registran a mano en el panel**, también los de Mercado Pago. Para suscribirse en línea hay que tener cuenta (`athletes.payRequiresAccount` en `site.config.js`), y el pago llega a Mercado Pago con el UID del deportista en la **Referencia externa**. Con eso lo ubicas y lo registras en su ficha con el medio "Mercado Pago". Hacerlo automático requiere un webhook de Mercado Pago y una cuenta de servicio de Firebase.
+- **Los pagos de Mercado Pago se registran solos** y extienden la membresía (ver "Registro automático" en `PAGOS.md`). Los pagos en efectivo o por transferencia se registran a mano en el panel. Para suscribirse en línea hay que tener cuenta (`athletes.payRequiresAccount` en `site.config.js`).
 - **El bloqueo del calendario es del sitio.** Alguien que conozca la dirección directa de Cal.com (`cal.com/hccombat/...`) podría reservar sin cuenta. Para impedirlo del todo hace falta revisar cada reserva contra la lista de deportistas con un webhook de Cal.com.
 - **La escuela no crea cuentas desde el panel.** Requiere el Admin SDK de Firebase en una función de servidor.
 - Para desactivar el requisito de cuenta, en `site.config.js` → `booking.requireAccount: false`.

@@ -15,6 +15,8 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const parseAmount = v => { const d = String(v).replace(/\D/g, ""); return d ? +d : null; };
 const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const DISCIPLINES = S.config.athletes?.disciplines || [];
+// Pagos de Mercado Pago revertidos (los marca api/mp-webhook.js)
+const ESTADOS = { refunded: "Reembolsado", charged_back: "Contracargo", cancelled: "Anulado" };
 
 let toast = () => {}, saveError = e => String(e);
 let athletes = [];       // [{ uid, ...ficha }]
@@ -37,15 +39,18 @@ async function load(){
   loaded = true;
   $("#athRows").innerHTML = '<p class="adm-loading">Cargando deportistas…</p>';
   try {
-    const [a, p, pays] = await Promise.all([
+    const [a, p, pays, orphans] = await Promise.all([
       fs.getDocs(fs.collection(db, "athletes")),
       fs.getDocs(fs.collection(db, "plans")),
-      fs.getDocs(fs.query(fs.collection(db, "payments"), fs.where("date", ">=", today().slice(0, 7) + "-01")))
+      fs.getDocs(fs.query(fs.collection(db, "payments"), fs.where("date", ">=", today().slice(0, 7) + "-01"))),
+      // Pagos de Mercado Pago que el webhook no pudo asociar a una cuenta
+      fs.getDocs(fs.query(fs.collection(db, "payments"), fs.where("uid", "==", "")))
     ]);
     athletes = a.docs.map(d => ({ ...d.data(), uid: d.id }))
       .sort((x, y) => norm(fullName(x)).localeCompare(norm(fullName(y))));
     plans = p.docs.map(d => ({ ...d.data(), id: d.id })).sort((x, y) => (x.order ?? 0) - (y.order ?? 0));
-    renderStats(pays.docs.map(d => d.data()));
+    renderStats(pays.docs.map(d => d.data()).filter(x => !x.estado));
+    renderOrphans(orphans.docs.map(d => ({ ...d.data(), id: d.id })));
     renderList();
   } catch (e) {
     console.warn(e);
@@ -62,6 +67,29 @@ function renderStats(monthPays){
     <span><b>${aldia}</b> al día</span>
     <span><b>${S.money(total)}</b> cobrado este mes</span>`;
 }
+
+// Aviso con los pagos sin deportista: se asignan con el correo o el UID
+function renderOrphans(list){
+  const box = $("#athOrphans");
+  box.hidden = !list.length;
+  box.innerHTML = list.length ? `<p><strong>${list.length === 1 ? "1 pago de Mercado Pago" : list.length + " pagos de Mercado Pago"} sin cuenta asociada.</strong>
+    Quien pagó no tenía cuenta con ese correo. Pídele que cree su cuenta y regístrale el pago en su ficha; después borra el pago de esta lista.</p>
+    <ul class="adm-pays">${list.sort((x, y) => y.date.localeCompare(x.date)).map(p => `<li>
+      <div><b>${S.money(p.amount)}</b><span>${esc([p.athleteName, p.payerEmail].filter(Boolean).join(" · "))}</span><small>${esc(p.note || "")}</small></div>
+      <div class="adm-pay-side">${fmtDate(p.date)}<button class="adm-link adm-danger-link" type="button" data-orphan-del="${esc(p.id)}">Borrar</button></div>
+    </li>`).join("")}</ul>` : "";
+}
+
+$("#athOrphans").addEventListener("click", async e => {
+  const b = e.target.closest("[data-orphan-del]"); if (!b) return;
+  if (!confirm("¿Borrar este pago de la lista? Hazlo solo después de registrarlo en la ficha del deportista.")) return;
+  try {
+    await fs.deleteDoc(fs.doc(db, "payments", b.dataset.orphanDel));
+    b.closest("li").remove();
+    if (!$("#athOrphans li")) $("#athOrphans").hidden = true;
+    toast("Pago borrado");
+  } catch (err) { alert(saveError(err)); }
+});
 
 /* ---------- Lista ---------- */
 function renderList(){
@@ -277,7 +305,7 @@ async function loadPayments(){
     if (current?.uid !== uid) return;
     const list = snap.docs.map(d => ({ ...d.data(), id: d.id })).sort((a, b) => b.date.localeCompare(a.date));
     box.innerHTML = list.length ? `<ul class="adm-pays">${list.map(p => `<li>
-        <div><b>${S.money(p.amount)}</b><span>${esc([METHODS[p.method], p.planName && "Plan " + p.planName].filter(Boolean).join(" · "))}</span>${p.note ? `<small>${esc(p.note)}</small>` : ""}</div>
+        <div><b${p.estado ? ' class="is-void"' : ""}>${S.money(p.amount)}</b>${p.estado ? `<span class="adm-tag warn">${esc(ESTADOS[p.estado] || p.estado)}</span>` : ""}<span>${esc([METHODS[p.method], p.planName && "Plan " + p.planName].filter(Boolean).join(" · "))}</span>${p.note ? `<small>${esc(p.note)}</small>` : ""}</div>
         <div class="adm-pay-side">${fmtDate(p.date)}<button class="adm-link adm-danger-link" type="button" data-pay-del="${esc(p.id)}">Borrar</button></div>
       </li>`).join("")}</ul>` : '<p class="adm-empty">Sin pagos registrados.</p>';
   } catch (e) {

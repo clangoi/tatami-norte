@@ -230,7 +230,7 @@ async function loadPayments(){
     const list = (await fs.getDocs(q)).docs.map(d => d.data()).sort((a, b) => b.date.localeCompare(a.date));
     box.innerHTML = list.length
       ? `<ul class="acc-pays">${list.map(p => `<li>
-          <div><b>${S.money(p.amount)}</b><span>${esc(p.planName ? "Plan " + p.planName : METHODS[p.method] || "")}</span></div>
+          <div><b>${S.money(p.amount)}</b><span>${esc(p.planName ? "Plan " + p.planName : METHODS[p.method] || "")}${p.estado ? " · Reembolsado" : ""}</span></div>
           <div class="acc-pay-meta">${fmtDate(p.date)}<span>${esc(METHODS[p.method] || "")}</span></div>
         </li>`).join("")}</ul>`
       : '<p class="acc-help">Todavía no hay pagos registrados.</p>';

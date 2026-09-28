@@ -161,15 +161,15 @@
 .ig-handle{font-size:clamp(40px,6.5vw,84px);text-transform:none;letter-spacing:0;overflow-wrap:anywhere}
 .ig-head-side{display:flex;flex-direction:column;align-items:flex-start;gap:18px;max-width:42ch}
 .ig-head-side p{color:var(--text-soft)}
-.ig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-@media (max-width:640px){.ig-grid{grid-template-columns:repeat(2,1fr);gap:6px}}
+.ig-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+@media (max-width:900px){.ig-grid{grid-template-columns:repeat(3,1fr);gap:6px}}
 .ig-tile{position:relative;display:block;aspect-ratio:1;max-width:100%;overflow:hidden;background:var(--navy-2);text-decoration:none}
 .ig-tile img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
 .ig-tile:hover img,.ig-tile:focus-visible img{transform:scale(1.05)}
-.ig-caption{position:absolute;inset:auto 0 0 0;padding:40px 16px 14px;background:linear-gradient(transparent,rgba(20,26,43,.92));color:var(--cream);font-size:14px;line-height:1.4;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s}
+.ig-caption{position:absolute;inset:auto 0 0 0;padding:28px 10px 10px;background:linear-gradient(transparent,rgba(20,26,43,.92));color:var(--cream);font-size:12px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s}
 .ig-tile:hover .ig-caption,.ig-tile:focus-visible .ig-caption{opacity:1;transform:none}
 @media (hover:none){.ig-caption{display:none}}
-.ig-badge{position:absolute;top:10px;right:10px;background:var(--gold);color:var(--navy);font:700 11px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;padding:6px 8px}
+.ig-badge{position:absolute;top:6px;right:6px;background:var(--gold);color:var(--navy);font:700 10px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;padding:5px 6px}
 .ig-skel{background:linear-gradient(100deg,var(--navy-2) 40%,var(--navy-3) 50%,var(--navy-2) 60%) 0 0/200% 100%;animation:ig-shimmer 1.4s linear infinite}
 @keyframes ig-shimmer{to{background-position:-200% 0}}
 

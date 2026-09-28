@@ -22,10 +22,6 @@
 .vs-card dt{font:600 13px/1.6 var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--steel)}
 .vs-card dd{margin:0}
 
-/* Imagen del cinturón (judo.html) */
-.belt-img{display:block;width:100%;height:auto}
-@media (max-width:620px){.grade .belt-img{max-width:140px}}
-
 /* Lista de grados sin la punta negra de BJJ */
 .grades.plain .belt::after{display:none}
 
@@ -43,10 +39,13 @@
 
 /* Ventana de técnicas */
 .tech-card.modal-card.dark{max-width:980px;padding:28px}
-.tech-head{display:grid;grid-template-columns:150px 1fr;gap:6px 24px;align-items:center;padding-right:48px;margin-bottom:22px}
-.tech-head h3{font-size:40px;font-weight:800}
-.tech-head h3 small{font:600 13px/1 var(--label);letter-spacing:.14em;color:var(--steel);margin-left:10px;vertical-align:middle}
-.tech-head p{grid-column:2;color:var(--text-soft);font-size:16px;margin:0}
+.tech-head{margin-bottom:22px}
+/* Franja del cinturón a todo el ancho; el botón de cerrar va encima, a la derecha */
+.tech-head .belt{height:68px;padding:0 72px 0 20px;margin-bottom:16px;gap:14px;font:800 34px/1 var(--display);letter-spacing:.04em}
+.tech-head .belt::after{display:none}
+.tech-head .belt small{font:700 15px/1 var(--label);letter-spacing:.16em;opacity:.8}
+.tech-card .modal-close{top:42px;right:42px}
+.tech-head p{color:var(--text-soft);font-size:16px;margin:0}
 .tech-player{position:relative;aspect-ratio:16/9;background:#000;scroll-margin:16px}
 .tech-player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .tech-now{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 0 4px;font:700 15px/1.2 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
@@ -67,9 +66,7 @@
 .tech-foot a{color:var(--text-soft)}
 @media (max-width:620px){
   .tech-card.modal-card.dark{padding:20px 16px}
-  .tech-head{grid-template-columns:1fr;padding-right:48px}
-  .tech-head .belt-img{max-width:140px}
-  .tech-head h3{font-size:32px}
-  .tech-head p{grid-column:1}
+  .tech-head .belt{height:56px;padding:0 60px 0 14px;font-size:26px}
+  .tech-card .modal-close{top:28px;right:24px}
   .tech-list{grid-template-columns:repeat(2,1fr)}
 }

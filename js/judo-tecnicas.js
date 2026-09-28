@@ -16,7 +16,7 @@
 
   const BELTS = {
     blanco: {
-      name: "Blanco", grade: "6° kyu", img: "white",
+      name: "Blanco", grade: "6° kyu", cls: "w",
       intro: "Lo que aprendes con cinturón blanco para rendir el examen a amarillo.",
       groups: [
         { title: "Nage-waza · Proyecciones", items: [
@@ -40,7 +40,7 @@
       ]
     },
     amarillo: {
-      name: "Amarillo", grade: "5° kyu", img: "yellow",
+      name: "Amarillo", grade: "5° kyu", cls: "y",
       intro: "Lo que aprendes con cinturón amarillo para rendir el examen a naranja.",
       groups: [
         { title: "Nage-waza · Proyecciones", items: [
@@ -64,7 +64,7 @@
       ]
     },
     naranja: {
-      name: "Naranja", grade: "4° kyu", img: "orange",
+      name: "Naranja", grade: "4° kyu", cls: "o",
       intro: "Lo que aprendes con cinturón naranja para rendir el examen a verde.",
       groups: [
         { title: "Nage-waza · Proyecciones", items: [
@@ -90,7 +90,7 @@
       ]
     },
     verde: {
-      name: "Verde", grade: "3° kyu", img: "green",
+      name: "Verde", grade: "3° kyu", cls: "g",
       intro: "Lo que aprendes con cinturón verde para rendir el examen a azul.",
       groups: [
         { title: "Nage-waza · Proyecciones", items: [
@@ -108,7 +108,7 @@
       ]
     },
     azul: {
-      name: "Azul", grade: "2° kyu", img: "blue",
+      name: "Azul", grade: "2° kyu", cls: "b",
       intro: "Lo que aprendes con cinturón azul para rendir el examen a café.",
       groups: [
         { title: "Nage-waza · Proyecciones", items: [
@@ -126,7 +126,7 @@
       ]
     },
     cafe: {
-      name: "Café", grade: "1° kyu", img: "brown",
+      name: "Café", grade: "1° kyu", cls: "br",
       intro: "Lo que aprendes con cinturón café para rendir el examen a negro.",
       groups: [
         { title: "Nage-waza · Proyecciones", items: [
@@ -147,7 +147,7 @@
       ]
     },
     negro: {
-      name: "Negro", grade: "1er dan", img: "black",
+      name: "Negro", grade: "1er dan", cls: "k",
       intro: "El examen a 1er dan sigue el reglamento de dan de la Federación. Estas son las dos kata del Kodokan que se preparan para el grado.",
       groups: [
         { title: "Kata", items: [
@@ -178,9 +178,8 @@
   function render(key){
     const b = BELTS[key];
     const belt = $("[data-tech-belt]");
-    belt.src = `assets/images/content/${b.img}_belt.webp`;
-    belt.alt = `Cinturón ${b.name.toLowerCase()}`;
-    $("#techTitle").innerHTML = `${esc(b.name)} <small>${esc(b.grade)}</small>`;
+    belt.className = `belt ${b.cls}`;
+    belt.innerHTML = `${esc(b.name)} <small>${esc(b.grade)}</small>`;
     $("[data-tech-intro]").textContent = b.intro;
 
     $("[data-tech-groups]").innerHTML = b.groups.map(g => {

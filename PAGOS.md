@@ -33,7 +33,7 @@ La función no corre con `python -m http.server`; se prueba en Vercel (o con `ve
 En tu cuenta de Mercado Pago → **Actividad**. Cada pago trae:
 
 - El nombre del plan y el periodo en el detalle.
-- En **Referencia externa**: `plan|periodo|fecha de inicio|correo`, p. ej. `ilim|mes|2026-10-01|ana@correo.cl`.
+- En **Referencia externa**: `plan|periodo|fecha de inicio|correo|UID`, p. ej. `ilim|mes|2026-10-01|ana@correo.cl|Xk3…`. El UID identifica la cuenta del deportista (ver `DEPORTISTAS.md`).
 
 Mercado Pago le envía el comprobante al alumno, y a ti un aviso por cada pago recibido.
 
@@ -44,4 +44,4 @@ Mercado Pago lo devuelve a `/?pago=ok`, `/?pago=pendiente` o `/?pago=error`, y e
 ## Pendiente (si se necesita más adelante)
 
 - **Cobro automático cada mes** (suscripción de Mercado Pago): hoy cada mes se paga por separado.
-- **Registrar los pagos en el panel**: requiere un webhook y una cuenta de servicio de Firebase.
+- **Registrar los pagos en el panel automáticamente**: requiere un webhook y una cuenta de servicio de Firebase. Mientras tanto, regístralos a mano en `/admin` → **Deportistas** con el medio "Mercado Pago".

@@ -3,10 +3,12 @@
    Inicio de sesión con Firebase Auth y edición de:
    posts/{slug}  artículos del blog (texto en Markdown, js/markdown.js)
    plans/{id}    planes de suscripción
+   Deportistas y pagos: js/admin-deportistas.js
    Quién puede entrar lo deciden admins/{uid} y firestore.rules.
    ========================================================== */
 import { SDK, app, db, fs } from "./firebase.js";
 import { toHtml, readingMinutes } from "./markdown.js";
+import { initAthletes } from "./admin-deportistas.js";
 
 const {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail
@@ -58,6 +60,7 @@ window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); 
 const confirmLeave = () => !dirty || confirm("Tienes cambios sin guardar. ¿Descartarlos?");
 
 /* ---------- Sesión ---------- */
+let athletesReady = false;
 onAuthStateChanged(auth, async user => {
   $("#logout").hidden = !user;
   $("#who").hidden = !user;
@@ -77,6 +80,7 @@ onAuthStateChanged(auth, async user => {
   show("vApp");
   loadPosts();
   loadPlans();
+  if (!athletesReady) { initAthletes({ toast, saveError }); athletesReady = true; }
 });
 
 $("#loginForm").addEventListener("submit", async e => {

@@ -10,7 +10,7 @@
      <site-nav current="judo" cta="#reservar"></site-nav>
      <site-footer></site-footer>
 
-   current: inicio | judo | bjj | blog  → marca el enlace activo.
+   current: inicio | judo | bjj | blog | cuenta  → marca el enlace activo.
             En "inicio" los enlaces son anclas de la misma página.
    cta:     destino del botón "Clase gratis" (por defecto, las
             reservas de la portada).
@@ -52,6 +52,7 @@
       <a href="${p.sec("horario")}">Horario</a>
       <a href="${p.sec("planes")}">Planes</a>
       <a href="${p.page("blog.html")}"${mark("blog")}>Blog</a>
+      <a href="${p.page("cuenta.html")}"${mark("cuenta")} data-account-link>Mi cuenta</a>
       <a class="btn small" href="${cta}">Clase gratis</a>
     </div>
   </div>`;

@@ -92,6 +92,7 @@ window.SITE_CONFIG = {
      variants: varios eventos de Cal.com que en el sitio son una sola clase
      (en reservas aparece un selector de duración). */
   booking: {
+    requireAccount: true,                        // solo deportistas con cuenta pueden reservar (ver DEPORTISTAS.md)
     calUsername: "hccombat",                     // cal.com/<usuario>
     calOrigin: "https://app.cal.com",
     classes: [
@@ -105,6 +106,13 @@ window.SITE_CONFIG = {
       { label: "Físico",    slug: "fisico",         tone: "acero",  page: "" },
       { label: "Sala libre / Randoris", slug: "sala-libre-randoris", tone: "linea", page: "" }
     ]
+  },
+
+  /* ---- Cuentas de deportistas · ver DEPORTISTAS.md ----
+     Disciplinas que cada deportista puede marcar en su perfil. */
+  athletes: {
+    disciplines: ["BJJ Gi", "BJJ No-Gi", "Judo", "Físico"],
+    payRequiresAccount: true                     // "Suscribirme" pide cuenta: el pago queda a nombre del deportista
   },
 
   /* ---- Firebase (blog y planes editables desde admin.html) · ver ADMIN.md ----

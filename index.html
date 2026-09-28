@@ -317,6 +317,11 @@
   let payPlan=null;
   $('#plans').addEventListener('click',e=>{
     const b=e.target.closest('[data-plan]'); if(!b) return;
+    // Con cuenta obligatoria (ver DEPORTISTAS.md), el pago queda a nombre del deportista
+    if(S.get('athletes.payRequiresAccount')){
+      if(window.TNAthlete===undefined){ toast('Revisando tu cuenta…'); return; }
+      if(!window.TNAthlete){ location.href='cuenta.html?next='+encodeURIComponent(location.pathname+'#planes'); return; }
+    }
     payPlan=PLANS.find(p=>p.id===b.dataset.plan);
     const total=cycle==='mes'?price(payPlan):price(payPlan)*12;
     $('#payTitle').textContent='Plan '+payPlan.name;
@@ -336,7 +341,7 @@
     const btn=$('#payForm [type=submit]');
     btn.disabled=true; btn.textContent='Conectando con Mercado Pago…'; $('#pErr').textContent='';
     fetch('/api/pagar',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({plan:payPlan.id,cycle,name:n,email:m,start:$('#pStart').value})})
+      body:JSON.stringify({plan:payPlan.id,cycle,name:n,email:m,start:$('#pStart').value,uid:window.TNAthlete?.uid||''})})
       .then(r=>r.json().catch(()=>({})).then(d=>{ if(!r.ok||!d.url) throw new Error(d.error||'No se pudo iniciar el pago.'); location.href=d.url; }))
       .catch(err=>{
         $('#pErr').textContent=(err.message==='Failed to fetch'?'Sin conexión. Intenta de nuevo.':err.message)+' También puedes escribirnos por WhatsApp.';
@@ -364,5 +369,6 @@
 })();
 </script>
 <script type="module" src="js/content.js"></script>
+<script type="module" src="js/sesion.js"></script>
 </body>
 </html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+<!--
+  CUENTA DEL DEPORTISTA (ver DEPORTISTAS.md)
+  Registro, inicio de sesión, perfil, membresía y pagos.
+  cuenta.html?next=/index.html#reservas  vuelve ahí después de entrar.
+  cuenta.html?modo=registro              abre directo "Crear cuenta".
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1B2338">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<title data-site-title="Mi cuenta">Mi cuenta · Escuela de Artes Marciales Kizuna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/cuenta.css">
+<script src="js/components.js"></script>
+</head>
+<body>
+<site-nav current="cuenta"></site-nav>
+
+<main class="acc">
+
+  <!-- Cargando sesión -->
+  <section class="wrap acc-center" id="vLoading">
+    <p class="acc-loading">Cargando…</p>
+  </section>
+
+  <!-- Entrar / crear cuenta -->
+  <section class="wrap acc-center" id="vAuth" hidden>
+    <div class="panel acc-auth">
+      <div class="toggle acc-mode" role="group" aria-label="Entrar o crear cuenta">
+        <button type="button" aria-pressed="true" data-mode="login">Entrar</button>
+        <button type="button" aria-pressed="false" data-mode="registro">Crear cuenta</button>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <h3>Entra a tu cuenta</h3>
+        <p class="hint">Con tu cuenta reservas clases y ves tu membresía y tus pagos.</p>
+        <div class="field"><label for="lEmail">Correo</label><input id="lEmail" type="email" autocomplete="username" required></div>
+        <div class="field"><label for="lPass">Contraseña</label><input id="lPass" type="password" autocomplete="current-password" required></div>
+        <div class="err" id="lErr" role="alert"></div>
+        <button class="btn block" type="submit">Entrar</button>
+        <button class="acc-link" id="forgot" type="button">Olvidé mi contraseña</button>
+      </form>
+
+      <form id="regForm" novalidate hidden>
+        <h3>Crea tu cuenta</h3>
+        <p class="hint">Necesitas una cuenta para reservar. Tu primera clase es gratis.</p>
+        <div class="row2">
+          <div class="field"><label for="rNombre">Nombre</label><input id="rNombre" autocomplete="given-name" maxlength="60" required></div>
+          <div class="field"><label for="rApellido">Apellido</label><input id="rApellido" autocomplete="family-name" maxlength="60" required></div>
+        </div>
+        <div class="field"><label for="rTel">Teléfono</label><input id="rTel" type="tel" autocomplete="tel" maxlength="30" placeholder="+56 9 1234 5678" required></div>
+        <div class="field"><label for="rEmail">Correo</label><input id="rEmail" type="email" autocomplete="email" required></div>
+        <div class="field"><label for="rPass">Contraseña</label><input id="rPass" type="password" autocomplete="new-password" minlength="8" required><small class="acc-help">Mínimo 8 caracteres.</small></div>
+        <label class="check"><input type="checkbox" id="rOk"> Acepto que la escuela guarde mis datos para gestionar mis reservas, membresía y pagos.</label>
+        <div class="err" id="rErr" role="alert"></div>
+        <button class="btn block" type="submit">Crear cuenta</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Perfil -->
+  <section id="vProfile" hidden>
+    <div class="wrap acc-head">
+      <div>
+        <div class="eyebrow">Mi cuenta</div>
+        <h1 id="hello">Hola</h1>
+        <p class="acc-email"><span id="email"></span> <span class="acc-unverified" id="unverified" hidden>· Correo sin confirmar <button class="acc-link" id="resend" type="button">Reenviar correo</button></span></p>
+      </div>
+      <a class="btn" id="nextLink" href="index.html#reservas" hidden>Ir a reservar</a>
+    </div>
+
+    <div class="wrap">
+      <div class="notice acc-notice" id="incomplete" hidden><strong>Completa tu perfil.</strong> Para reservar necesitamos tu nombre, apellido y teléfono.</div>
+    </div>
+
+    <div class="wrap acc-grid">
+      <form class="acc-card" id="profileForm" novalidate>
+        <h2>Mis datos</h2>
+        <div class="row2">
+          <div class="field"><label for="pNombre">Nombre</label><input id="pNombre" autocomplete="given-name" maxlength="60" required></div>
+          <div class="field"><label for="pApellido">Apellido</label><input id="pApellido" autocomplete="family-name" maxlength="60" required></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="pTel">Teléfono</label><input id="pTel" type="tel" autocomplete="tel" maxlength="30" required></div>
+          <div class="field"><label for="pRut">RUT <span class="acc-opt">opcional</span></label><input id="pRut" maxlength="15" placeholder="12.345.678-5"></div>
+        </div>
+        <div class="field"><label for="pNac">Fecha de nacimiento <span class="acc-opt">opcional</span></label><input id="pNac" type="date"></div>
+        <fieldset class="field acc-fieldset">
+          <legend>Disciplinas que entrenas</legend>
+          <div class="filters acc-disc" id="pDisc"></div>
+        </fieldset>
+        <h3 class="acc-sub">Contacto de emergencia <span class="acc-opt">opcional</span></h3>
+        <div class="row2">
+          <div class="field"><label for="pEmNombre">Nombre</label><input id="pEmNombre" maxlength="80"></div>
+          <div class="field"><label for="pEmTel">Teléfono</label><input id="pEmTel" type="tel" maxlength="30"></div>
+        </div>
+        <div class="err" id="pErr" role="alert"></div>
+        <button class="btn" type="submit">Guardar cambios</button>
+      </form>
+
+      <aside class="acc-side">
+        <div class="acc-card">
+          <h2>Membresía</h2>
+          <div class="acc-status" id="mStatus"></div>
+          <p class="acc-plan" id="mPlan"></p>
+          <p class="acc-help">La membresía la actualiza la escuela cuando registra tu pago. ¿Ves algo raro? Escríbenos.</p>
+          <a class="btn small ghost" href="index.html#planes">Ver planes</a>
+        </div>
+
+        <div class="acc-card">
+          <h2>Mis pagos</h2>
+          <div id="payments"><p class="acc-loading">Cargando…</p></div>
+        </div>
+
+        <div class="acc-card">
+          <h2>Cuenta</h2>
+          <div class="acc-actions">
+            <button class="btn small ghost" id="changePass" type="button">Cambiar contraseña</button>
+            <button class="btn small ghost" id="logout" type="button">Cerrar sesión</button>
+          </div>
+          <details class="acc-danger">
+            <summary>Eliminar mi cuenta</summary>
+            <p class="acc-help">Se borran tu cuenta y tus datos. Los pagos ya registrados se conservan en la contabilidad de la escuela. No se puede deshacer.</p>
+            <form id="deleteForm" novalidate>
+              <div class="field"><label for="dPass">Tu contraseña</label><input id="dPass" type="password" autocomplete="current-password"></div>
+              <div class="err" id="dErr" role="alert"></div>
+              <button class="btn small ghost acc-danger-btn" type="submit">Eliminar definitivamente</button>
+            </form>
+          </details>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<site-footer></site-footer>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script src="site.config.js"></script>
+<script src="js/site.js"></script>
+<script type="module" src="js/cuenta.js"></script>
+</body>
+</html>

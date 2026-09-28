@@ -2,7 +2,9 @@
    Kizuna · Horario semanal
    Dibuja la semana en cada [data-schedule]. Los datos salen de
    site.config.js → schedule:
-     source "cal"  → disponibilidad real de Cal.com (por defecto)
+     source "cal"  → lo que ofrece Cal.com en los próximos 7 días (por defecto).
+                     Cada día muestra su fecha; si cambias un horario en Cal.com,
+                     la página lo refleja en cuanto esa semana entra en la ventana.
      source "json" → archivo en schedule.url (formato en HORARIO.md)
 
    <div data-schedule></div>                          todas las clases
@@ -29,15 +31,21 @@
   /* ---------- Datos desde Cal.com ---------- */
   const API = "https://api.cal.com/v2";
   const TZ = booking.timeZone || "America/Santiago";
-  const CACHE_KEY = "tn_schedule_cal_v1";
+  const CACHE_KEY = "tn_schedule_cal_v2";
   const CACHE_MIN = 10;
+  const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
   const pad = n => String(n).padStart(2, "0");
   const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const dayOf = iso => DAYS[(new Date(iso + "T12:00:00").getDay() + 6) % 7][0];
+  const shortDate = iso => { const [, m, d] = iso.split("-").map(Number); return `${d} ${MONTHS[m - 1]}`; };
   const addMin = (hhmm, min) => { const [h, m] = hhmm.split(":").map(Number); const t = h * 60 + m + min; return `${pad(Math.floor(t / 60) % 24)}:${pad(t % 60)}`; };
   const calGet = (path, version) => fetch(API + path, { headers: { "cal-api-version": version } })
     .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
 
+  /* Semana a mostrar: hoy y los 6 días siguientes (un día de cada tipo).
+     Si hoy ya no quedan clases, ese día se muestra con la fecha de la
+     semana siguiente. Cal.com no entrega horarios que ya pasaron. */
   async function fromCal(){
     try {
       const c = JSON.parse(sessionStorage.getItem(CACHE_KEY) || "null");
@@ -53,33 +61,48 @@
     const length = {};
     (types.data || []).forEach(t => { length[t.slug] = t.lengthInMinutes || 60; });
 
-    // Próximas semanas desde mañana
-    const start = new Date(); start.setDate(start.getDate() + 1);
-    const end = new Date(start); end.setDate(end.getDate() + 7 * (cfg.weeks || 2));
+    // Hoy + 7 días (el octavo sirve de reemplazo para hoy)
+    const today = new Date();
+    const last = new Date(today); last.setDate(last.getDate() + 7);
+    const todayIso = isoDate(today), lastIso = isoDate(last);
+    const endQ = new Date(last); endQ.setDate(endQ.getDate() + 1);
 
     const disciplinas = {};
-    const found = {};   // "dia|inicio|clase" → clase
+    const byDate = {};   // "AAAA-MM-DD" → clases de ese día
     await Promise.all(classes.map(async cls => {
       disciplinas[cls.slug] = { nombre: cls.label || cls.slug, tono: cls.tone || "oro", pagina: cls.page || "" };
       const slugs = (cls.variants && cls.variants.length) ? cls.variants.map(v => v.slug) : [cls.slug];
       await Promise.all(slugs.map(async slug => {
         const q = `/slots?username=${encodeURIComponent(user)}&eventTypeSlug=${encodeURIComponent(slug)}` +
-                  `&start=${isoDate(start)}&end=${isoDate(end)}&timeZone=${encodeURIComponent(TZ)}`;
+                  `&start=${todayIso}&end=${isoDate(endQ)}&timeZone=${encodeURIComponent(TZ)}`;
         const res = await calGet(q, "2024-09-04");
         Object.entries(res.data || {}).forEach(([date, slots]) => {
-          const dia = DAYS[(new Date(date + "T12:00:00").getDay() + 6) % 7][0];
-          slots.forEach(s => {
-            const inicio = s.start.slice(11, 16);
-            const fin = addMin(inicio, length[slug] || 60);
-            const key = `${dia}|${inicio}|${cls.slug}`;
-            // Dos eventos de la misma clase a la misma hora: queda el más largo
-            if (!found[key] || fin > found[key].fin) found[key] = { dia, inicio, fin, disciplina: cls.slug, pick: slug };
+          if (date < todayIso || date > lastIso) return;
+          slots.forEach(sl => {
+            const inicio = sl.start.slice(11, 16);
+            (byDate[date] = byDate[date] || []).push({ dia: dayOf(date), fecha: date, inicio, fin: addMin(inicio, length[slug] || 60), disciplina: cls.slug, pick: slug });
           });
         });
       }));
     }));
 
-    const data = { disciplinas, clases: Object.values(found), nota: cfg.note || "" };
+    // Qué fecha representa a cada día de la semana
+    const fechas = {};
+    for (let i = 0; i <= 7; i++) {
+      const d = new Date(today); d.setDate(d.getDate() + i);
+      const iso = isoDate(d), dia = dayOf(iso);
+      if (i === 7) { if (!(byDate[todayIso] || []).length) fechas[dia] = iso; }
+      else fechas[dia] = iso;
+    }
+
+    // Clases de esas fechas; dos eventos de la misma clase a la misma hora → queda el más largo
+    const found = {};
+    Object.entries(fechas).forEach(([dia, iso]) => (byDate[iso] || []).forEach(c => {
+      const key = `${dia}|${c.inicio}|${c.disciplina}`;
+      if (!found[key] || c.fin > found[key].fin) found[key] = c;
+    }));
+
+    const data = { disciplinas, clases: Object.values(found), fechas, hoy: todayIso, nota: cfg.note || "" };
     try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), data })); } catch (e) {}
     return data;
   }
@@ -97,6 +120,9 @@
       .filter(c => disc[c.disciplina] && (!filter.length || filter.includes(c.disciplina)))
       .sort((a, b) => a.inicio.localeCompare(b.inicio));
     const book = el.dataset.book || "#reservas";
+    const fechas = data.fechas || {};
+    const isToday = k => fechas[k] ? fechas[k] === data.hoy : k === todayKey;
+    const dateLabel = k => fechas[k] ? `<span class="sch-date">${shortDate(fechas[k])}</span>` : "";
 
     if (!classes.length) {
       el.innerHTML = '<p class="sch-empty">No hay clases publicadas en las próximas semanas. Escríbenos para conocer los horarios.</p>';
@@ -125,13 +151,13 @@
     const grid = `<div class="sch-grid" style="--days:${days.length}" role="table" aria-label="Horario semanal">
         <div class="sch-row sch-head" role="row">
           <div class="sch-corner" role="columnheader"></div>
-          ${days.map(([k, , s]) => `<div class="sch-day${k === todayKey ? " is-today" : ""}" role="columnheader">${s}${k === todayKey ? "<small>Hoy</small>" : ""}</div>`).join("")}
+          ${days.map(([k, , s]) => `<div class="sch-day${isToday(k) ? " is-today" : ""}" role="columnheader">${s}${isToday(k) ? "<small>Hoy</small>" : ""}${dateLabel(k)}</div>`).join("")}
         </div>
         ${times.map(t => `<div class="sch-row" role="row">
           <div class="sch-hour" role="rowheader">${esc(t)}</div>
           ${days.map(([k]) => {
             const here = classes.filter(c => c.dia === k && c.inicio === t);
-            return `<div class="sch-cell${k === todayKey ? " is-today" : ""}" role="cell">${here.map(cell).join("")}</div>`;
+            return `<div class="sch-cell${isToday(k) ? " is-today" : ""}" role="cell">${here.map(cell).join("")}</div>`;
           }).join("")}
         </div>`).join("")}
       </div>`;
@@ -140,15 +166,17 @@
     const list = `<div class="sch-list">
         ${days.map(([k, name]) => {
           const here = classes.filter(c => c.dia === k);
-          return `<div class="sch-list-day${k === todayKey ? " is-today" : ""}">
-            <h3>${name}${k === todayKey ? " <small>Hoy</small>" : ""}</h3>
+          return `<div class="sch-list-day${isToday(k) ? " is-today" : ""}">
+            <h3>${name}${isToday(k) ? " <small>Hoy</small>" : ""}${dateLabel(k)}</h3>
             ${here.length ? here.map(cell).join("") : '<p class="sch-rest">Sin clases</p>'}
           </div>`;
         }).join("")}
       </div>`;
 
     const note = data.nota ? `<p class="sch-foot">${esc(data.nota)}</p>` : "";
-    el.innerHTML = legend + grid + list + note;
+    const shown = days.map(([k]) => fechas[k]).filter(Boolean).sort();
+    const range = shown.length ? `<p class="sch-range">Del ${shortDate(shown[0])} al ${shortDate(shown[shown.length - 1])}</p>` : "";
+    el.innerHTML = range + legend + grid + list + note;
   }
 
   // Un solo manejador por bloque: filtros y clic en una clase

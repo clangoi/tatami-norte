@@ -73,6 +73,14 @@ window.SITE_CONFIG = {
     count: 6                                     // el plan gratuito entrega hasta 6
   },
 
+  /* ---- Horario semanal · ver HORARIO.md ----
+     De dónde se lee el horario. Hoy es un archivo del sitio;
+     cuando exista el panel de admin, aquí irá la dirección de
+     la base de datos y el formato seguirá siendo el mismo. */
+  schedule: {
+    url: "data/horario.json"
+  },
+
   /* ---- Reservas (Cal.com) · ver CAL-SETUP.md ---- */
   booking: {
     calUsername: "hccombat",                     // cal.com/<usuario>

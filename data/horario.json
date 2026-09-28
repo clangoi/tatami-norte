@@ -1,0 +1,33 @@
+{
+  "titulo": "Semana tipo",
+  "actualizado": "2026-09-27",
+  "nota": "Todas las clases duran 60 minutos. Los cupos y las fechas exactas se confirman al reservar.",
+  "disciplinas": {
+    "judo":                { "nombre": "Judo",                  "tono": "oro",    "pagina": "judo.html" },
+    "jiu-jitsu-gi":        { "nombre": "BJJ Gi",                "tono": "bronce", "pagina": "bjj.html" },
+    "jiujitsu-no-gi":      { "nombre": "BJJ No-Gi",             "tono": "marino", "pagina": "bjj.html#no-gi" },
+    "fisico":              { "nombre": "Físico",                "tono": "acero",  "pagina": "" },
+    "sala-libre-randoris": { "nombre": "Sala libre / Randoris", "tono": "linea",  "pagina": "" }
+  },
+  "clases": [
+    { "dia": "lunes",     "inicio": "18:00", "fin": "19:00", "disciplina": "judo" },
+    { "dia": "lunes",     "inicio": "19:00", "fin": "20:00", "disciplina": "jiu-jitsu-gi" },
+    { "dia": "lunes",     "inicio": "20:00", "fin": "21:00", "disciplina": "judo" },
+
+    { "dia": "martes",    "inicio": "11:00", "fin": "12:00", "disciplina": "jiujitsu-no-gi" },
+    { "dia": "martes",    "inicio": "18:00", "fin": "19:00", "disciplina": "judo" },
+
+    { "dia": "miercoles", "inicio": "11:00", "fin": "12:00", "disciplina": "judo" },
+    { "dia": "miercoles", "inicio": "19:00", "fin": "20:00", "disciplina": "fisico" },
+    { "dia": "miercoles", "inicio": "20:00", "fin": "21:00", "disciplina": "judo" },
+
+    { "dia": "jueves",    "inicio": "11:00", "fin": "12:00", "disciplina": "jiujitsu-no-gi" },
+    { "dia": "jueves",    "inicio": "18:00", "fin": "19:00", "disciplina": "judo" },
+
+    { "dia": "viernes",   "inicio": "18:00", "fin": "19:00", "disciplina": "fisico" },
+    { "dia": "viernes",   "inicio": "19:00", "fin": "20:00", "disciplina": "jiu-jitsu-gi" },
+    { "dia": "viernes",   "inicio": "20:00", "fin": "21:00", "disciplina": "judo" },
+
+    { "dia": "sabado",    "inicio": "11:00", "fin": "12:00", "disciplina": "sala-libre-randoris" }
+  ]
+}

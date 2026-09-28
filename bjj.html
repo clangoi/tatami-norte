@@ -136,6 +136,16 @@
     </div>
   </section>
 
+  <section class="sec" id="horario">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="eyebrow">Horario</div><h2>Horario<br>de BJJ</h2></div>
+        <p>Clases de BJJ Gi y No-Gi durante la semana. Toca una clase para reservarla.</p>
+      </div>
+      <div data-schedule data-filter="jiu-jitsu-gi,jiujitsu-no-gi" data-book="#reservar"></div>
+    </div>
+  </section>
+
   <section class="sec" id="reservar">
     <div class="wrap">
       <div class="sec-head">
@@ -183,7 +193,7 @@
     </div>
     <div><h4>Horario</h4><ul data-site-list="hours"><li>Clases según el calendario de reservas</li><li>Consultas por correo o WhatsApp</li></ul></div>
     <div><h4>Contacto</h4><ul><li><a data-site-href="email" data-site="contact.email" href="#">contacto@hccombat.com</a></li><li><a data-site-href="phone" data-site="contact.phone" href="#">+56 9 4796 6805</a></li><li><a data-site-href="whatsapp" href="#">WhatsApp</a></li><li><a data-site-href="instagram" href="#">Instagram</a></li><li><a data-site-href="facebook" href="#">Facebook</a></li><li><a data-site-href="tiktok" href="#">TikTok</a></li></ul></div>
-    <div><h4>Explora</h4><ul><li><a href="judo.html">Judo</a></li><li><a href="bjj.html">BJJ</a></li><li><a href="index.html#horario">Agendar clase</a></li><li><a href="index.html#planes">Planes</a></li><li><a href="blog.html">Blog</a></li></ul></div>
+    <div><h4>Explora</h4><ul><li><a href="judo.html">Judo</a></li><li><a href="bjj.html">BJJ</a></li><li><a href="index.html#reservas">Agendar clase</a></li><li><a href="index.html#planes">Planes</a></li><li><a href="blog.html">Blog</a></li></ul></div>
   </div>
   <div class="wrap foot-base"><span>© <span data-site="year">2026</span> <span data-site="name">Escuela de Artes Marciales Kizuna</span></span><span data-site="motto">Respeto · Disciplina · Constancia</span></div>
 </footer>
@@ -191,6 +201,7 @@
 <script src="site.config.js"></script>
 <script src="js/site.js"></script>
 <script src="js/booking.js"></script>
+<script src="js/schedule.js"></script>
 <script>
   (function(){
     const section = document.getElementById('booking');

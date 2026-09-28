@@ -23,6 +23,11 @@
 .post-body blockquote{margin:6px 0;padding:6px 0 6px 22px;border-left:3px solid var(--bronze);font-size:21px;color:var(--text-soft-light)}
 .post-body a{color:var(--bronze)}
 .post-body strong{color:var(--navy)}
+.post-body h3{font-size:clamp(22px,2.4vw,26px);font-weight:800;margin-top:8px}
+.post-video{margin:4px 0;display:flex;flex-direction:column;gap:8px}
+.post-video .frame{position:relative;aspect-ratio:16/9;background:var(--navy);border-radius:4px;overflow:hidden}
+.post-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.post-video figcaption{font-size:14px;line-height:1.5;color:var(--text-soft-light)}
 
 /* Llamado a reservar al final */
 .post-cta{max-width:68ch;margin:48px auto 0;background:var(--navy);color:var(--cream);padding:28px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between}

@@ -23,7 +23,7 @@ window.SITE_CONFIG = {
   contact: {
     phone: "+56 9 4796 6805",
     whatsapp: "56947966805",                     // solo dígitos con código de país
-    instagram: "clubkizunajudo",                 // sin @ · cambiar a "clubkizuna" cuando se renombre la cuenta
+    instagram: "clubkizuna",                     // sin @
     facebook: "",
     tiktok: ""
   },

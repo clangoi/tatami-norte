@@ -25,12 +25,6 @@ window.BLOG_POSTS = [
     ex: "Las cuatro caídas básicas y por qué te protegen dentro y fuera del tatami."
   },
   {
-    slug: "cortar-peso-sin-perder-potencia",
-    title: "Cortar peso sin perder potencia",
-    cat: "Nutrición", letter: "KG", date: "2026-09-08", read: 7,
-    ex: "La diferencia entre bajar de categoría y deshidratarte. Un calendario de 8 semanas que sí funciona."
-  },
-  {
     slug: "tu-cinturon-importa-menos",
     title: "Tu cinturón importa menos de lo que crees",
     cat: "Mentalidad", letter: "OSS", date: "2026-09-01", read: 5,

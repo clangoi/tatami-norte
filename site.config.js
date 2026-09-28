@@ -81,7 +81,6 @@ window.SITE_CONFIG = {
   schedule: {
     source: "cal",                               // "cal" o "json" (archivo en url)
     weeks: 2,                                    // semanas que se revisan en Cal.com
-    note: "Horario tomado del calendario de reservas. Los cupos se confirman al reservar.",
     url: "data/horario.json"                     // solo si source es "json"
   },
 

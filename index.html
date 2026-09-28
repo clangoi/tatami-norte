@@ -212,10 +212,10 @@
         <div class="field"><label for="pStart">Fecha de inicio</label><input id="pStart" type="date"></div>
         <div class="err" id="pErr" role="alert"></div>
         <button class="btn block" type="submit">Continuar al pago</button>
-        <p class="secure">El pago se procesa en la pasarela segura (Stripe o Mercado Pago). <span data-site="name">Escuela de Artes Marciales Kizuna</span> no guarda datos de tarjeta.</p>
+        <p class="secure">El pago se procesa en Mercado Pago, con tarjeta, débito o transferencia. <span data-site="name">Escuela de Artes Marciales Kizuna</span> no guarda datos de tarjeta.</p>
       </form>
       <div id="payDone" class="stack" hidden>
-        <div class="notice"><strong>Vista previa.</strong> En el sitio publicado, este botón abre el checkout de la pasarela de pago con el plan y el periodo ya seleccionados. Aquí no se realiza ningún cobro.</div>
+        <div class="notice" id="payMsg"></div>
         <button class="btn ghost block" data-close>Cerrar</button>
       </div>
     </div>
@@ -359,8 +359,34 @@
     const n=$('#pName').value.trim(), m=$('#pEmail').value.trim();
     if(n.length<3){ $('#pErr').textContent='Escribe el nombre de quien va a entrenar.'; return; }
     if(!emailOk(m)){ $('#pErr').textContent='Revisa el correo: ahí llegan tus recibos.'; return; }
-    $('#payForm').hidden=true; $('#payDone').hidden=false;
+    // api/pagar.js calcula el precio y crea el checkout de Mercado Pago
+    const btn=$('#payForm [type=submit]');
+    btn.disabled=true; btn.textContent='Conectando con Mercado Pago…'; $('#pErr').textContent='';
+    fetch('/api/pagar',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({plan:payPlan.id,cycle,name:n,email:m,start:$('#pStart').value})})
+      .then(r=>r.json().catch(()=>({})).then(d=>{ if(!r.ok||!d.url) throw new Error(d.error||'No se pudo iniciar el pago.'); location.href=d.url; }))
+      .catch(err=>{
+        $('#pErr').textContent=(err.message==='Failed to fetch'?'Sin conexión. Intenta de nuevo.':err.message)+' También puedes escribirnos por WhatsApp.';
+        btn.disabled=false; btn.textContent='Continuar al pago';
+      });
   });
+  // Mercado Pago no guarda la página en el historial: al volver con "atrás" se reactiva el botón
+  window.addEventListener('pageshow',()=>{ const btn=$('#payForm [type=submit]'); btn.disabled=false; btn.textContent='Continuar al pago'; });
+
+  /* vuelta desde Mercado Pago: ?pago=ok|pendiente|error */
+  const PAY_MSG={
+    ok:'<strong>¡Pago recibido!</strong> Te llegará el comprobante de Mercado Pago a tu correo. Nos pondremos en contacto para coordinar tu inicio.',
+    pendiente:'<strong>Pago pendiente.</strong> Mercado Pago nos avisará cuando se acredite. Si pagaste en efectivo o transferencia, puede tardar un poco.',
+    error:'<strong>El pago no se completó.</strong> No se hizo ningún cobro. Puedes intentarlo de nuevo o escribirnos por WhatsApp.'
+  };
+  const back=new URLSearchParams(location.search).get('pago');
+  if(PAY_MSG[back]){
+    $('#payTitle').textContent='Suscripción'; $('#paySum').innerHTML='';
+    $('#payMsg').innerHTML=PAY_MSG[back];
+    $('#payForm').hidden=true; $('#payDone').hidden=false;
+    openModal($('#payModal'));
+    history.replaceState(null,'',location.pathname+location.hash);
+  }
 
 })();
 </script>

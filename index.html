@@ -271,9 +271,8 @@
   const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
   window.TNBooking.mount($('#booking'));
   // Enlaces con data-pick (p. ej. la tarjeta Físico) abren esa pestaña del calendario
-  document.querySelectorAll('a[data-pick]').forEach(a=>a.addEventListener('click',()=>{
-    const tab=$(`#booking [data-cal-tabs] [data-slug="${a.dataset.pick}"]`);
-    if(tab) tab.click();
+  document.querySelectorAll('a[data-pick]:not(.sch-class)').forEach(a=>a.addEventListener('click',()=>{
+    window.TNBooking.select('#booking', a.dataset.pick);
   }));
   window.TNBooking.onSuccess(()=>toast('Reserva confirmada'));
 

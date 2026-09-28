@@ -215,3 +215,7 @@
   .sch-rest{color:var(--steel);font-size:14px}
 }
 @media (max-width:460px){.sch-list{grid-template-columns:1fr}}
+.sch-loading{color:var(--steel);font:600 14px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;padding:24px 0}
+/* Selector de duración dentro de una clase (p. ej. Judo 1 h / 1 h 15) */
+.cal-variants{margin-top:-4px}
+.cal-variants button{font-size:12px;padding:8px 12px}

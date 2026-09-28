@@ -207,9 +207,8 @@
     const section = document.getElementById('booking');
     TNBooking.mount(section, { slugs: ['jiu-jitsu-gi', 'jiujitsu-no-gi'] });
     // "Reservar BJJ Gi / No-Gi" abre la pestaña correspondiente
-    document.querySelectorAll('[data-pick]').forEach(a => a.addEventListener('click', () => {
-      const tab = section.querySelector(`[data-cal-tabs] [data-slug="${a.dataset.pick}"]`);
-      if (tab) tab.click();
+    document.querySelectorAll('.vs-card [data-pick]').forEach(a => a.addEventListener('click', () => {
+      TNBooking.select(section, a.dataset.pick);
     }));
   })();
 </script>

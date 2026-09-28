@@ -4,6 +4,9 @@
    Uso (ver el marcado completo en index.html → #booking):
      TNBooking.mount(seccion)                     todas las clases
      TNBooking.mount(seccion, {slugs:["judo"]})   solo algunas
+     TNBooking.select(seccion, "judo2")           abre esa clase (o variante)
+   Una clase puede tener variantes (p. ej. Judo de 1 h y de 1 h 15):
+   se muestran como una sola pestaña con un selector de duración.
    Expone window.TNBooking.
    ========================================================== */
 (function(){
@@ -15,8 +18,13 @@
 
   const successHandlers = [];
   const failHandlers = [];
-  const mounted = {};          // slug → true cuando ya se insertó su calendario
+  const mounted = {};          // slug → elemento del calendario ya insertado
+  const roots = [];            // secciones montadas: { el, select }
   let loaderReady = false;
+
+  // Todos los eventos de Cal.com de una clase (la propia y sus variantes)
+  const slugsOf = c => (c.variants && c.variants.length) ? c.variants.map(v => v.slug) : [c.slug];
+  const classOf = (list, slug) => list.find(c => c.slug === slug || slugsOf(c).includes(slug));
 
   // Colores de la marca dentro del calendario (tema oscuro)
   const UI = {
@@ -50,36 +58,34 @@
     Cal.config.forwardQueryParams = true;   // pasa los UTM de la página a Cal.com
   }
 
-  // Un namespace por clase, como en el código de Cal.com
+  // Un namespace por evento, como en el código de Cal.com
   const nsName = slug => "tn_" + slug.replace(/[^a-z0-9]/gi, "_");
 
-  function mountInline(container, cls){
+  function mountInline(container, slug){
     loadLoader();
-    const ns = nsName(cls.slug);
+    const ns = nsName(slug);
     const el = document.createElement("div");
     el.className = "cal-frame";
     el.id = "cal-inline-" + ns;
-    el.dataset.slug = cls.slug;
+    el.dataset.slug = slug;
     container.appendChild(el);
 
     Cal("init", ns, { origin });
     Cal.ns[ns]("inline", {
       elementOrSelector: "#" + el.id,
-      calLink: `${username}/${cls.slug}`,
+      calLink: `${username}/${slug}`,
       config: { layout: "month_view", useSlotsViewOnSmallScreen: "true", theme: "dark" }
     });
     Cal.ns[ns]("ui", UI);
-    Cal.ns[ns]("on", { action: "bookingSuccessfulV2", callback: e => successHandlers.forEach(fn => fn(e.detail.data || {}, cls)) });
-    Cal.ns[ns]("on", { action: "linkFailed", callback: e => failHandlers.forEach(fn => fn(e.detail.data || {}, cls)) });
-    mounted[cls.slug] = el;
+    Cal.ns[ns]("on", { action: "bookingSuccessfulV2", callback: e => successHandlers.forEach(fn => fn(e.detail.data || {}, slug)) });
+    Cal.ns[ns]("on", { action: "linkFailed", callback: e => failHandlers.forEach(fn => fn(e.detail.data || {}, slug)) });
+    mounted[slug] = el;
     return el;
   }
 
-  function show(container, list, slug){
-    const cls = list.find(c => c.slug === slug) || list[0];
-    if (!cls) return;
-    Object.values(mounted).forEach(el => { if (container.contains(el)) el.hidden = el.dataset.slug !== cls.slug; });
-    if (!mounted[cls.slug]) mountInline(container, cls);
+  function show(container, slug){
+    Object.values(mounted).forEach(el => { if (container.contains(el)) el.hidden = el.dataset.slug !== slug; });
+    if (!mounted[slug]) mountInline(container, slug);
     const loading = container.querySelector(".cal-loading");
     if (loading) loading.remove();
   }
@@ -112,6 +118,15 @@
     </div>`).join("");
   }
 
+  function makeButton(label, slug, pressed){
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.dataset.slug = slug;
+    b.setAttribute("aria-pressed", pressed);
+    return b;
+  }
+
   window.TNBooking = {
     configured,
     classes,
@@ -128,7 +143,9 @@
       const container = root.querySelector("[data-cal-inline]");
       const tabs = root.querySelector("[data-cal-tabs]");
       const fallback = root.querySelector("[data-cal-fallback]");
-      const list = opts.slugs ? classes.filter(c => opts.slugs.includes(c.slug)) : classes;
+      const list = opts.slugs
+        ? classes.filter(c => opts.slugs.includes(c.slug) || slugsOf(c).some(s => opts.slugs.includes(s)))
+        : classes;
 
       renderMine(root);
       if (!container || !configured || !list.length) {
@@ -137,24 +154,34 @@
         return false;
       }
 
+      // Selector de duración (solo para clases con variantes)
+      const variantsBar = document.createElement("div");
+      variantsBar.className = "filters cal-variants";
+      variantsBar.setAttribute("role", "group");
+      variantsBar.setAttribute("aria-label", "Duración");
+      variantsBar.hidden = true;
+      container.parentNode.insertBefore(variantsBar, container);
+
+      const current = {};   // clase → variante elegida
+      function select(slug){
+        const cls = classOf(list, slug) || list[0];
+        const variant = slugsOf(cls).includes(slug) ? slug : (current[cls.slug] || slugsOf(cls)[0]);
+        current[cls.slug] = variant;
+        if (tabs) tabs.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.slug === cls.slug));
+        const vs = cls.variants || [];
+        variantsBar.hidden = vs.length < 2;
+        variantsBar.replaceChildren(...vs.map(v => makeButton(v.label, v.slug, v.slug === variant)));
+        show(container, variant);
+      }
+      roots.push({ el: root, select });
+
       if (tabs) {
         tabs.hidden = list.length < 2;
-        tabs.replaceChildren(...list.map((c, i) => {
-          const b = document.createElement("button");
-          b.type = "button";
-          b.textContent = c.label || c.slug;
-          b.dataset.slug = c.slug;
-          b.setAttribute("aria-pressed", i === 0);
-          return b;
-        }));
-        tabs.addEventListener("click", e => {
-          const b = e.target.closest("[data-slug]");
-          if (!b) return;
-          tabs.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
-          show(container, list, b.dataset.slug);
-        });
+        tabs.replaceChildren(...list.map((c, i) => makeButton(c.label || c.slug, c.slug, i === 0)));
+        tabs.addEventListener("click", e => { const b = e.target.closest("[data-slug]"); if (b) select(b.dataset.slug); });
       }
-      show(container, list, list[0].slug);
+      variantsBar.addEventListener("click", e => { const b = e.target.closest("[data-slug]"); if (b) select(b.dataset.slug); });
+      select(list[0].slug);
 
       successHandlers.push(data => {
         if (!data.uid || !data.startTime) return;
@@ -176,6 +203,16 @@
       });
       failHandlers.push(() => { if (fallback) fallback.hidden = false; });
       return true;
+    },
+
+    /* Elige una clase (o una variante) en una sección ya montada.
+       target: la sección, un elemento que la contenga o un selector
+       (p. ej. "#reservas"). */
+    select(target, slug){
+      const el = typeof target === "string" ? document.querySelector(target) : target;
+      const r = el && roots.find(r => r.el === el || el.contains(r.el) || r.el.contains(el));
+      if (r) r.select(slug);
+      return !!r;
     },
 
     onSuccess(fn){ successHandlers.push(fn); },

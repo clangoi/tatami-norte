@@ -74,25 +74,36 @@ window.SITE_CONFIG = {
   },
 
   /* ---- Horario semanal · ver HORARIO.md ----
-     De dónde se lee el horario. Hoy es un archivo del sitio;
-     cuando exista el panel de admin, aquí irá la dirección de
-     la base de datos y el formato seguirá siendo el mismo. */
+     Se arma solo con la disponibilidad de Cal.com: mira las próximas
+     semanas y muestra qué clases hay cada día a cada hora.
+     Para cambiar el horario, cámbialo en Cal.com. */
   schedule: {
-    url: "data/horario.json"
+    source: "cal",                               // "cal" o "json" (archivo en url)
+    weeks: 2,                                    // semanas que se revisan en Cal.com
+    note: "Horario tomado del calendario de reservas. Los cupos se confirman al reservar.",
+    url: "data/horario.json"                     // solo si source es "json"
   },
 
-  /* ---- Reservas (Cal.com) · ver CAL-SETUP.md ---- */
+  /* ---- Clases y reservas (Cal.com) · ver CAL-SETUP.md ----
+     Una pestaña por clase. slug = la parte final de la URL en Cal.com
+     (cal.com/hccombat/judo → "judo").
+     tone: color en el horario (oro, bronce, marino, acero, linea).
+     page: página de la disciplina ("" si no tiene).
+     variants: varios eventos de Cal.com que en el sitio son una sola clase
+     (en reservas aparece un selector de duración). */
   booking: {
     calUsername: "hccombat",                     // cal.com/<usuario>
     calOrigin: "https://app.cal.com",
-    // Una pestaña por clase. slug = la parte final de la URL en Cal.com
-    // (cal.com/hccombat/judo → "judo"). Agrega una línea por cada clase nueva.
     classes: [
-      { label: "BJJ Gi",               slug: "jiu-jitsu-gi" },
-      { label: "BJJ No-Gi",            slug: "jiujitsu-no-gi" },
-      { label: "Judo",                 slug: "judo" },
-      { label: "Físico",               slug: "fisico" },
-      { label: "Sala libre / Randoris", slug: "sala-libre-randoris" }
+      { label: "BJJ Gi",    slug: "jiu-jitsu-gi",   tone: "bronce", page: "bjj.html" },
+      { label: "BJJ No-Gi", slug: "jiujitsu-no-gi", tone: "marino", page: "bjj.html#no-gi" },
+      { label: "Judo",      slug: "judo",           tone: "oro",    page: "judo.html",
+        variants: [
+          { label: "1 hora",       slug: "judo" },
+          { label: "1 hora 15 min", slug: "judo2" }
+        ] },
+      { label: "Físico",    slug: "fisico",         tone: "acero",  page: "" },
+      { label: "Sala libre / Randoris", slug: "sala-libre-randoris", tone: "linea", page: "" }
     ]
   }
 };

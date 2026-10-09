@@ -20,7 +20,7 @@
     ["lunes", "Lunes", "Lun"], ["martes", "Martes", "Mar"], ["miercoles", "Miércoles", "Mié"],
     ["jueves", "Jueves", "Jue"], ["viernes", "Viernes", "Vie"], ["sabado", "Sábado", "Sáb"], ["domingo", "Domingo", "Dom"]
   ];
-  const TONES = ["oro", "bronce", "marino", "acero", "linea"];
+  const TONES = ["oro", "bronce", "cobre", "marino", "acero", "plata", "crema", "linea"];
   const todayKey = DAYS[(new Date().getDay() + 6) % 7][0];
 
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));

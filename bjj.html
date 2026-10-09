@@ -128,9 +128,9 @@
     <div class="wrap">
       <div class="sec-head">
         <div><div class="eyebrow">Horario</div><h2>Horario<br>de BJJ</h2></div>
-        <p>Clases de BJJ Gi y No-Gi durante la semana. Toca una clase para reservarla.</p>
+        <p>BJJ Gi con Kizuna y Núcleo, BJJ No-Gi con Núcleo y Judo No-Gi. Toca una clase para reservarla.</p>
       </div>
-      <div data-schedule data-filter="jiu-jitsu-gi,jiujitsu-no-gi" data-book="#reservar"></div>
+      <div data-schedule data-filter="jiu-jitsu-gi,bjj-gi-nucleo,jiujitsu-no-gi,judo-no-gi" data-book="#reservar"></div>
     </div>
   </section>
 
@@ -138,7 +138,7 @@
     <div class="wrap">
       <div class="sec-head">
         <div><div class="eyebrow">Reservas</div><h2>Reserva tu<br>clase de BJJ</h2></div>
-        <p>Elige Gi o No-Gi, el día y la hora. Te llega un correo con la confirmación y un enlace para cambiar o cancelar.</p>
+        <p>Elige la clase, el día y la hora. Te llega un correo con la confirmación y un enlace para cambiar o cancelar.</p>
       </div>
       <div class="cal-grid" id="booking">
         <aside class="panel">
@@ -180,7 +180,7 @@
 <script>
   (function(){
     const section = document.getElementById('booking');
-    TNBooking.mount(section, { slugs: ['jiu-jitsu-gi', 'jiujitsu-no-gi'] });
+    TNBooking.mount(section, { slugs: ['jiu-jitsu-gi', 'bjj-gi-nucleo', 'jiujitsu-no-gi', 'judo-no-gi'] });
     // "Reservar BJJ Gi / No-Gi" abre la pestaña correspondiente
     document.querySelectorAll('.vs-card [data-pick]').forEach(a => a.addEventListener('click', () => {
       TNBooking.select(section, a.dataset.pick);

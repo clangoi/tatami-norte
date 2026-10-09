@@ -87,7 +87,7 @@ window.SITE_CONFIG = {
   /* ---- Clases y reservas (Cal.com) · ver CAL-SETUP.md ----
      Una pestaña por clase. slug = la parte final de la URL en Cal.com
      (cal.com/hccombat/judo → "judo").
-     tone: color en el horario (oro, bronce, marino, acero, linea).
+     tone: color en el horario (oro, bronce, cobre, marino, acero, plata, crema, linea).
      page: página de la disciplina ("" si no tiene).
      variants: varios eventos de Cal.com que en el sitio son una sola clase
      (en reservas aparece un selector de duración). */
@@ -95,13 +95,16 @@ window.SITE_CONFIG = {
     calUsername: "hccombat",                     // cal.com/<usuario>
     calOrigin: "https://app.cal.com",
     classes: [
-      { label: "BJJ Gi",    slug: "jiu-jitsu-gi",   tone: "bronce", page: "bjj.html" },
-      { label: "BJJ No-Gi", slug: "jiujitsu-no-gi", tone: "marino", page: "bjj.html#no-gi" },
+      { label: "BJJ Gi · Kizuna",    slug: "jiu-jitsu-gi",   tone: "bronce", page: "bjj.html" },
+      { label: "BJJ Gi · Núcleo",    slug: "bjj-gi-nucleo",  tone: "cobre",  page: "bjj.html" },
+      { label: "BJJ No-Gi · Núcleo", slug: "jiujitsu-no-gi", tone: "marino", page: "bjj.html#no-gi" },
       { label: "Judo",      slug: "judo",           tone: "oro",    page: "judo.html",
         variants: [
           { label: "1 hora",       slug: "judo" },
           { label: "1 hora 15 min", slug: "judo2" }
         ] },
+      { label: "Judo No-Gi", slug: "judo-no-gi",    tone: "crema",  page: "judo.html" },
+      { label: "Judo Kids",  slug: "judo-kids",     tone: "plata",  page: "judo.html" },
       { label: "Físico",    slug: "fisico",         tone: "acero",  page: "" },
       { label: "Sala libre / Randoris", slug: "sala-libre-randoris", tone: "linea", page: "" }
     ]

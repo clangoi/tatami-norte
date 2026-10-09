@@ -174,11 +174,14 @@
 @keyframes ig-shimmer{to{background-position:-200% 0}}
 
 /* ---- Horario semanal (js/schedule.js) ---- */
-/* Tonos por disciplina: se eligen en data/horario.json → "tono" */
+/* Tonos por clase: site.config.js → booking.classes → tone (o "tono" en data/horario.json) */
 .t-oro{background:var(--gold);color:var(--navy)}
 .t-bronce{background:var(--bronze);color:var(--navy)}
+.t-cobre{background:transparent;color:var(--cream);border:1px solid var(--bronze);box-shadow:inset 3px 0 0 var(--bronze)}
 .t-marino{background:var(--navy-3);color:var(--cream);box-shadow:inset 3px 0 0 var(--gold)}
 .t-acero{background:var(--steel);color:var(--navy)}
+.t-plata{background:transparent;color:var(--cream);border:1px solid var(--steel);box-shadow:inset 3px 0 0 var(--steel)}
+.t-crema{background:var(--cream);color:var(--navy)}
 .t-linea{background:transparent;color:var(--cream);border:1px dashed var(--gold)}
 
 .sch-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}

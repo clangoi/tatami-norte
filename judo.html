@@ -111,9 +111,9 @@
     <div class="wrap">
       <div class="sec-head">
         <div><div class="eyebrow">Horario</div><h2>Horario<br>de Judo</h2></div>
-        <p>Clases de Judo durante la semana. Toca una clase para reservarla.</p>
+        <p>Clases de Judo, Judo No-Gi y Judo Kids durante la semana. Toca una clase para reservarla.</p>
       </div>
-      <div data-schedule data-filter="judo" data-book="#reservar"></div>
+      <div data-schedule data-filter="judo,judo-no-gi,judo-kids" data-book="#reservar"></div>
     </div>
   </section>
 
@@ -121,7 +121,7 @@
     <div class="wrap">
       <div class="sec-head">
         <div><div class="eyebrow">Reservas</div><h2>Reserva tu<br>clase de Judo</h2></div>
-        <p>Elige el día y la hora. Te llega un correo con la confirmación y un enlace para cambiar o cancelar.</p>
+        <p>Elige la clase, el día y la hora. Te llega un correo con la confirmación y un enlace para cambiar o cancelar.</p>
       </div>
       <div class="cal-grid" id="booking">
         <aside class="panel">
@@ -175,7 +175,7 @@
 <script src="js/schedule.js"></script>
 <script src="js/judo-tecnicas.js"></script>
 <script>
-  TNBooking.mount(document.getElementById('booking'), { slugs: ['judo'] });
+  TNBooking.mount(document.getElementById('booking'), { slugs: ['judo', 'judo-no-gi', 'judo-kids'] });
 </script>
 </body>
 </html>

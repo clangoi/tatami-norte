@@ -8,10 +8,6 @@
     {
       "source": "/admin",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/cuenta",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
     }
   ]
 }

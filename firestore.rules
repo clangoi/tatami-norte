@@ -5,21 +5,18 @@ rules_version = '2';
 //
 // - Cualquiera puede leer los artículos publicados y los planes visibles.
 // - Solo quien tenga un documento en admins/{su UID} puede escribir en ellos.
-// - Cada deportista lee y edita su propia ficha (athletes/{su UID}), salvo
-//   plan, vigenteHasta y activo, que solo cambia el admin.
-// - Los pagos (payments) los registra el admin; cada deportista ve los suyos.
 // - La colección admins no se puede editar desde el sitio: se maneja
 //   a mano en la consola de Firebase.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function signedIn() {
-      return request.auth != null;
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
-    function isAdmin() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    function shortText(d, key, max) {
+      return !(key in d) || (d[key] is string && d[key].size() <= max);
     }
 
     function validPost(d) {
@@ -27,7 +24,10 @@ service cloud.firestore {
         && d.title is string && d.title.size() > 0 && d.title.size() <= 160
         && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && d.body is string && d.body.size() <= 200000
-        && d.published is bool;
+        && d.published is bool
+        && shortText(d, 'ex', 300)
+        && shortText(d, 'cat', 30)
+        && shortText(d, 'letter', 3);
     }
 
     function validPlan(d) {
@@ -35,50 +35,13 @@ service cloud.firestore {
         && d.name is string && d.name.size() > 0 && d.name.size() <= 60
         && d.visible is bool
         && d.order is number
+        && shortText(d, 'for', 140)
+        && (!('feats' in d) || (d.feats is list && d.feats.size() <= 20))
         && (!('price' in d) || d.price == null || (d.price is number && d.price >= 0));
     }
 
-    function isOwner(uid) {
-      return signedIn() && request.auth.uid == uid;
-    }
-
-    // Lo que el deportista puede editar de su ficha (igual que PROFILE_FIELDS en js/deportista.js)
-    function profileKeys() {
-      return ['nombre', 'apellido', 'telefono', 'nacimiento', 'rut', 'disciplinas',
-              'emergenciaNombre', 'emergenciaTelefono', 'updatedAt'];
-    }
-
-    function shortText(d, key, max) {
-      return !(key in d) || (d[key] is string && d[key].size() <= max);
-    }
-
-    function validAthlete(d) {
-      return d.nombre is string && d.nombre.size() > 0 && d.nombre.size() <= 60
-        && d.apellido is string && d.apellido.size() > 0 && d.apellido.size() <= 60
-        && d.email is string && d.email.size() <= 120
-        && shortText(d, 'telefono', 30)
-        && shortText(d, 'rut', 15)
-        && shortText(d, 'nacimiento', 10)
-        && shortText(d, 'emergenciaNombre', 80)
-        && shortText(d, 'emergenciaTelefono', 30)
-        && (!('disciplinas' in d) || (d.disciplinas is list && d.disciplinas.size() <= 12))
-        && shortText(d, 'plan', 60)
-        && shortText(d, 'vigenteHasta', 10)
-        && (!('activo' in d) || d.activo is bool);
-    }
-
-    function validPayment(d) {
-      return d.keys().hasAll(['uid', 'amount', 'date', 'method'])
-        && d.uid is string
-        && d.amount is number && d.amount > 0
-        && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
-        && d.method in ['mercadopago', 'efectivo', 'transferencia', 'tarjeta', 'otro']
-        && shortText(d, 'planName', 60)
-        && shortText(d, 'note', 300);
-    }
-
     match /admins/{uid} {
-      allow read: if signedIn() && request.auth.uid == uid;
+      allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if false;
     }
 
@@ -93,26 +56,6 @@ service cloud.firestore {
     match /plans/{id} {
       allow read: if resource.data.visible == true || isAdmin();
       allow create, update: if isAdmin() && validPlan(request.resource.data);
-      allow delete: if isAdmin();
-    }
-
-    match /athletes/{uid} {
-      allow read: if isOwner(uid) || isAdmin();
-      // Al registrarse: solo sus datos, con el correo de su cuenta
-      allow create: if isOwner(uid)
-        && request.resource.data.keys().hasOnly(profileKeys().concat(['email', 'createdAt']))
-        && request.resource.data.email == request.auth.token.email
-        && validAthlete(request.resource.data);
-      allow update: if validAthlete(request.resource.data) && (
-        isAdmin()
-        || (isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(profileKeys()))
-      );
-      allow delete: if isOwner(uid) || isAdmin();
-    }
-
-    match /payments/{id} {
-      allow read: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
-      allow create, update: if isAdmin() && validPayment(request.resource.data);
       allow delete: if isAdmin();
     }
 

@@ -17,13 +17,12 @@ window.SITE_CONFIG = {
   motto: "Respeto · Disciplina · Constancia",
   description: "Escuela de Artes Marciales Kizuna en Santiago: BJJ Gi, BJJ No-Gi, Judo y preparación física. Reserva tu clase en línea.",
 
-  /* ---- Contacto ----
-     Los canales principales son Instagram y WhatsApp: el sitio invita
-     a escribir por mensaje directo de Instagram (ig.me). */
+  /* ---- Contacto ---- */
   contact: {
+    email: "contacto@hccombat.com",
     phone: "+56 9 4796 6805",
     whatsapp: "56947966805",                     // solo dígitos con código de país
-    instagram: "clubkizuna",                     // sin @
+    instagram: "escuela.kizuna",                 // sin @
     facebook: "",
     tiktok: ""
   },
@@ -38,8 +37,8 @@ window.SITE_CONFIG = {
 
   /* ---- Horario (pie de página) ---- */
   hours: [
-    "Revisa el calendario de reservas",
-    "Consultas por Instagram o WhatsApp"
+    "Clases según el calendario de reservas",
+    "Consultas por correo o WhatsApp"
   ],
 
   /* ---- Cifras de la portada ---- */
@@ -70,7 +69,7 @@ window.SITE_CONFIG = {
      2. Pega aquí su URL (https://feeds.behold.so/...).
      Sin URL, la sección muestra solo el botón para seguir la cuenta. */
   instagramFeed: {
-    url: "https://feeds.behold.so/LXNWcDXcHb0Zzx0wsqWb",
+    url: "https://feeds.behold.so/TLliuxq76nn5STiVhwCw",
     count: 6                                     // el plan gratuito entrega hasta 6
   },
 
@@ -81,6 +80,7 @@ window.SITE_CONFIG = {
   schedule: {
     source: "cal",                               // "cal" o "json" (archivo en url)
     weeks: 2,                                    // semanas que se revisan en Cal.com
+    note: "Horario tomado del calendario de reservas. Los cupos se confirman al reservar.",
     url: "data/horario.json"                     // solo si source es "json"
   },
 
@@ -92,7 +92,6 @@ window.SITE_CONFIG = {
      variants: varios eventos de Cal.com que en el sitio son una sola clase
      (en reservas aparece un selector de duración). */
   booking: {
-    requireAccount: true,                        // solo deportistas con cuenta pueden reservar (ver DEPORTISTAS.md)
     calUsername: "hccombat",                     // cal.com/<usuario>
     calOrigin: "https://app.cal.com",
     classes: [
@@ -106,13 +105,6 @@ window.SITE_CONFIG = {
       { label: "Físico",    slug: "fisico",         tone: "acero",  page: "" },
       { label: "Sala libre / Randoris", slug: "sala-libre-randoris", tone: "linea", page: "" }
     ]
-  },
-
-  /* ---- Cuentas de deportistas · ver DEPORTISTAS.md ----
-     Disciplinas que cada deportista puede marcar en su perfil. */
-  athletes: {
-    disciplines: ["BJJ Gi", "BJJ No-Gi", "Judo", "Físico"],
-    payRequiresAccount: true                     // "Suscribirme" pide cuenta: el pago queda a nombre del deportista
   },
 
   /* ---- Firebase (blog y planes editables desde admin.html) · ver ADMIN.md ----

@@ -33,43 +33,9 @@ La función no corre con `python -m http.server`; se prueba en Vercel (o con `ve
 En tu cuenta de Mercado Pago → **Actividad**. Cada pago trae:
 
 - El nombre del plan y el periodo en el detalle.
-- En **Referencia externa**: `plan|periodo|fecha de inicio|correo|UID`, p. ej. `ilim|mes|2026-10-01|ana@correo.cl|Xk3…`. El UID identifica la cuenta del deportista (ver `DEPORTISTAS.md`).
+- En **Referencia externa**: `plan|periodo|fecha de inicio|correo`, p. ej. `ilim|mes|2026-10-01|ana@correo.cl`.
 
 Mercado Pago le envía el comprobante al alumno, y a ti un aviso por cada pago recibido.
-
-## Registro automático en el panel (webhook)
-
-Cuando un pago se aprueba, Mercado Pago avisa a `/api/mp-webhook`. La función vuelve a consultar el pago a Mercado Pago (nunca confía en el aviso) y:
-
-- Lo guarda en la ficha del deportista (`/admin` → Deportistas y `/cuenta`), con el medio "Mercado Pago".
-- **Extiende su membresía**: 1 mes si pagó mensual, 12 si pagó anual. Se suma desde su vencimiento si sigue al día, o desde hoy si estaba vencida. También actualiza su plan.
-- Busca al deportista por su cuenta (UID) y, si no calza, por el correo. Si nadie calza, el pago aparece en el panel como **"sin cuenta asociada"** para registrarlo a mano.
-- Si el pago se reembolsa o tiene contracargo, lo marca como tal. La fecha de la membresía no se toca: ajústala a mano si corresponde.
-- Mercado Pago puede avisar varias veces del mismo pago; se registra una sola vez.
-
-### Configuración (una sola vez)
-
-**1. Cuenta de servicio de Firebase** (permite a la función escribir en Firestore)
-
-1. [Consola de Firebase](https://console.firebase.google.com) → proyecto `kizuna-admin-25951` → ⚙️ **Configuración del proyecto** → **Cuentas de servicio**.
-2. **Generar nueva clave privada** → se descarga un archivo `.json`.
-3. En Vercel → **Settings → Environment Variables** → agrega `FIREBASE_SERVICE_ACCOUNT` y pega **todo el contenido** del archivo.
-4. Guarda el archivo en un lugar seguro o bórralo. **Nunca lo subas al repositorio**: da acceso total a la base de datos.
-
-**2. Webhook en Mercado Pago**
-
-1. [Panel de developers](https://www.mercadopago.cl/developers/panel) → tu aplicación → **Webhooks** → **Configurar notificaciones**.
-2. **Modo productivo** → URL: `https://<tu-dominio>/api/mp-webhook`.
-3. Eventos: marca **Pagos**. Guarda.
-4. Copia la **clave secreta** que aparece y agrégala en Vercel como `MP_WEBHOOK_SECRET`.
-
-**3. Redeploy** en Vercel para que tome las variables nuevas.
-
-### Probar
-
-- En Mercado Pago → Webhooks → **Simular notificación**. Con un id inventado la función responde "ignorado" (el pago no existe): sirve para confirmar que la URL y la clave secreta funcionan.
-- Para una prueba completa, usa las cuentas de prueba (arriba) con una cuenta de deportista creada en `/cuenta`: al aprobarse el pago, su membresía debería aparecer extendida en `/cuenta`.
-- Los resultados quedan en Vercel → **Logs** (función `api/mp-webhook`): `Pago 123: registrado`, `repetido` o `sin deportista`.
 
 ## Qué ve el alumno al volver
 
@@ -78,3 +44,4 @@ Mercado Pago lo devuelve a `/?pago=ok`, `/?pago=pendiente` o `/?pago=error`, y e
 ## Pendiente (si se necesita más adelante)
 
 - **Cobro automático cada mes** (suscripción de Mercado Pago): hoy cada mes se paga por separado.
+- **Registro automático de pagos** (webhook de Mercado Pago): hoy los pagos se revisan en la cuenta de Mercado Pago.

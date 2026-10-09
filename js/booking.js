@@ -8,10 +8,6 @@
    Una clase puede tener variantes (p. ej. Judo de 1 h y de 1 h 15):
    se muestran como una sola pestaña con un selector de duración.
 
-   Con booking.requireAccount = true, el calendario queda bloqueado
-   hasta que js/sesion.js confirma que hay un deportista con sesión
-   (TNBooking.unlock); mientras tanto se muestra un aviso para entrar
-   o crear cuenta. Sus datos se completan solos en Cal.com.
    Expone window.TNBooking.
    ========================================================== */
 (function(){
@@ -20,12 +16,6 @@
   const origin = cfg.calOrigin || "https://app.cal.com";
   const classes = (cfg.classes || []).filter(c => c && c.slug);
   const configured = username !== "" && classes.length > 0;
-  const requireAccount = cfg.requireAccount === true;
-  const siteRoot = new URL("../", document.currentScript.src).href;
-  let athlete = null;          // { uid, name, email, phone } cuando hay sesión
-  const pending = [];          // montajes que esperan la sesión
-  const gates = [];            // contenedores con el aviso de cuenta
-  let gateState = "checking", gateTimer = 0;
 
   const successHandlers = [];
   const failHandlers = [];
@@ -81,17 +71,11 @@
     el.dataset.slug = slug;
     container.appendChild(el);
 
-    // Datos del deportista ya escritos en el formulario de Cal.com
-    const prefill = athlete ? {
-      name: athlete.name, email: athlete.email,
-      ...(athlete.phone ? { attendeePhoneNumber: athlete.phone } : {}),
-      "metadata[deportista]": athlete.uid
-    } : {};
     Cal("init", ns, { origin });
     Cal.ns[ns]("inline", {
       elementOrSelector: "#" + el.id,
       calLink: `${username}/${slug}`,
-      config: { layout: "month_view", useSlotsViewOnSmallScreen: "true", theme: "dark", ...prefill }
+      config: { layout: "month_view", useSlotsViewOnSmallScreen: "true", theme: "dark" }
     });
     Cal.ns[ns]("ui", UI);
     Cal.ns[ns]("on", { action: "bookingSuccessfulV2", callback: e => successHandlers.forEach(fn => fn(e.detail.data || {}, slug)) });
@@ -135,41 +119,6 @@
     </div>`).join("");
   }
 
-  /* ---- Aviso de cuenta (requireAccount) ----
-     estado: "checking" | "anon" | "incomplete" */
-  // cuenta.html?next=<esta página>#<sección>: vuelve aquí después de entrar
-  const accountUrl = g => {
-    const hash = (g.root.closest && g.root.closest("section[id]")?.id) || g.root.id || "reservas";
-    return siteRoot + "cuenta.html?next=" + encodeURIComponent(location.pathname + location.search + "#" + hash);
-  };
-  const GATE = {
-    checking: g => `<p class="cal-loading">Revisando tu cuenta…</p>`,
-    anon: g => `<div class="cal-gate">
-        <div class="eyebrow">Solo deportistas registrados</div>
-        <h3>Entra para reservar</h3>
-        <p>Para agendar una clase necesitas tu cuenta de deportista. Crearla toma un minuto y tu primera clase sigue siendo gratis.</p>
-        <div class="cal-gate-actions">
-          <a class="btn" href="${accountUrl(g)}&modo=registro">Crear cuenta</a>
-          <a class="btn ghost" href="${accountUrl(g)}">Ya tengo cuenta</a>
-        </div>
-      </div>`,
-    incomplete: g => `<div class="cal-gate">
-        <div class="eyebrow">Falta un paso</div>
-        <h3>Completa tu perfil</h3>
-        <p>Antes de reservar necesitamos tu nombre y teléfono.</p>
-        <div class="cal-gate-actions"><a class="btn" href="${accountUrl(g)}">Completar perfil</a></div>
-      </div>`
-  };
-  function paintGates(state){
-    gateState = state;
-    gates.forEach(g => {
-      g.container.hidden = false;
-      g.container.classList.add("is-gated");
-      g.container.innerHTML = GATE[state](g);
-      if (g.tabs) g.tabs.hidden = true;
-    });
-  }
-
   function makeButton(label, slug, pressed){
     const b = document.createElement("button");
     b.type = "button";
@@ -204,18 +153,6 @@
         if (container) container.hidden = true;
         if (fallback) fallback.hidden = false;
         return false;
-      }
-
-      // Sin sesión: aviso de cuenta y el calendario espera a unlock()
-      if (requireAccount && !athlete) {
-        const gate = { container, tabs, root };
-        gates.push(gate);
-        paintGates("checking");
-        pending.push(() => this.mount(root, opts));
-        // Si js/sesion.js no responde (Firebase caído), aviso para reservar por mensaje
-        clearTimeout(gateTimer);
-        gateTimer = setTimeout(() => { if (!athlete && gateState === "checking") this.lock("error"); }, 15000);
-        return true;
       }
 
       // Selector de duración (solo para clases con variantes)
@@ -278,26 +215,6 @@
       if (r) r.select(slug);
       return !!r;
     },
-
-    requireAccount,
-
-    // js/sesion.js: hay deportista con perfil completo → abre los calendarios
-    unlock(data){
-      athlete = data;
-      gates.splice(0).forEach(g => { g.container.classList.remove("is-gated"); g.container.innerHTML = ""; });
-      pending.splice(0).forEach(fn => fn());
-    },
-    // js/sesion.js: sin sesión ("anon"), perfil a medias ("incomplete")
-    // o Firebase sin respuesta ("error" → aviso para reservar por mensaje)
-    lock(state){
-      if (state === "error") {
-        gateState = "error";
-        gates.forEach(g => { g.container.hidden = true; const f = g.root.querySelector("[data-cal-fallback]"); if (f) f.hidden = false; });
-        return;
-      }
-      paintGates(state);
-    },
-    athlete: () => athlete,
 
     onSuccess(fn){ successHandlers.push(fn); },
     onFail(fn){ failHandlers.push(fn); },

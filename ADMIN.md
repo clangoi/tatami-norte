@@ -18,6 +18,8 @@ En [la consola de Firebase](https://console.firebase.google.com) → **Authentic
 - **Firestore Database → Crear base de datos** → ubicación `southamerica-east1 (São Paulo)` → **modo producción**.
 - **Reglas** → borra lo que haya, pega el contenido de `firestore.rules` y presiona **Publicar**.
 
+> Si la base ya existía de antes (con deportistas y pagos), igual vuelve a publicar las reglas: las nuevas cierran esas colecciones. Puedes borrar `athletes` y `payments` desde **Datos** si ya no las necesitas.
+
 ### 3. Darte permiso de admin
 
 1. Entra a `/admin` con tu correo y contraseña. Te va a mostrar tu **UID** con un botón para copiarlo.

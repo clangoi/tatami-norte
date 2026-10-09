@@ -77,7 +77,6 @@
       <div class="filters" role="tablist" aria-label="Secciones">
         <button type="button" role="tab" aria-pressed="true" data-tab="blog">Blog</button>
         <button type="button" role="tab" aria-pressed="false" data-tab="plans">Planes</button>
-        <button type="button" role="tab" aria-pressed="false" data-tab="athletes">Deportistas</button>
       </div>
     </div>
 
@@ -182,111 +181,6 @@
           </div>
         </div>
       </form>
-    </div>
-
-    <!-- ===== Deportistas ===== -->
-    <div class="wrap" data-view="athletes" hidden>
-      <div id="athList">
-        <div class="adm-bar">
-          <h2>Deportistas</h2>
-          <div class="adm-stats" id="athStats"></div>
-        </div>
-        <div class="adm-toolbar">
-          <input class="adm-search" id="athSearch" type="search" placeholder="Buscar por nombre, correo, teléfono, RUT o UID" aria-label="Buscar deportista">
-          <div class="filters" id="athFilters" role="group" aria-label="Filtrar">
-            <button type="button" aria-pressed="true" data-f="todos">Todos</button>
-            <button type="button" aria-pressed="false" data-f="aldia">Al día</button>
-            <button type="button" aria-pressed="false" data-f="vencida">Vencida</button>
-            <button type="button" aria-pressed="false" data-f="sin">Sin membresía</button>
-            <button type="button" aria-pressed="false" data-f="inactivo">Inactivos</button>
-          </div>
-        </div>
-        <p class="adm-help adm-note">Cada deportista crea su cuenta en <a href="cuenta.html" target="_blank" rel="noopener">/cuenta</a>. Aquí editas su ficha, su membresía y registras sus pagos.</p>
-        <div class="notice adm-orphans" id="athOrphans" hidden></div>
-        <div class="adm-rows" id="athRows"></div>
-      </div>
-
-      <div id="athDetail" hidden>
-        <div class="adm-bar">
-          <div>
-            <button class="adm-link" type="button" data-ath-back>← Deportistas</button>
-            <h2 id="athName"></h2>
-            <p class="adm-help" id="athMeta"></p>
-          </div>
-          <span id="athStatus"></span>
-        </div>
-
-        <div class="adm-split adm-ath">
-          <div class="adm-stack">
-            <form class="adm-box" id="memForm" novalidate>
-              <h3>Membresía</h3>
-              <div class="row2">
-                <div class="field"><label for="mPlan">Plan</label><select id="mPlan"></select></div>
-                <div class="field"><label for="mUntil">Vigente hasta</label><input id="mUntil" type="date"></div>
-              </div>
-              <label class="check"><input type="checkbox" id="mActive"> Cuenta activa (si la desactivas, sigue pudiendo entrar, pero aparece como inactiva)</label>
-              <div class="err" id="memErr" role="alert"></div>
-              <button class="btn small" type="submit">Guardar membresía</button>
-            </form>
-
-            <form class="adm-box" id="payForm" novalidate>
-              <h3>Registrar pago</h3>
-              <div class="row2">
-                <div class="field"><label for="yDate">Fecha</label><input id="yDate" type="date" required></div>
-                <div class="field"><label for="yAmount">Monto (<span data-currency></span>)</label><input id="yAmount" inputmode="numeric" autocomplete="off" placeholder="45.000" required></div>
-              </div>
-              <div class="row2">
-                <div class="field"><label for="yMethod">Medio de pago</label>
-                  <select id="yMethod"><option value="transferencia">Transferencia</option><option value="mercadopago">Mercado Pago</option><option value="efectivo">Efectivo</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
-                </div>
-                <div class="field"><label for="yPlan">Plan</label><select id="yPlan"></select></div>
-              </div>
-              <div class="field"><label for="yNote">Nota <span class="adm-opt">opcional</span></label><input id="yNote" maxlength="300" placeholder="N° de transferencia, mes que paga, etc."></div>
-              <div class="adm-extend">
-                <label class="check"><input type="checkbox" id="yExtend" checked> Extender la membresía</label>
-                <select id="yMonths" aria-label="Meses"><option value="1">1 mes</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select>
-                <span class="adm-help" id="yUntil"></span>
-              </div>
-              <div class="err" id="payErr" role="alert"></div>
-              <button class="btn small" type="submit">Registrar pago</button>
-            </form>
-
-            <div class="adm-box">
-              <h3>Pagos</h3>
-              <div id="athPays"></div>
-            </div>
-          </div>
-
-          <div class="adm-stack">
-            <form class="adm-box" id="athForm" novalidate>
-              <h3>Datos personales</h3>
-              <div class="row2">
-                <div class="field"><label for="aNombre">Nombre</label><input id="aNombre" maxlength="60" required></div>
-                <div class="field"><label for="aApellido">Apellido</label><input id="aApellido" maxlength="60" required></div>
-              </div>
-              <div class="row2">
-                <div class="field"><label for="aTel">Teléfono</label><input id="aTel" type="tel" maxlength="30"></div>
-                <div class="field"><label for="aRut">RUT</label><input id="aRut" maxlength="15"></div>
-              </div>
-              <div class="field"><label for="aNac">Fecha de nacimiento</label><input id="aNac" type="date"></div>
-              <div class="field"><label>Disciplinas</label><div class="filters adm-disc" id="aDisc"></div></div>
-              <div class="row2">
-                <div class="field"><label for="aEmNombre">Contacto de emergencia</label><input id="aEmNombre" maxlength="80"></div>
-                <div class="field"><label for="aEmTel">Teléfono de emergencia</label><input id="aEmTel" type="tel" maxlength="30"></div>
-              </div>
-              <p class="adm-help">El correo es el de su cuenta y solo lo puede cambiar el deportista.</p>
-              <div class="err" id="athErr" role="alert"></div>
-              <button class="btn small" type="submit">Guardar datos</button>
-            </form>
-
-            <div class="adm-box adm-box-danger">
-              <h3>Borrar ficha</h3>
-              <p class="adm-help">Borra sus datos y membresía. Los pagos se conservan. Su cuenta de acceso sigue existiendo: si vuelve a entrar, se le pedirá completar el perfil otra vez. Para borrar también la cuenta de acceso, hazlo en Firebase → Authentication.</p>
-              <button class="btn small ghost adm-danger" type="button" id="athDelete">Borrar ficha</button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </section>
 </main>

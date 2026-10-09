@@ -223,10 +223,3 @@
 .sch-date{display:block;margin-top:6px;font:500 12px/1 var(--label);letter-spacing:.1em;color:var(--steel)}
 .sch-list-day h3 .sch-date{display:inline;margin:0 0 0 8px;vertical-align:middle}
 .sch-range{margin:-24px 0 18px;color:var(--steel);font:600 14px/1 var(--label);letter-spacing:.14em;text-transform:uppercase}
-
-/* Reservas: aviso para entrar o crear cuenta (booking.requireAccount) */
-.cal-box.is-gated{display:grid;place-items:center;min-height:420px}
-.cal-gate{color:var(--cream);max-width:440px;padding:40px clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:14px;align-items:flex-start}
-.cal-gate h3{font-size:clamp(36px,4vw,48px);font-weight:900}
-.cal-gate p{color:var(--text-soft);font-size:16px}
-.cal-gate-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}

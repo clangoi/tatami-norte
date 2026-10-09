@@ -2,7 +2,7 @@
    Kizuna · Pago con Mercado Pago (función de Vercel)
    POST /api/pagar  →  { url }  (checkout de Mercado Pago)
 
-   Recibe { plan, cycle, name, email, start, uid } desde index.html,
+   Recibe { plan, cycle, name, email, start } desde index.html,
    calcula el precio aquí en el servidor (nunca confía en el que
    manda el navegador) y crea una preferencia de Checkout Pro.
 
@@ -65,8 +65,6 @@ module.exports = async (req, res) => {
   const name = String(b.name || "").trim().slice(0, 120);
   const email = String(b.email || "").trim().slice(0, 160);
   const start = dateOk(b.start) ? b.start : "";
-  // UID de la cuenta del deportista (athletes/{uid}); solo se usa como referencia
-  const uid = /^[A-Za-z0-9]{10,40}$/.test(b.uid || "") ? b.uid : "";
   if (!planId || name.length < 3 || !emailOk(email)) {
     return res.status(400).json({ error: "Faltan datos: revisa nombre y correo." });
   }
@@ -105,8 +103,8 @@ module.exports = async (req, res) => {
     },
     auto_return: "approved",
     statement_descriptor: (cfg.shortName || "KIZUNA").toUpperCase().slice(0, 22),
-    external_reference: `${planId}|${cycle}|${start}|${email}|${uid}`.slice(0, 256),
-    metadata: { plan: planId, plan_name: plan.name, cycle, start, name, email, uid }
+    external_reference: `${planId}|${cycle}|${start}|${email}`.slice(0, 256),
+    metadata: { plan: planId, plan_name: plan.name, cycle, start, name, email }
   };
 
   try {

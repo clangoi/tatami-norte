@@ -17,12 +17,13 @@ window.SITE_CONFIG = {
   motto: "Respeto · Disciplina · Constancia",
   description: "Escuela de Artes Marciales Kizuna en Santiago: BJJ Gi, BJJ No-Gi, Judo y preparación física. Reserva tu clase en línea.",
 
-  /* ---- Contacto ---- */
+  /* ---- Contacto ----
+     Los canales principales son Instagram y WhatsApp: el sitio invita
+     a escribir por mensaje directo de Instagram (ig.me). */
   contact: {
-    email: "contacto@hccombat.com",
     phone: "+56 9 4796 6805",
     whatsapp: "56947966805",                     // solo dígitos con código de país
-    instagram: "escuela.kizuna",                 // sin @
+    instagram: "clubkizuna",                     // sin @
     facebook: "",
     tiktok: ""
   },
@@ -37,8 +38,8 @@ window.SITE_CONFIG = {
 
   /* ---- Horario (pie de página) ---- */
   hours: [
-    "Clases según el calendario de reservas",
-    "Consultas por correo o WhatsApp"
+    "Revisa el calendario de reservas",
+    "Consultas por Instagram o WhatsApp"
   ],
 
   /* ---- Cifras de la portada ---- */
@@ -69,7 +70,7 @@ window.SITE_CONFIG = {
      2. Pega aquí su URL (https://feeds.behold.so/...).
      Sin URL, la sección muestra solo el botón para seguir la cuenta. */
   instagramFeed: {
-    url: "https://feeds.behold.so/TLliuxq76nn5STiVhwCw",
+    url: "https://feeds.behold.so/LXNWcDXcHb0Zzx0wsqWb",
     count: 6                                     // el plan gratuito entrega hasta 6
   },
 
@@ -80,7 +81,6 @@ window.SITE_CONFIG = {
   schedule: {
     source: "cal",                               // "cal" o "json" (archivo en url)
     weeks: 2,                                    // semanas que se revisan en Cal.com
-    note: "Horario tomado del calendario de reservas. Los cupos se confirman al reservar.",
     url: "data/horario.json"                     // solo si source es "json"
   },
 

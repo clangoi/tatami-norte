@@ -1,8 +1,0 @@
-{
-  "name": "kizuna-sitio",
-  "private": true,
-  "description": "Sitio estático de Kizuna. Las dependencias son solo para las funciones de api/ (Vercel).",
-  "engines": {
-    "node": ">=20"
-  }
-}

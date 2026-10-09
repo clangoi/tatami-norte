@@ -7,7 +7,6 @@
      TNBooking.select(seccion, "judo2")           abre esa clase (o variante)
    Una clase puede tener variantes (p. ej. Judo de 1 h y de 1 h 15):
    se muestran como una sola pestaña con un selector de duración.
-
    Expone window.TNBooking.
    ========================================================== */
 (function(){

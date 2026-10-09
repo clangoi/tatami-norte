@@ -44,4 +44,4 @@ Mercado Pago lo devuelve a `/?pago=ok`, `/?pago=pendiente` o `/?pago=error`, y e
 ## Pendiente (si se necesita más adelante)
 
 - **Cobro automático cada mes** (suscripción de Mercado Pago): hoy cada mes se paga por separado.
-- **Registrar los pagos en el panel**: requiere un webhook y una cuenta de servicio de Firebase.
+- **Registro automático de pagos** (webhook de Mercado Pago): hoy los pagos se revisan en la cuenta de Mercado Pago.

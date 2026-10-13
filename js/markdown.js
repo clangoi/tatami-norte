@@ -9,7 +9,8 @@
    **negrita**  *cursiva*  [texto](https://enlace)
    - lista / 1. lista numerada
    > cita destacada
-   ![descripción](/assets/images/foto.png "pie")   imagen (varias seguidas = galería)
+   ![descripción](img:ID "pie")                    foto subida desde el panel (varias seguidas = galería)
+   ![descripción](/assets/images/foto.png "pie")   imagen del sitio
    @[título](ID_YOUTUBE?start=21&end=57 "pie")     video de YouTube
    Línea en blanco = párrafo nuevo. El primero sale más grande.
    ========================================================== */
@@ -33,11 +34,13 @@ function inline(text){
 const IMG = /^!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)$/;
 const VIDEO = /^@\[([^\]]*)\]\(([\w-]{11})(?:\?((?:(?:start|end)=\d+&?)*))?(?:\s+"([^"]*)")?\)$/;
 // Solo https o rutas del mismo sitio (no "//otro-sitio")
-const safeImg = u => /^(https:\/\/|\/(?!\/))/i.test(u);
+// o "img:ID", una foto subida desde el panel (se completa con hydrateImages de firebase.js)
+const safeImg = u => /^(https:\/\/|\/(?!\/)|img:[\w-]{8,40}$)/i.test(u);
 
 function figure(m){
   const [, alt, src, cap] = m;
-  return `<figure><img src="${esc(src)}" loading="lazy" decoding="async" alt="${esc(alt)}">${cap ? `<figcaption>${esc(cap)}</figcaption>` : ""}</figure>`;
+  const attr = src.startsWith("img:") ? `data-img="${esc(src.slice(4))}"` : `src="${esc(src)}"`;
+  return `<figure><img ${attr} loading="lazy" decoding="async" alt="${esc(alt)}">${cap ? `<figcaption>${esc(cap)}</figcaption>` : ""}</figure>`;
 }
 
 function video(m){

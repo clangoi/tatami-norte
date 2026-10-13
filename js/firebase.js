@@ -33,3 +33,22 @@ export async function visiblePlans(){
   return snap.docs.map(d => ({ ...d.data(), id: d.id }))
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
+
+// Imágenes subidas desde admin: images/{id} guarda la foto como data URL (ya reducida).
+// Se piden una sola vez por visita.
+const imageCache = new Map();
+export function cacheImage(id, data){ imageCache.set(id, Promise.resolve(data)); }
+export function loadImage(id){
+  if (!imageCache.has(id)) {
+    imageCache.set(id, fs.getDoc(fs.doc(db, "images", id)).then(s => (s.exists() ? s.data().data : null)));
+  }
+  return imageCache.get(id);
+}
+// Rellena las <img data-img="ID"> que dibuja markdown.js
+export function hydrateImages(root){
+  root.querySelectorAll("img[data-img]").forEach(img => {
+    loadImage(img.dataset.img)
+      .then(data => { if (data) img.src = data; else img.alt = img.alt || "Imagen no disponible"; })
+      .catch(() => { img.alt = img.alt || "Imagen no disponible"; });
+  });
+}

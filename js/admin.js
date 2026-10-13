@@ -6,7 +6,7 @@
    plans/{id}    planes de suscripción
    Quién puede entrar lo deciden admins/{uid} y firestore.rules.
    ========================================================== */
-import { SDK, app, db, fs } from "./firebase.js";
+import { SDK, app, db, fs, cacheImage, hydrateImages } from "./firebase.js";
 import { toHtml, readingMinutes } from "./markdown.js";
 import { SEED_POSTS } from "./seed-posts.js";
 
@@ -227,6 +227,8 @@ $("#posts").addEventListener("click", async e => {
     if (!confirm(`¿Borrar “${p.title}”? No se puede deshacer.`)) return;
     try {
       await fs.deleteDoc(fs.doc(db, "posts", p.slug));
+      // Sus fotos ya no sirven; si falla el borrado quedan huérfanas, sin afectar nada
+      imageIds(p.body).forEach(id => fs.deleteDoc(fs.doc(db, "images", id)).catch(() => {}));
       posts = posts.filter(x => x !== p);
       renderPosts();
       renderTopics();
@@ -313,12 +315,64 @@ function previewPost(){
     <h3>${esc(F.title.value || "Título del artículo")}</h3><p class="ex">${esc(F.ex.value)}</p>`;
   $("#pvTitle").textContent = F.title.value;
   $("#pvBody").innerHTML = toHtml(F.body.value) || '<p class="adm-empty">El texto aparecerá aquí.</p>';
+  hydrateImages($("#pvBody"));
   $("#readInfo").textContent = `${readingMinutes(F.body.value)} min de lectura`;
 }
+
+/* ---------- Imágenes ---------- */
+const imageIds = body => [...String(body || "").matchAll(/\(img:([\w-]{8,40})[\s)]/g)].map(m => m[1]);
+const newImageId = () => [...crypto.getRandomValues(new Uint8Array(12))].map(n => (n % 36).toString(36)).join("");
+
+// Reduce la foto a 1200 px como máximo y la deja bajo ~700 KB para que quepa en Firestore
+async function compressImage(file){
+  const bmp = await createImageBitmap(file);
+  let scale = Math.min(1, 1200 / Math.max(bmp.width, bmp.height));
+  for (let tries = 0; tries < 6; tries++) {
+    const w = Math.max(1, Math.round(bmp.width * scale)), h = Math.max(1, Math.round(bmp.height * scale));
+    const canvas = Object.assign(document.createElement("canvas"), { width: w, height: h });
+    canvas.getContext("2d").drawImage(bmp, 0, 0, w, h);
+    for (const q of [0.82, 0.68, 0.55]) {
+      let url = canvas.toDataURL("image/webp", q);
+      if (!url.startsWith("data:image/webp")) url = canvas.toDataURL("image/jpeg", q); // navegador sin WebP
+      if (url.length <= 700000) { bmp.close?.(); return url; }
+    }
+    scale *= 0.75;
+  }
+  bmp.close?.();
+  throw new Error("La imagen es demasiado pesada incluso reducida. Prueba con otra.");
+}
+
+$("#fImage").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  const err = $("#postErr");
+  if (!file.type.startsWith("image/")) { err.textContent = "Elige un archivo de imagen (JPG, PNG o WebP)."; return; }
+  err.textContent = "";
+  const btn = $('[data-md="image"]'); btn.disabled = true; btn.textContent = "Subiendo…";
+  try {
+    const data = await compressImage(file);
+    const id = newImageId();
+    await fs.setDoc(fs.doc(db, "images", id), { data, createdAt: fs.serverTimestamp() });
+    cacheImage(id, data);
+    const t = F.body, s = t.selectionStart;
+    const alt = "descripción";
+    const lead = s && !/\n\n$/.test(t.value.slice(0, s)) ? "\n\n" : "";
+    const text = `${lead}![${alt}](img:${id})\n\n`;
+    t.setRangeText(text, s, t.selectionEnd);
+    const from = s + lead.length + 2;
+    t.focus(); t.setSelectionRange(from, from + alt.length);
+    dirty = true; previewPost();
+    toast("Imagen subida");
+  } catch (e2) {
+    err.textContent = e2.code ? saveError(e2) : (e2.message || "No se pudo subir la imagen.");
+  } finally { btn.disabled = false; btn.textContent = "Imagen"; }
+});
 
 // Barra de formato: envuelve la selección o inserta al inicio de la línea
 $(".adm-tools").addEventListener("click", e => {
   const b = e.target.closest("[data-md]"); if (!b) return;
+  if (b.dataset.md === "image") { $("#fImage").click(); return; }
   const t = F.body, s = t.selectionStart, en = t.selectionEnd;
   const sel = t.value.slice(s, en);
   const lineStart = t.value.lastIndexOf("\n", s - 1) + 1;

@@ -65,6 +65,18 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Fotos de los artículos (data URL ya reducida desde el panel). Las ve cualquiera.
+    match /images/{id} {
+      allow read: if true;
+      allow create: if isAdmin()
+        && id.matches('^[A-Za-z0-9_-]{8,40}$')
+        && request.resource.data.keys().hasOnly(['data', 'createdAt'])
+        && request.resource.data.data is string
+        && request.resource.data.data.matches('^data:image/(webp|jpeg|png);base64,.*')
+        && request.resource.data.data.size() <= 900000;
+      allow delete: if isAdmin();
+    }
+
     match /plans/{id} {
       allow read: if resource.data.visible == true || isAdmin();
       allow create, update: if isAdmin() && validPlan(request.resource.data);

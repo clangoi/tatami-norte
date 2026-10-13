@@ -37,3 +37,4 @@
 .post-cta p{font:800 28px/1.05 var(--display);text-transform:uppercase}
 .post-cta p span{display:block;font:500 16px/1.4 var(--body);text-transform:none;color:var(--text-soft);margin-top:6px}
 .post-gallery.one{grid-template-columns:1fr;max-width:420px}
+.post-body img[data-img]:not([src]){display:block;width:100%;aspect-ratio:4/3;background:rgba(27,35,56,.08)}

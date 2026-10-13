@@ -3,7 +3,7 @@
    Lee el artículo de Firestore y llena la página con el mismo
    diseño de los artículos escritos a mano.
    ========================================================== */
-import { db, fs, publishedPosts } from "./firebase.js";
+import { db, fs, publishedPosts, hydrateImages } from "./firebase.js";
 import { toHtml } from "./markdown.js";
 
 const $ = s => document.querySelector(`[data-a="${s}"]`);
@@ -58,6 +58,7 @@ async function load(){
   $("read").textContent = `${p.read || 1} min de lectura`;
   $("meta").hidden = false;
   $("body").innerHTML = toHtml(p.body);
+  hydrateImages($("body"));
 
   // "Sigue leyendo": suma los demás artículos del panel
   if (window.TNBlog) {

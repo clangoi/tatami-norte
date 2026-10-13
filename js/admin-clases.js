@@ -283,29 +283,67 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     return `${renderWeek()}${feedNote}`;
   }
 
-  /* ---------- Horario semanal (bloques, como el de la portada) ----------
-     Cada celda es un día y una hora. Al tocarla se agrega una clase (creada antes en
-     "Clases", que define cuánto dura); al tocar una clase del horario se edita. */
-  const LIMITS_KEY = "tn_sched_limits";
-  const VISIBLE_FROM = 15;                  // al abrir se ven las 15:00 a las 22:00
+  /* ---------- Horario semanal (calendario por bloques) ----------
+     Cada día es una columna y cada hora una fila de cuatro intervalos de 15 minutos. Una clase se dibuja
+     como un bloque que ocupa justo lo que dura: de 17:30 a 18:30 cubre la mitad de la fila de las 17:00 y la
+     mitad de la de las 18:00. Las horas que no caen en un intervalo de 15 minutos se aproximan al siguiente.
+     Al tocar un lugar vacío se agrega una clase (creada antes en "Clases", que define cuánto dura);
+     al tocar una clase se ajusta. */
+  const LIMITS_KEY = "tn_sched_limits_v2";
   const hourLabel = h => `${String(h).padStart(2, "0")}:00`;
-  let limits = { start: 6, end: 24 };       // horas límite de la grilla (se cambian tocándolas)
+  const ceil15 = min => Math.ceil(min / 15) * 15;
+  const DEFAULT_LIMITS = { start: 6, end: 22 };   // por defecto el horario se ve de 06:00 a 22:00
+  let limits = { ...DEFAULT_LIMITS };             // horas de los extremos (se cambian tocándolas)
   try {
     const l = JSON.parse(localStorage.getItem(LIMITS_KEY) || "null");
     if (l && Number.isInteger(l.start) && Number.isInteger(l.end) && l.start >= 0 && l.end <= 24 && l.start < l.end) limits = l;
-  } catch (e) { /* sin almacenamiento: se usan 6 y 24 */ }
-  let slotEditor = null;                    // { slot|null, day, hour } mientras la ventana está abierta
+  } catch (e) { /* sin almacenamiento: se usan los de por defecto */ }
+  let slotEditor = null;                          // { slot|null, day, hour, minute } mientras la ventana está abierta
 
-  // Los límites se amplían solos si ya hay clases fuera de ellos
   const liveSlots = () => slots.filter(s => classOf(s.classId));
 
+  // Tramo que se dibuja de una clase, en minutos del día, ya aproximado a intervalos de 15 minutos
+  function spanOfSlot(s) {
+    const [h, m] = String(s.start).split(":").map(Number);
+    const a = Math.min(ceil15(h * 60 + m), 24 * 60 - 15);
+    const dur = (s.duration || (classOf(s.classId) || {}).duration || 60);
+    const b = Math.min(24 * 60, Math.max(a + 15, ceil15(h * 60 + m + dur)));
+    return [a, b];
+  }
+
+  // Los extremos se amplían solos si ya hay clases fuera de ellos
   function schedRange() {
     let start = limits.start, end = limits.end;
     liveSlots().forEach(s => {
-      const h = parseInt(s.start, 10);
-      if (Number.isInteger(h)) { start = Math.min(start, h); end = Math.max(end, h + 1); }
+      const [a, b] = spanOfSlot(s);
+      start = Math.min(start, Math.floor(a / 60));
+      end = Math.max(end, Math.ceil(b / 60));
     });
-    return { start, end };
+    return { start, end: Math.min(24, end) };
+  }
+
+  // Reparte en carriles las clases que se pisan (solo pasa con datos antiguos) para que no se tapen
+  function layoutDay(items) {
+    const out = [];
+    let cluster = [], clusterEnd = -1;
+    const flush = () => {
+      const ends = [];
+      cluster.forEach(it => {
+        let lane = ends.findIndex(e => e <= it.a);
+        if (lane < 0) { lane = ends.length; ends.push(it.b); } else ends[lane] = it.b;
+        it.lane = lane;
+      });
+      cluster.forEach(it => { it.lanes = ends.length; });
+      out.push(...cluster);
+      cluster = [];
+    };
+    items.sort((x, y) => x.a - y.a || x.b - y.b).forEach(it => {
+      if (cluster.length && it.a >= clusterEnd) { flush(); clusterEnd = -1; }
+      clusterEnd = Math.max(clusterEnd, it.b);
+      cluster.push(it);
+    });
+    if (cluster.length) flush();
+    return out;
   }
 
   function renderSlots() {
@@ -320,35 +358,45 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const hours = Array.from({ length: end - start }, (_, i) => start + i);
     const hourOptions = (from, to, sel) => Array.from({ length: to - from + 1 }, (_, i) => from + i)
       .map(h => `<option value="${h}"${h === sel ? " selected" : ""}>${hourLabel(h)}</option>`).join("");
+    const hm = min => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 
-    const chip = s => {
-      const c = classOf(s.classId);
-      const dur = s.duration || (c && c.duration) || 60;
-      return `<button type="button" class="sch-class t-${esc((c && c.tone) || "oro")}${s.active === false ? " is-off" : ""}" data-sched-edit="${esc(s.id)}">
+    const block = it => {
+      const s = it.slot, c = classOf(s.classId);
+      const top = (it.a - start * 60) / 60, height = (it.b - it.a) / 60;
+      const w = 100 / it.lanes;
+      return `<button type="button" draggable="false" class="sch-class adm-block t-${esc((c && c.tone) || "oro")}${s.active === false ? " is-off" : ""}${it.b - it.a <= 30 ? " is-short" : ""}"
+        data-sched-edit="${esc(s.id)}" style="top:calc(var(--hour-h) * ${top} + 1px);height:calc(var(--hour-h) * ${height} - 2px);left:calc(${it.lane * w}% + 2px);width:calc(${w}% - 4px)">
         <span class="sch-name">${esc(c ? c.label : s.classId)}</span>
-        <span class="sch-time">${esc(s.start)}–${esc(addMin(s.start, dur))}</span>
+        <span class="sch-time">${hm(it.a)}–${hm(it.b)}</span>
         ${s.active === false ? `<span class="adm-chip-off" role="img" aria-label="Oculta" title="Oculta (no se puede reservar)">${ICONS.eyeOff}</span>` : ""}
       </button>`;
     };
+
+    const column = ([k, n]) => {
+      const items = layoutDay(liveSlots().filter(s => s.day === k).map(s => { const [a, b] = spanOfSlot(s); return { slot: s, a, b }; }));
+      return `<div class="adm-cal-col" role="group" aria-label="${n}">
+        ${hours.map(h => `<div class="adm-sched-cell" role="button" tabindex="0" data-sched-add data-day="${k}" data-hour="${h}" aria-label="Agregar una clase el ${n} desde las ${hourLabel(h)}"></div>`).join("")}
+        ${items.map(block).join("")}
+      </div>`;
+    };
+
     const grid = `<div class="adm-sched-scroll" data-sched-scroll>
-      <div class="sch-grid adm-sched-grid" style="--days:7" role="table" aria-label="Horario semanal">
-        <div class="sch-row sch-head" role="row"><div class="sch-corner" role="columnheader"></div>${DAYS.map(([, n]) => `<div class="sch-day" role="columnheader">${n}</div>`).join("")}</div>
-        ${hours.map((h, i) => `<div class="sch-row" role="row">
-          <div class="sch-hour" role="rowheader">${i === 0
+      <div class="adm-cal" style="--hour-h:64px">
+        <div class="adm-cal-head"><div></div>${DAYS.map(([, n]) => `<div class="adm-cal-day">${n}</div>`).join("")}</div>
+        <div class="adm-cal-body">
+          <div class="adm-cal-hours">${hours.map((h, i) => `<div class="adm-cal-hour">${i === 0
             ? `<select class="adm-limit" id="limStart" aria-label="Hora inicial del horario">${hourOptions(0, end - 1, start)}</select>`
-            : hourLabel(h)}</div>
-          ${DAYS.map(([k, n]) => `<div class="sch-cell adm-sched-cell" role="button" tabindex="0" data-sched-add data-day="${k}" data-hour="${h}" aria-label="Agregar una clase el ${n} desde las ${hourLabel(h)}">
-            ${liveSlots().filter(s => s.day === k && parseInt(s.start, 10) === h).sort((a, b) => a.start.localeCompare(b.start)).map(chip).join("")}
-          </div>`).join("")}
-        </div>`).join("")}
-        <div class="sch-row adm-sched-foot" role="row"><div class="sch-hour" role="rowheader"><select class="adm-limit" id="limEnd" aria-label="Hora final del horario">${hourOptions(start + 1, 24, end)}</select></div>
-          ${DAYS.map(() => '<div class="sch-cell adm-sched-end"></div>').join("")}</div>
+            : hourLabel(h)}</div>`).join("")}</div>
+          ${DAYS.map(column).join("")}
+        </div>
+        <div class="adm-cal-foot"><div><select class="adm-limit" id="limEnd" aria-label="Hora final del horario">${hourOptions(start + 1, 24, end)}</select></div></div>
       </div>
     </div>`;
 
     return `<div class="adm-bar"><h2>Horario semanal</h2></div>
-      <p class="adm-help adm-note">Toca un bloque del horario para agregar una clase en ese día y hora, o toca una clase para ajustarla. Cada clase dura lo que defines en <b>Clases</b>. Para un feriado o una semana sin clase usa <b>Cierres</b>; los cambios valen para las fechas futuras y las reservas ya hechas no se mueven.</p>
+      <p class="adm-help adm-note">Toca el lugar del horario donde empieza la clase (cada hora tiene cuatro intervalos de 15 minutos) o toca una clase para ajustarla. También puedes arrastrarla a otro lugar: se acomoda de 15 en 15 minutos según la altura donde la sueltes. Las horas de los extremos (${hourLabel(start)} y ${hourLabel(end)}) se pueden cambiar tocándolas. Cada clase dura lo que defines en <b>Clases</b>; si una hora no cae en un intervalo de 15 minutos, se aproxima al siguiente. Para un feriado o una semana sin clase usa <b>Cierres</b>; los cambios valen para las fechas futuras y las reservas ya hechas no se mueven.</p>
       ${importBox}
+      <p class="err adm-sched-msg" data-sched-msg role="alert" hidden></p>
       ${grid}
       ${slotEditorModal()}`;
   }
@@ -356,7 +404,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   // Ventana para agregar o ajustar una clase del horario
   function slotEditorModal() {
     if (!slotEditor) return "";
-    const { slot, day, hour } = slotEditor;
+    const { slot, day, hour, minute = 0 } = slotEditor;
     const x = slot || {};
     const options = classes.filter(c => c.active !== false || c.id === x.classId);
     const cur = classOf(x.classId) || options[0];
@@ -370,7 +418,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         <div class="field"><label for="seClass">Clase</label>
           <select id="seClass" name="classId">${options.map(c => `<option value="${esc(c.id)}" data-min="${esc(c.duration || 60)}"${c.id === cur.id ? " selected" : ""}>${esc(c.label)}</option>`).join("")}</select></div>
         <div class="field"><label for="seStart">Hora de inicio</label>
-          <input id="seStart" name="start" type="time" value="${esc(slot ? slot.start : hourLabel(hour))}" required>
+          <input id="seStart" name="start" type="time" step="900" value="${esc(slot ? slot.start : `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`)}" required>
           <small class="adm-help" data-hint></small></div>
         <div class="field"><label id="seDaysLabel">Días en que se repite</label>
           <div class="adm-days" role="group" aria-labelledby="seDaysLabel">${DAYS.map(([k, n]) => {
@@ -393,6 +441,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
      Cada clase ocupa desde su hora de inicio hasta que cumple su duración. Se compara en minutos
      de la semana (lunes 00:00 = 0), así también se detecta una clase que pasa de medianoche. */
   const WEEK_MIN = 7 * 1440;
+  const up15 = t => { const [h, m] = t.split(":").map(Number); const v = Math.min(ceil15(h * 60 + m), 24 * 60 - 15); return `${String(Math.floor(v / 60)).padStart(2, "0")}:${String(v % 60).padStart(2, "0")}`; };
   const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
   const spanOf = (day, start, min) => { const a = DAYS.findIndex(d => d[0] === day) * 1440 + toMin(start); return [a, a + min]; };
   const minutesOf = sl => sl.duration || (classOf(sl.classId) || {}).duration || 60;
@@ -416,8 +465,9 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   // Choques de lo que hay escrito en la ventana (vacío si todo está bien o aún falta algún dato)
   function formOverlaps(form) {
     const f = form.elements;
-    const cls = classOf(f.classId.value), start = f.start.value;
-    if (!cls || !/^([01]\d|2[0-3]):[0-5]\d$/.test(start) || !f.active.checked) return [];
+    const cls = classOf(f.classId.value), rawStart = f.start.value;
+    if (!cls || !/^([01]\d|2[0-3]):[0-5]\d$/.test(rawStart) || !f.active.checked) return [];
+    const start = up15(rawStart);
     const item = slotEditor && slotEditor.slot;
     const days = [...form.querySelectorAll('input[name="days"]:checked')].map(i => i.value);
     if (item && !days.includes(item.day)) days.push(item.day);
@@ -436,7 +486,11 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const hint = form.querySelector("[data-hint]");
     if (!opt || !hint) return;
     const min = Number(opt.dataset.min) || 60;
-    hint.textContent = /^([01]\d|2[0-3]):[0-5]\d$/.test(t) ? `Dura ${min} min (se define en Clases) · termina a las ${addMin(t, min)}` : `Dura ${min} min (se define en Clases)`;
+    const ok = /^([01]\d|2[0-3]):[0-5]\d$/.test(t);
+    const at = ok ? up15(t) : t;
+    hint.textContent = ok
+      ? `Dura ${min} min (se define en Clases) · termina a las ${addMin(at, min)}${at !== t ? ` · la hora se aproxima a las ${at} (intervalos de 15 min)` : ""}`
+      : `Dura ${min} min (se define en Clases)`;
   }
 
   function openSchedEditor(next) {
@@ -452,9 +506,10 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const err = form.querySelector("[data-err]");
     const fail = m => { err.textContent = m; };
     err.textContent = "";
-    const classId = f.classId.value, start = f.start.value;
+    const classId = f.classId.value, rawStart = f.start.value;
     if (!classOf(classId)) return fail("Elige la clase.");
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(start)) return fail("Escribe la hora de inicio.");
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(rawStart)) return fail("Escribe la hora de inicio.");
+    const start = up15(rawStart);
     const item = slotEditor.slot;
     const days = [...form.querySelectorAll('input[name="days"]:checked')].map(i => i.value);
     if (item && !days.includes(item.day)) days.push(item.day);
@@ -525,6 +580,154 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       render();
     } catch (e) { console.warn(e); alert(saveError(e)); }
   }
+
+  /* ---------- Mover una clase arrastrándola ----------
+     Se agarra una clase del horario y se suelta en otro bloque (día y hora). Dentro de cada bloque
+     de una hora hay cuatro posiciones, de 15 en 15 minutos, según la altura donde se suelta.
+     Usa eventos de puntero, así que sirve con mouse, lápiz y dedo. Un clic sin mover sigue abriendo
+     la ventana de ajuste. */
+  const STEP = 15;
+  const DRAG_FROM = 6;                 // píxeles que hay que mover para que cuente como arrastre
+  let drag = null;
+  let swallowClick = false;
+  let msgTimer = null;
+  const pad2 = n => String(n).padStart(2, "0");
+  const clock = min => `${pad2(Math.floor(min / 60))}:${pad2(min % 60)}`;
+
+  function showSchedMsg(text) {
+    const box = root.querySelector("[data-sched-msg]");
+    if (!box) { alert(text); return; }
+    box.textContent = text;
+    box.hidden = false;
+    clearTimeout(msgTimer);
+    msgTimer = setTimeout(() => { box.hidden = true; }, 9000);
+  }
+
+  // Bloque y cuarto de hora bajo el puntero (null si no hay ninguno)
+  function dropTarget(x, y) {
+    const el = document.elementFromPoint(x, y);
+    const cell = el && el.closest("[data-sched-add]");
+    if (!cell || !root.contains(cell)) return null;
+    const r = cell.getBoundingClientRect();
+    const quarter = Math.min(3, Math.max(0, Math.floor(((y - r.top) / r.height) * (60 / STEP))));
+    return { cell, quarter, day: cell.dataset.day, minutes: Number(cell.dataset.hour) * 60 + quarter * STEP };
+  }
+
+  const clashOf = (slot, t) => slot.active === false ? [] :
+    findOverlaps({ days: [t.day], start: clock(t.minutes), minutes: minutesOf(slot), excludeId: slot.id });
+
+  function paintDrop(t) {
+    root.querySelectorAll(".adm-drop-line").forEach(n => n.remove());
+    root.querySelectorAll(".adm-sched-cell.is-drop").forEach(n => n.classList.remove("is-drop"));
+    if (!t) return;
+    t.cell.classList.add("is-drop");
+    const line = document.createElement("div");
+    const bad = clashOf(drag.slot, t).length > 0;
+    line.className = "adm-drop-line" + (bad ? " is-bad" : "");
+    line.style.top = `${t.quarter * (100 / (60 / STEP))}%`;
+    const tag = document.createElement("span");
+    tag.textContent = `${clock(t.minutes)}${bad ? " · se solapa" : ""}`;
+    line.append(tag);
+    t.cell.append(line);
+  }
+
+  function endDrag() {
+    window.removeEventListener("pointermove", onDragMove);
+    window.removeEventListener("pointerup", onDragEnd);
+    window.removeEventListener("pointercancel", cancelDrag);
+    if (drag && drag.ghost) drag.ghost.remove();
+    if (drag && drag.chip) drag.chip.classList.remove("is-dragging");
+    document.body.classList.remove("adm-dragging");
+    paintDrop(null);
+  }
+
+  function onDragMove(e) {
+    if (!drag || e.pointerId !== drag.pid) return;
+    if (!drag.active) {
+      if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < DRAG_FROM) return;
+      drag.active = true;
+      const w = drag.chip.getBoundingClientRect().width;
+      drag.ghost = drag.chip.cloneNode(true);
+      drag.ghost.classList.add("adm-drag-ghost");
+      drag.ghost.removeAttribute("data-sched-edit");
+      drag.ghost.style.width = `${w}px`;
+      document.body.append(drag.ghost);
+      drag.chip.classList.add("is-dragging");
+      document.body.classList.add("adm-dragging");
+    }
+    e.preventDefault();
+    const g = drag.ghost;
+    g.style.left = `${e.clientX - g.offsetWidth / 2}px`;
+    g.style.top = `${e.clientY - 18}px`;
+
+    // Si se acerca al borde de la pantalla, la página se desplaza sola
+    if (e.clientY < 56) window.scrollBy(0, -16);
+    else if (e.clientY > window.innerHeight - 56) window.scrollBy(0, 16);
+
+    drag.target = dropTarget(e.clientX, e.clientY);
+    paintDrop(drag.target);
+    const time = g.querySelector(".sch-time");
+    if (time) {
+      time.textContent = drag.target
+        ? `${dayName(drag.target.day)} ${clock(drag.target.minutes)}–${addMin(clock(drag.target.minutes), minutesOf(drag.slot))}`
+        : "Suelta sobre un bloque";
+    }
+  }
+
+  function cancelDrag() { endDrag(); drag = null; }
+
+  function onDragEnd(e) {
+    if (!drag || e.pointerId !== drag.pid) return;
+    const moved = drag.active;
+    const { slot } = drag;
+    const t = moved ? dropTarget(e.clientX, e.clientY) : null;
+    endDrag();
+    drag = null;
+    if (!moved) return;                      // fue un clic: lo atiende el manejador de clics
+    swallowClick = true;                     // y un arrastre no debe abrir la ventana de ajuste
+    setTimeout(() => { swallowClick = false; }, 60);
+    if (t) moveSlot(slot, t);
+  }
+
+  async function moveSlot(slot, t) {
+    const start = clock(t.minutes);
+    if (t.day === slot.day && start === slot.start) return;
+    const clash = clashOf(slot, t);
+    if (clash.length) {
+      showSchedMsg(["No se puede mover: la clase se solapa con otra del horario.", ...clash].join("\n"));
+      return;
+    }
+    const before = { day: slot.day, start: slot.start };
+    slot.day = t.day; slot.start = start;    // se muestra ya; si Firebase falla se devuelve
+    render();
+    try {
+      await fs.updateDoc(fs.doc(db, "slots", slot.id), { day: t.day, start });
+      toast(`Movida al ${dayName(t.day).toLowerCase()} a las ${start}`);
+    } catch (e) {
+      console.warn(e);
+      Object.assign(slot, before);
+      render();
+      alert(saveError(e));
+    }
+  }
+
+  // El navegador no debe iniciar su propio arrastre (que cancela los eventos de puntero)
+  root.addEventListener("dragstart", e => { if (e.target.closest && e.target.closest("[data-sched-edit]")) e.preventDefault(); });
+
+  root.addEventListener("pointerdown", e => {
+    if (e.button !== 0 || !e.isPrimary || slotEditor) return;
+    const chip = e.target.closest("[data-sched-edit]");
+    const slot = chip && slots.find(x => x.id === chip.dataset.schedEdit);
+    if (!slot) return;
+    drag = { slot, chip, x0: e.clientX, y0: e.clientY, pid: e.pointerId, active: false, ghost: null, target: null };
+    window.addEventListener("pointermove", onDragMove, { passive: false });
+    window.addEventListener("pointerup", onDragEnd);
+    window.addEventListener("pointercancel", cancelDrag);
+  });
+
+  root.addEventListener("click", e => {
+    if (swallowClick) { e.stopPropagation(); e.preventDefault(); swallowClick = false; }
+  }, true);
 
   /* ---------- Clases ---------- */
   function renderClasses() {
@@ -602,31 +805,11 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const before = root.querySelector("[data-weeks-scroll]");
     const lastScroll = before ? before.scrollLeft : null;
     const sched = root.querySelector("[data-sched-scroll]");
-    // Se recuerda qué hora estaba arriba del horario para dejarla ahí aunque cambien las filas
-    let anchor = null;
-    if (sched) {
-      const headH = (sched.querySelector(".sch-corner") || {}).offsetHeight || 0;
-      const top = sched.scrollTop + headH;
-      const c = [...sched.querySelectorAll('[data-sched-add][data-day="lunes"]')].find(x => x.offsetTop + x.offsetHeight > top + 1);
-      if (c) anchor = { hour: c.dataset.hour, delta: top - c.offsetTop };
-    }
     root.innerHTML = `<div class="filters adm-subnav" role="tablist" aria-label="Clases">
         ${SUBS.map(([k, n]) => `<button type="button" role="tab" aria-pressed="${k === sub}" data-csub="${k}">${n}</button>`).join("")}
       </div>
       <div>${{ people: renderPeople, slots: renderSlots, classes: renderClasses, closures: renderClosures }[sub]()}</div>`;
     document.body.classList.toggle("adm-modal-open", !!root.querySelector(".adm-modal"));
-    const grid = root.querySelector("[data-sched-scroll]");
-    if (grid) {
-      const headH = (grid.querySelector(".sch-corner") || {}).offsetHeight || 0;
-      const at = h => grid.querySelector(`[data-sched-add][data-day="lunes"][data-hour="${h}"]`);
-      const kept = anchor && at(anchor.hour);
-      if (kept) grid.scrollTop = kept.offsetTop - headH + anchor.delta;
-      else {
-        // La primera vez se ve de 15:00 a 22:00; con scroll se llega a las horas anteriores y posteriores
-        const first = at(Math.max(VISIBLE_FROM, schedRange().start));
-        grid.scrollTop = first ? first.offsetTop - headH : 0;
-      }
-    }
     const strip = root.querySelector("[data-weeks-scroll]");
     const on = strip && strip.querySelector('[aria-pressed="true"]');
     if (on) {
@@ -774,7 +957,12 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const se = t.closest("[data-sched-edit]");
     if (se) { const slot = slots.find(x => x.id === se.dataset.schedEdit); if (slot) openSchedEditor({ slot, day: slot.day, hour: parseInt(slot.start, 10) }); return; }
     const sa = t.closest("[data-sched-add]");
-    if (sa) { openSchedEditor({ slot: null, day: sa.dataset.day, hour: Number(sa.dataset.hour) }); return; }
+    if (sa) {
+      const r = sa.getBoundingClientRect();
+      const quarter = e.detail === 0 ? 0 : Math.min(3, Math.max(0, Math.floor(((e.clientY - r.top) / r.height) * 4)));   // con teclado, a la hora en punto
+      openSchedEditor({ slot: null, day: sa.dataset.day, hour: Number(sa.dataset.hour), minute: quarter * 15 });
+      return;
+    }
     const ec = t.closest("[data-edit-class]");
     if (ec) { editing = { kind: "class", item: classOf(ec.dataset.editClass) }; render(); window.scrollTo({ top: 0 }); return; }
     const cb = t.closest("[data-cancel-booking]");

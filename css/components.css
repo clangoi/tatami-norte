@@ -89,8 +89,14 @@
 .mb-link:hover{color:var(--gold)}
 
 /* ---- Planes de suscripción ---- */
-.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;align-items:stretch}
-@media (max-width:920px){.plans{grid-template-columns:1fr;max-width:520px}}
+/* Carrusel horizontal: los planes nuevos se ven deslizando hacia el lado */
+.plans{display:flex;gap:20px;align-items:stretch;overflow-x:auto;overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory;scroll-padding-inline:2px;-webkit-overflow-scrolling:touch;
+  padding:18px 2px 20px;scrollbar-width:thin;scrollbar-color:var(--bronze) var(--line)}
+.plans::-webkit-scrollbar{height:6px}
+.plans::-webkit-scrollbar-track{background:var(--line)}
+.plans::-webkit-scrollbar-thumb{background:var(--bronze)}
+.plans>.plan{flex:0 0 min(340px,84vw);scroll-snap-align:start}
 .plan{border:1px solid var(--line);padding:32px 28px;display:flex;flex-direction:column;gap:18px;background:var(--navy)}
 .plan h3{font-size:40px}
 .plan .for{font-size:15px;color:var(--text-soft);min-height:48px}
@@ -110,6 +116,12 @@
 .plan.feat li::before{background:var(--navy)}
 .plan.feat .btn{background:var(--navy);color:var(--gold);border-color:var(--navy)}
 .plan.feat .btn:hover{background:var(--ink)}
+.plans-nav{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+.plans-nav[hidden]{display:none}
+.plans-nav button{width:48px;height:48px;display:grid;place-items:center;background:transparent;color:var(--gold);border:1px solid var(--gold);cursor:pointer;transition:background .15s,color .15s}
+.plans-nav button:hover:not(:disabled){background:var(--gold);color:var(--navy)}
+.plans-nav button:disabled{opacity:.3;cursor:default}
+.plans-nav button:focus-visible,.plans:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .plans-foot{margin-top:28px;color:var(--steel);font-size:15px}
 
 /* Resumen de pago */

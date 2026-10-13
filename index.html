@@ -142,7 +142,11 @@
         <button type="button" aria-pressed="false" data-cycle="anual">Anual <em>−20%</em></button>
       </div>
     </div>
-    <div class="plans" id="plans"></div>
+    <div class="plans" id="plans" tabindex="0" aria-label="Planes de suscripción"></div>
+    <div class="plans-nav" id="plansNav" hidden>
+      <button type="button" data-dir="-1" aria-label="Plan anterior"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button type="button" data-dir="1" aria-label="Plan siguiente"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
     <p class="plans-foot">¿Dudas sobre qué plan te conviene? Escríbenos y te ayudamos a elegir.</p>
   </div>
 </section>
@@ -291,6 +295,23 @@
     </article>`;
     }).join('');
   }
+  /* flechas del carrusel: solo aparecen si hay planes fuera de vista */
+  const track=$('#plans'), nav=$('#plansNav');
+  const [prevB,nextB]=nav.querySelectorAll('button');
+  function syncNav(){
+    const max=track.scrollWidth-track.clientWidth;
+    nav.hidden=max<=2;
+    prevB.disabled=track.scrollLeft<=2;
+    nextB.disabled=track.scrollLeft>=max-2;
+  }
+  nav.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    const card=track.firstElementChild; if(!card) return;
+    track.scrollBy({left:+b.dataset.dir*(card.offsetWidth+20),behavior:'smooth'});
+  });
+  track.addEventListener('scroll',syncNav,{passive:true});
+  window.addEventListener('resize',syncNav);
+  new MutationObserver(syncNav).observe(track,{childList:true});
   document.querySelectorAll('.toggle button').forEach(b=>b.addEventListener('click',()=>{
     cycle=b.dataset.cycle;
     document.querySelectorAll('.toggle button').forEach(x=>x.setAttribute('aria-pressed',x===b));

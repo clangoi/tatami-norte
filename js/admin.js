@@ -10,6 +10,7 @@ import { SDK, app, db, fs, cacheImage, hydrateImages } from "./firebase.js";
 import { toHtml, readingMinutes } from "./markdown.js";
 import { SEED_POSTS } from "./seed-posts.js";
 import { initClases } from "./admin-clases.js";
+import { stateIcon, iconBtn } from "./admin-icons.js";
 
 const {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail
@@ -185,17 +186,18 @@ function renderPosts(){
   const list = posts.filter(p => !filter.value || catsOf(p).includes(filter.value)).sort(SORTS[$("#postSort").value] || SORTS.new);
   if (!list.length) { $("#posts").innerHTML = '<p class="adm-empty">No hay artículos con ese tema.</p>'; return; }
   $("#posts").innerHTML = list.map(p => {
-    const status = p.published ? '<span class="adm-tag on">Publicado</span>' : '<span class="adm-tag">Borrador</span>';
+    const text = `<b>${esc(p.title)}</b>
+        <span>${esc(catsOf(p).join(" · ") || "Sin tema")} · ${fmtDate(p.date)}</span>`;
+    // Ver = tocar el artículo: abre la página publicada. Un borrador no tiene página que ver.
+    const main = p.published
+      ? `<a class="adm-row-main adm-row-link" href="blog/articulo.html?p=${encodeURIComponent(p.slug)}" target="_blank" rel="noopener" title="Ver en el sitio">${text}</a>`
+      : `<div class="adm-row-main">${text}</div>`;
     return `<div class="adm-row">
-      <div class="adm-row-main">
-        <b>${esc(p.title)}</b>
-        <span>${esc(catsOf(p).join(" · ") || "Sin tema")} · ${fmtDate(p.date)}</span>
-      </div>
-      ${status}
+      ${main}
+      ${stateIcon(p.published, "Publicado", "Borrador (no publicado)")}
       <div class="adm-row-actions">
-        ${p.published ? `<a class="btn small ghost" href="blog/articulo.html?p=${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">Ver</a>` : ""}
-        <button class="btn small ghost" type="button" data-edit="${esc(p.slug)}">Editar</button>
-        <button class="btn small ghost adm-danger" type="button" data-del="${esc(p.slug)}">Borrar</button>
+        ${iconBtn("pencil", "Editar", `data-edit="${esc(p.slug)}"`)}
+        ${iconBtn("trash", "Borrar", `data-del="${esc(p.slug)}"`)}
       </div>
     </div>`;
   }).join("");
@@ -460,8 +462,8 @@ function renderTopics(){
       <div class="adm-row-main"><b>${esc(t.name)}</b><span>${n} ${n === 1 ? "artículo" : "artículos"}</span></div>
       <span></span>
       <div class="adm-row-actions">
-        <button class="btn small ghost" type="button" data-trename="${esc(t.id)}">Renombrar</button>
-        <button class="btn small ghost adm-danger" type="button" data-tdel="${esc(t.id)}">Borrar</button>
+        ${iconBtn("pencil", "Renombrar", `data-trename="${esc(t.id)}"`)}
+        ${iconBtn("trash", "Borrar", `data-tdel="${esc(t.id)}"`)}
       </div>
     </div>`;
   }).join("");
@@ -575,10 +577,10 @@ function renderPlans(){
         <b>${esc(p.name)}${p.featured ? ' <span class="adm-star">Más elegido</span>' : ""}</b>
         <span>${esc(priceText(p))} · ${(p.feats || []).length} beneficios</span>
       </div>
-      ${p.visible ? '<span class="adm-tag on">Visible</span>' : '<span class="adm-tag">Oculto</span>'}
+      ${stateIcon(p.visible, "Visible en el sitio", "Oculto (no se muestra en el sitio)")}
       <div class="adm-row-actions">
-        <button class="btn small ghost" type="button" data-pedit="${esc(p.id)}">Editar</button>
-        <button class="btn small ghost adm-danger" type="button" data-pdel="${esc(p.id)}">Borrar</button>
+        ${iconBtn("pencil", "Editar", `data-pedit="${esc(p.id)}"`)}
+        ${iconBtn("trash", "Borrar", `data-pdel="${esc(p.id)}"`)}
       </div>
     </div>`).join("");
 }

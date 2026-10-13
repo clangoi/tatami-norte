@@ -7,6 +7,8 @@
    y muestra bookings/{id}: quién está inscrito, quién canceló y quién
    reprogramó, con su motivo. Las reservas las crea el sitio (api/reservar).
    ========================================================== */
+import { ICONS, stateIcon, iconBtn } from "./admin-icons.js";
+
 const DAYS = [["lunes", "Lunes"], ["martes", "Martes"], ["miercoles", "Miércoles"], ["jueves", "Jueves"], ["viernes", "Viernes"], ["sabado", "Sábado"], ["domingo", "Domingo"]];
 const DAY_BY_DOW = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
 const TONES = [["oro", "Oro"], ["bronce", "Bronce"], ["cobre", "Cobre"], ["marino", "Marino"], ["acero", "Acero"], ["plata", "Plata"], ["crema", "Crema"], ["linea", "Línea"]];
@@ -290,52 +292,177 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     return `${renderWeek()}${feedNote}`;
   }
 
-  /* ---------- Horario semanal ---------- */
+  /* ---------- Horario semanal (bloques, como el de la portada) ----------
+     Cada celda es un día y una hora. Al tocarla se agrega una clase (creada antes en
+     "Clases", que define cuánto dura); al tocar una clase del horario se edita. */
+  const LIMITS_KEY = "tn_sched_limits";
+  const VISIBLE_FROM = 15;                  // al abrir se ven las 15:00 a las 22:00
+  const hourLabel = h => `${String(h).padStart(2, "0")}:00`;
+  let limits = { start: 6, end: 24 };       // horas límite de la grilla (se cambian tocándolas)
+  try {
+    const l = JSON.parse(localStorage.getItem(LIMITS_KEY) || "null");
+    if (l && Number.isInteger(l.start) && Number.isInteger(l.end) && l.start >= 0 && l.end <= 24 && l.start < l.end) limits = l;
+  } catch (e) { /* sin almacenamiento: se usan 6 y 24 */ }
+  let slotEditor = null;                    // { slot|null, day, hour } mientras la ventana está abierta
+
+  // Los límites se amplían solos si ya hay clases fuera de ellos
+  function schedRange() {
+    let start = limits.start, end = limits.end;
+    slots.forEach(s => {
+      const h = parseInt(s.start, 10);
+      if (Number.isInteger(h)) { start = Math.min(start, h); end = Math.max(end, h + 1); }
+    });
+    return { start, end };
+  }
+
   function renderSlots() {
-    if (editing && editing.kind === "slot") return slotForm(editing.item);
     // Herramienta de un solo uso: solo aparece mientras no haya ningún horario (ver importFromCal)
     const importBox = !slots.length && cfg.calUsername && (cfg.classes || []).length
       ? `<div class="notice adm-seed"><p><strong>¿Vienes de Cal.com?</strong> Puedo leer los horarios que tienes allá (próximas 3 semanas) y crearlos aquí, junto con las clases que falten. Antes de guardar te muestro lo que encontré. Cal.com no entrega los cupos: quedan los habituales de cada clase.</p>
         <button class="btn small" type="button" id="importCal">Importar horario desde Cal.com</button></div>` : "";
-    if (!classes.length && !importBox) return '<div class="notice adm-seed"><p>Primero crea las clases en la pestaña <b>Clases</b>.</p></div>';
+    if (!classes.length && !importBox) return '<div class="notice adm-seed"><p>Primero crea las clases en la pestaña <b>Clases</b>: ahí defines cuánto dura cada una. Después las ubicas aquí en el horario.</p></div>';
     if (!classes.length) return importBox + '<p class="adm-help adm-note">También puedes crear las clases a mano en la pestaña <b>Clases</b>.</p>';
-    const rows = DAYS.map(([key, name]) => {
-      const list = slots.filter(s => s.day === key).sort((a, b) => a.start.localeCompare(b.start));
-      if (!list.length) return "";
-      return `<h3 class="adm-day">${name}</h3>${list.map(s => {
-        const c = classOf(s.classId);
-        const dur = s.duration || (c && c.duration) || 60;
-        return `<div class="adm-row">
-          <div class="adm-row-main"><b>${esc(s.start)}–${esc(addMin(s.start, dur))} · ${esc(c ? c.label : s.classId)}</b>
-          <span>${esc(s.capacity || (c && c.capacity) || DEFAULT_CAP)} cupos${s.note ? ` · ${esc(s.note)}` : ""}</span></div>
-          ${s.active === false ? '<span class="adm-tag">Oculto</span>' : '<span class="adm-tag on">Activo</span>'}
-          <div class="adm-row-actions">
-            <button class="btn small ghost" type="button" data-edit-slot="${esc(s.id)}">Editar</button>
-            <button class="btn small ghost adm-danger" type="button" data-del-slot="${esc(s.id)}">Borrar</button>
-          </div></div>`;
-      }).join("")}`;
-    }).join("");
-    return `<div class="adm-bar"><h2>Horario semanal</h2><button class="btn" type="button" data-new="slot">Nuevo horario</button></div>
-      <p class="adm-help adm-note">Cada fila se repite todas las semanas. Para un feriado o una semana sin clase usa <b>Cierres</b>. Los cambios valen para las fechas futuras; las reservas ya hechas no se mueven.</p>
-      ${rows || importBox || '<p class="adm-empty">Aún no hay horarios.</p>'}`;
+
+    const { start, end } = schedRange();
+    const hours = Array.from({ length: end - start }, (_, i) => start + i);
+    const hourOptions = (from, to, sel) => Array.from({ length: to - from + 1 }, (_, i) => from + i)
+      .map(h => `<option value="${h}"${h === sel ? " selected" : ""}>${hourLabel(h)}</option>`).join("");
+
+    const chip = s => {
+      const c = classOf(s.classId);
+      const dur = s.duration || (c && c.duration) || 60;
+      return `<button type="button" class="sch-class t-${esc((c && c.tone) || "oro")}${s.active === false ? " is-off" : ""}" data-sched-edit="${esc(s.id)}">
+        <span class="sch-name">${esc(c ? c.label : s.classId)}</span>
+        <span class="sch-time">${esc(s.start)}–${esc(addMin(s.start, dur))}</span>
+        ${s.active === false ? `<span class="adm-chip-off" role="img" aria-label="Oculta" title="Oculta (no se puede reservar)">${ICONS.eyeOff}</span>` : ""}
+      </button>`;
+    };
+    const grid = `<div class="adm-sched-scroll" data-sched-scroll>
+      <div class="sch-grid adm-sched-grid" style="--days:7" role="table" aria-label="Horario semanal">
+        <div class="sch-row sch-head" role="row"><div class="sch-corner" role="columnheader"></div>${DAYS.map(([, n]) => `<div class="sch-day" role="columnheader">${n}</div>`).join("")}</div>
+        ${hours.map((h, i) => `<div class="sch-row" role="row">
+          <div class="sch-hour" role="rowheader">${i === 0
+            ? `<select class="adm-limit" id="limStart" aria-label="Hora inicial del horario">${hourOptions(0, end - 1, start)}</select>`
+            : hourLabel(h)}</div>
+          ${DAYS.map(([k, n]) => `<div class="sch-cell adm-sched-cell" role="button" tabindex="0" data-sched-add data-day="${k}" data-hour="${h}" aria-label="Agregar una clase el ${n} desde las ${hourLabel(h)}">
+            ${slots.filter(s => s.day === k && parseInt(s.start, 10) === h).sort((a, b) => a.start.localeCompare(b.start)).map(chip).join("")}
+          </div>`).join("")}
+        </div>`).join("")}
+        <div class="sch-row adm-sched-foot" role="row"><div class="sch-hour" role="rowheader"><select class="adm-limit" id="limEnd" aria-label="Hora final del horario">${hourOptions(start + 1, 24, end)}</select></div>
+          ${DAYS.map(() => '<div class="sch-cell adm-sched-end"></div>').join("")}</div>
+      </div>
+    </div>`;
+
+    return `<div class="adm-bar"><h2>Horario semanal</h2></div>
+      <p class="adm-help adm-note">Toca un bloque del horario para agregar una clase en ese día y hora, o toca una clase para ajustarla. Cada clase dura lo que defines en <b>Clases</b>. Los extremos (${hourLabel(start)} y ${hourLabel(end)}) se pueden cambiar tocándolos. Para un feriado o una semana sin clase usa <b>Cierres</b>; los cambios valen para las fechas futuras y las reservas ya hechas no se mueven.</p>
+      ${importBox}
+      ${grid}
+      ${slotEditorModal()}`;
   }
 
-  function slotForm(s) {
-    const x = s || {};
-    return `<form class="adm-editor adm-form" data-form="slot" novalidate>
-      <div class="adm-bar"><h2>${s ? "Editar horario" : "Nuevo horario"}</h2>
-        <div class="adm-actions"><button class="btn ghost" type="button" data-back>Cancelar</button><button class="btn" type="submit">Guardar</button></div></div>
-      <div class="adm-formgrid">
-        <div class="field"><label for="sClass">Clase</label><select id="sClass" name="classId">${classes.map(c => `<option value="${esc(c.id)}"${c.id === x.classId ? " selected" : ""}>${esc(c.label)}</option>`).join("")}</select></div>
-        <div class="field"><label for="sDay">Día</label><select id="sDay" name="day">${DAYS.map(([k, n]) => `<option value="${k}"${k === x.day ? " selected" : ""}>${n}</option>`).join("")}</select></div>
-        <div class="field"><label for="sStart">Hora de inicio</label><input id="sStart" name="start" type="time" value="${esc(x.start || "19:00")}" required></div>
-        <div class="field"><label for="sDur">Duración (minutos)</label><input id="sDur" name="duration" type="number" min="10" max="300" value="${esc(x.duration || "")}" placeholder="La de la clase"></div>
-        <div class="field"><label for="sCap">Cupos</label><input id="sCap" name="capacity" type="number" min="1" max="200" value="${esc(x.capacity || "")}" placeholder="Los de la clase"></div>
-        <div class="field"><label for="sNote">Nota (opcional)</label><input id="sNote" name="note" maxlength="60" value="${esc(x.note || "")}" placeholder="Ej.: Solo cinturones azules"></div>
-      </div>
-      <label class="check"><input type="checkbox" name="active"${x.active === false ? "" : " checked"}> Activo (si no, no se puede reservar)</label>
-      <div class="err" data-err role="alert"></div>
-    </form>`;
+  // Ventana para agregar o ajustar una clase del horario
+  function slotEditorModal() {
+    if (!slotEditor) return "";
+    const { slot, day, hour } = slotEditor;
+    const x = slot || {};
+    const options = classes.filter(c => c.active !== false || c.id === x.classId);
+    const cur = classOf(x.classId) || options[0];
+    return `<div class="adm-modal">
+      <div class="adm-modal-bg" data-close-editor></div>
+      <form class="adm-detail adm-slotform" data-form="sched" role="dialog" aria-modal="true" aria-label="${slot ? "Editar clase del horario" : "Agregar clase al horario"}" novalidate>
+        <div class="adm-detail-head">
+          <h3 class="adm-detail-title">${slot ? "Ajustar clase" : "Agregar al horario"}</h3>
+          <button class="btn small ghost" type="button" data-close-editor>Cerrar</button>
+        </div>
+        <div class="field"><label for="seClass">Clase</label>
+          <select id="seClass" name="classId">${options.map(c => `<option value="${esc(c.id)}" data-min="${esc(c.duration || 60)}"${c.id === cur.id ? " selected" : ""}>${esc(c.label)}</option>`).join("")}</select></div>
+        <div class="field"><label for="seStart">Hora de inicio</label>
+          <input id="seStart" name="start" type="time" value="${esc(slot ? slot.start : hourLabel(hour))}" required>
+          <small class="adm-help" data-hint></small></div>
+        <div class="field"><label id="seDaysLabel">Días en que se repite</label>
+          <div class="adm-days" role="group" aria-labelledby="seDaysLabel">${DAYS.map(([k, n]) => {
+            const mine = k === (slot ? slot.day : day);
+            return `<label class="check"><input type="checkbox" name="days" value="${k}"${mine ? " checked" : ""}${slot && mine ? " disabled" : ""}> ${n}</label>`;
+          }).join("")}</div>
+          <small class="adm-help">${slot ? "Marca otros días para copiar esta clase a la misma hora." : "Marca más días si esta clase se repite a la misma hora."}</small></div>
+        ${slot && slot.duration ? `<label class="check"><input type="checkbox" name="useClassDur"> Usar la duración de la clase (${esc((classOf(slot.classId) || {}).duration || 60)} min) en vez de ${esc(slot.duration)} min</label>` : ""}
+        <label class="check"><input type="checkbox" name="active"${x.active === false ? "" : " checked"}> Activa (si no, no se puede reservar)</label>
+        <div class="err" data-err role="alert"></div>
+        <div class="adm-actions">
+          <button class="btn" type="submit">Guardar</button>
+          ${slot ? iconBtn("trash", "Borrar de este día", `data-sched-del="${esc(slot.id)}"`) : ""}
+        </div>
+      </form>
+    </div>`;
+  }
+
+  // "Termina a las 19:30" según la clase y la hora elegidas
+  function editorHint(form) {
+    const opt = form.elements.classId.selectedOptions[0];
+    const t = form.elements.start.value;
+    const hint = form.querySelector("[data-hint]");
+    if (!opt || !hint) return;
+    const min = Number(opt.dataset.min) || 60;
+    hint.textContent = /^([01]\d|2[0-3]):[0-5]\d$/.test(t) ? `Dura ${min} min (se define en Clases) · termina a las ${addMin(t, min)}` : `Dura ${min} min (se define en Clases)`;
+  }
+
+  function openSchedEditor(next) {
+    if (!classes.some(c => c.active !== false)) { alert("Primero crea una clase en la pestaña Clases."); return; }
+    slotEditor = next;
+    render();
+    const form = root.querySelector(".adm-slotform");
+    if (form) { editorHint(form); form.querySelector("#seStart").focus({ preventScroll: true }); }
+  }
+
+  async function saveSched(form) {
+    const f = form.elements;
+    const err = form.querySelector("[data-err]");
+    const fail = m => { err.textContent = m; };
+    err.textContent = "";
+    const classId = f.classId.value, start = f.start.value;
+    if (!classOf(classId)) return fail("Elige la clase.");
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(start)) return fail("Escribe la hora de inicio.");
+    const item = slotEditor.slot;
+    const days = [...form.querySelectorAll('input[name="days"]:checked')].map(i => i.value);
+    if (item && !days.includes(item.day)) days.push(item.day);
+    if (!days.length) return fail("Elige al menos un día.");
+    const active = f.active.checked;
+    const batch = fs.writeBatch(db);
+    let updated = null;
+    const created = [];
+    if (item) {
+      const { id, ...data } = item;
+      Object.assign(data, { classId, start, active });
+      if (f.useClassDur && f.useClassDur.checked) delete data.duration;
+      batch.set(fs.doc(db, "slots", id), data);
+      updated = { id, ...data };
+    }
+    days.filter(d => !item || d !== item.day).forEach(day => {
+      if (slots.some(s => s.classId === classId && s.day === day && s.start === start)) return;   // ya existe
+      const ref = fs.doc(fs.collection(db, "slots"));
+      const data = { classId, day, start, active };
+      batch.set(ref, data);
+      created.push({ id: ref.id, ...data });
+    });
+    try {
+      await batch.commit();
+      slots = slots.map(s => (updated && s.id === updated.id ? updated : s)).concat(created);
+      slotEditor = null;
+      toast(item ? "Horario actualizado" : `${created.length} horario${created.length === 1 ? "" : "s"} agregado${created.length === 1 ? "" : "s"}`);
+      render();
+    } catch (e) { console.warn(e); fail(saveError(e)); }
+  }
+
+  async function deleteSched(id) {
+    const s = slots.find(x => x.id === id);
+    if (!s || !confirm("¿Borrar esta clase de este día del horario? Las reservas ya hechas se conservan.")) return;
+    try {
+      await fs.deleteDoc(fs.doc(db, "slots", id));
+      slots = slots.filter(x => x.id !== id);
+      slotEditor = null;
+      toast("Borrado");
+      render();
+    } catch (e) { alert(saveError(e)); }
   }
 
   /* ---------- Clases ---------- */
@@ -348,10 +475,10 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       ${seed}
       ${classes.map(c => `<div class="adm-row">
         <div class="adm-row-main"><b>${esc(c.label)}</b><span>${esc(c.duration || 60)} min · ${esc(c.capacity || DEFAULT_CAP)} cupos · ${slots.filter(s => s.classId === c.id).length} horarios</span></div>
-        ${c.active === false ? '<span class="adm-tag">Oculta</span>' : '<span class="adm-tag on">Activa</span>'}
+        ${stateIcon(c.active !== false, "Activa (se puede reservar)", "Oculta (no aparece en las reservas)")}
         <div class="adm-row-actions">
-          <button class="btn small ghost" type="button" data-edit-class="${esc(c.id)}">Editar</button>
-          <button class="btn small ghost adm-danger" type="button" data-del-class="${esc(c.id)}">Borrar</button>
+          ${iconBtn("pencil", "Editar", `data-edit-class="${esc(c.id)}"`)}
+          ${iconBtn("trash", "Borrar", `data-del-class="${esc(c.id)}"`)}
         </div></div>`).join("")}`;
   }
 
@@ -364,7 +491,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         <div class="field"><label for="cLabel">Nombre</label><input id="cLabel" name="label" maxlength="60" value="${esc(x.label || "")}" required></div>
         <div class="field"><label for="cId">Código</label><input id="cId" name="id" maxlength="40" pattern="[a-z0-9\\-]+" value="${esc(x.id || "")}"${c ? " readonly" : ""} required>
           <small class="adm-help">Solo minúsculas, números y guiones. No se puede cambiar después. Las páginas de Judo y BJJ lo usan para mostrar sus clases.</small></div>
-        <div class="field"><label for="cDur">Duración habitual (minutos)</label><input id="cDur" name="duration" type="number" min="10" max="300" value="${esc(x.duration || 60)}"></div>
+        <div class="field"><label for="cDur">Duración de la clase (minutos)</label><input id="cDur" name="duration" type="number" min="10" max="300" value="${esc(x.duration || 60)}">
+          <small class="adm-help">Es lo que dura en el horario semanal: al ubicarla ahí solo eliges la hora de inicio.</small></div>
         <div class="field"><label for="cCap">Cupos habituales</label><input id="cCap" name="capacity" type="number" min="1" max="200" value="${esc(x.capacity || DEFAULT_CAP)}"></div>
         <div class="field"><label for="cTone">Color en el horario</label><select id="cTone" name="tone">${TONES.map(([k, n]) => `<option value="${k}"${k === (x.tone || "oro") ? " selected" : ""}>${n}</option>`).join("")}</select></div>
         <div class="field"><label for="cPage">Página de la disciplina</label><input id="cPage" name="page" maxlength="60" value="${esc(x.page || "")}" placeholder="judo.html (opcional)"></div>
@@ -387,7 +515,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         const cls = slot && classOf(slot.classId);
         return `<div class="adm-row"><div class="adm-row-main"><b>${esc(cap1(longDate(c.date)))}</b>
           <span>${c.slotId ? esc(`${cls ? cls.label : "Clase"} ${slot ? slot.start : ""}`) : "Todo el día"}${c.reason ? ` · ${esc(c.reason)}` : ""}</span></div>
-          <span></span><div class="adm-row-actions"><button class="btn small ghost adm-danger" type="button" data-del-closure="${esc(c.id)}">Quitar</button></div></div>`;
+          <span></span><div class="adm-row-actions">${iconBtn("trash", "Borrar cierre", `data-del-closure="${esc(c.id)}"`)}</div></div>`;
       }).join("") : '<p class="adm-empty">No hay cierres próximos.</p>'}`;
   }
 
@@ -412,11 +540,32 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   function render() {
     const before = root.querySelector("[data-weeks-scroll]");
     const lastScroll = before ? before.scrollLeft : null;
+    const sched = root.querySelector("[data-sched-scroll]");
+    // Se recuerda qué hora estaba arriba del horario para dejarla ahí aunque cambien las filas
+    let anchor = null;
+    if (sched) {
+      const headH = (sched.querySelector(".sch-corner") || {}).offsetHeight || 0;
+      const top = sched.scrollTop + headH;
+      const c = [...sched.querySelectorAll('[data-sched-add][data-day="lunes"]')].find(x => x.offsetTop + x.offsetHeight > top + 1);
+      if (c) anchor = { hour: c.dataset.hour, delta: top - c.offsetTop };
+    }
     root.innerHTML = `<div class="filters adm-subnav" role="tablist" aria-label="Clases">
         ${SUBS.map(([k, n]) => `<button type="button" role="tab" aria-pressed="${k === sub}" data-csub="${k}">${n}</button>`).join("")}
       </div>
       <div>${{ people: renderPeople, slots: renderSlots, classes: renderClasses, closures: renderClosures }[sub]()}</div>`;
     document.body.classList.toggle("adm-modal-open", !!root.querySelector(".adm-modal"));
+    const grid = root.querySelector("[data-sched-scroll]");
+    if (grid) {
+      const headH = (grid.querySelector(".sch-corner") || {}).offsetHeight || 0;
+      const at = h => grid.querySelector(`[data-sched-add][data-day="lunes"][data-hour="${h}"]`);
+      const kept = anchor && at(anchor.hour);
+      if (kept) grid.scrollTop = kept.offsetTop - headH + anchor.delta;
+      else {
+        // La primera vez se ve de 15:00 a 22:00; con scroll se llega a las horas anteriores y posteriores
+        const first = at(Math.max(VISIBLE_FROM, schedRange().start));
+        grid.scrollTop = first ? first.offsetTop - headH : 0;
+      }
+    }
     const strip = root.querySelector("[data-weeks-scroll]");
     const on = strip && strip.querySelector('[aria-pressed="true"]');
     if (on) {
@@ -439,18 +588,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const fail = m => { err.textContent = m; };
     err.textContent = "";
     try {
-      if (kind === "slot") {
-        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(f.start.value)) return fail("Elige la hora de inicio.");
-        const data = { classId: f.classId.value, day: f.day.value, start: f.start.value, active: f.active.checked };
-        if (num(f.duration.value)) data.duration = num(f.duration.value);
-        if (num(f.capacity.value)) data.capacity = num(f.capacity.value);
-        if (f.note.value.trim()) data.note = f.note.value.trim();
-        const item = editing.item;
-        const ref = item ? fs.doc(db, "slots", item.id) : fs.doc(fs.collection(db, "slots"));
-        await fs.setDoc(ref, data);
-        const saved = { id: ref.id, ...data };
-        slots = item ? slots.map(s => (s.id === item.id ? saved : s)) : [...slots, saved];
-      } else if (kind === "class") {
+      if (kind === "class") {
         const label = f.label.value.trim();
         const id = editing.item ? editing.item.id : (f.id.value.trim() || slugify(label));
         if (!label) return fail("Escribe el nombre de la clase.");
@@ -569,8 +707,13 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     if (t.closest("[data-back]")) { editing = null; render(); return; }
     const nw = t.closest("[data-new]");
     if (nw) { editing = { kind: nw.dataset.new, item: null }; render(); window.scrollTo({ top: 0 }); return; }
-    const es = t.closest("[data-edit-slot]");
-    if (es) { editing = { kind: "slot", item: slots.find(s => s.id === es.dataset.editSlot) }; render(); window.scrollTo({ top: 0 }); return; }
+    if (t.closest("[data-close-editor]")) { slotEditor = null; render(); return; }
+    const sd = t.closest("[data-sched-del]");
+    if (sd) return deleteSched(sd.dataset.schedDel);
+    const se = t.closest("[data-sched-edit]");
+    if (se) { const slot = slots.find(x => x.id === se.dataset.schedEdit); if (slot) openSchedEditor({ slot, day: slot.day, hour: parseInt(slot.start, 10) }); return; }
+    const sa = t.closest("[data-sched-add]");
+    if (sa) { openSchedEditor({ slot: null, day: sa.dataset.day, hour: Number(sa.dataset.hour) }); return; }
     const ec = t.closest("[data-edit-class]");
     if (ec) { editing = { kind: "class", item: classOf(ec.dataset.editClass) }; render(); window.scrollTo({ top: 0 }); return; }
     const cb = t.closest("[data-cancel-booking]");
@@ -596,8 +739,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       fs.deleteDoc(fs.doc(db, coll, id)).then(() => { after(id); toast("Borrado"); render(); }).catch(err => alert(saveError(err)));
       return true;
     };
-    if (del("data-del-slot", "slots", () => "¿Borrar este horario? Las reservas ya hechas se conservan.", id => { slots = slots.filter(s => s.id !== id); })) return;
-    if (del("data-del-closure", "closures", () => "¿Quitar este cierre? Esa clase volverá a poder reservarse.", id => { closures = closures.filter(c => c.id !== id); })) return;
+    if (del("data-del-closure", "closures", () => "¿Borrar este cierre? Esa clase volverá a poder reservarse.", id => { closures = closures.filter(c => c.id !== id); })) return;
     if (del("data-del-class", "classes", id => {
       const n = slots.filter(s => s.classId === id).length;
       return n ? `Esta clase tiene ${n} horario${n > 1 ? "s" : ""}. Si la borras, esos horarios dejan de mostrarse. ¿Borrarla?` : "¿Borrar esta clase?";
@@ -616,13 +758,30 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   });
 
   document.addEventListener("keydown", e => {
-    if (e.key === "Escape" && selectedKey && root.querySelector(".adm-modal")) { selectedKey = null; render(); }
+    if (e.key === "Escape" && root.querySelector(".adm-modal")) { selectedKey = null; slotEditor = null; render(); }
   });
 
+  root.addEventListener("keydown", e => {
+    const cell = e.target.closest && e.target.closest("[data-sched-add]");
+    if (cell && e.target === cell && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); cell.click(); }
+  });
+
+  root.addEventListener("input", e => { if (e.target.form && e.target.form.dataset.form === "sched") editorHint(e.target.form); });
+
   root.addEventListener("change", e => {
+    if (e.target.form && e.target.form.dataset.form === "sched") editorHint(e.target.form);
+    if (e.target.id === "limStart" || e.target.id === "limEnd") {
+      limits = { start: Number(root.querySelector("#limStart").value), end: Number(root.querySelector("#limEnd").value) };
+      try { localStorage.setItem(LIMITS_KEY, JSON.stringify(limits)); } catch (err) { /* sin almacenamiento */ }
+      render();
+      return;
+    }
     if (e.target.id === "rgClass") { classFilter = e.target.value; render(); return; }
   });
-  root.addEventListener("submit", e => { e.preventDefault(); saveForm(e.target); });
+  root.addEventListener("submit", e => {
+    e.preventDefault();
+    if (e.target.dataset.form === "sched") saveSched(e.target); else saveForm(e.target);
+  });
 
   return { activate };
 }

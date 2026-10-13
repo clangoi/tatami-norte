@@ -164,7 +164,12 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   /* ---------- Horario semanal ---------- */
   function renderSlots() {
     if (editing && editing.kind === "slot") return slotForm(editing.item);
-    if (!classes.length) return '<div class="notice adm-seed"><p>Primero crea las clases en la pestaña <b>Clases</b>.</p></div>';
+    // Herramienta de un solo uso: solo aparece mientras no haya ningún horario (ver importFromCal)
+    const importBox = !slots.length && cfg.calUsername && (cfg.classes || []).length
+      ? `<div class="notice adm-seed"><p><strong>¿Vienes de Cal.com?</strong> Puedo leer los horarios que tienes allá (próximas 3 semanas) y crearlos aquí, junto con las clases que falten. Antes de guardar te muestro lo que encontré. Cal.com no entrega los cupos: quedan los habituales de cada clase.</p>
+        <button class="btn small" type="button" id="importCal">Importar horario desde Cal.com</button></div>` : "";
+    if (!classes.length && !importBox) return '<div class="notice adm-seed"><p>Primero crea las clases en la pestaña <b>Clases</b>.</p></div>';
+    if (!classes.length) return importBox + '<p class="adm-help adm-note">También puedes crear las clases a mano en la pestaña <b>Clases</b>.</p>';
     const rows = DAYS.map(([key, name]) => {
       const list = slots.filter(s => s.day === key).sort((a, b) => a.start.localeCompare(b.start));
       if (!list.length) return "";
@@ -183,7 +188,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     }).join("");
     return `<div class="adm-bar"><h2>Horario semanal</h2><button class="btn" type="button" data-new="slot">Nuevo horario</button></div>
       <p class="adm-help adm-note">Cada fila se repite todas las semanas. Para un feriado o una semana sin clase usa <b>Cierres</b>. Los cambios valen para las fechas futuras; las reservas ya hechas no se mueven.</p>
-      ${rows || '<p class="adm-empty">Aún no hay horarios.</p>'}`;
+      ${rows || importBox || '<p class="adm-empty">Aún no hay horarios.</p>'}`;
   }
 
   function slotForm(s) {
@@ -356,6 +361,65 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     } catch (e) { alert(saveError(e)); }
   }
 
+  /* ---------- Importar el horario desde Cal.com (un solo uso) ----------
+     Lee la disponibilidad pública de Cal.com de las próximas 3 semanas, la
+     reduce a un patrón semanal (clase + día + hora) y crea lo que falte.
+     Se puede borrar este bloque y el botón cuando el horario ya esté cargado. */
+  async function importFromCal(btn) {
+    const calGet = (path, version) => fetch("https://api.cal.com/v2" + path, { headers: { "cal-api-version": version } })
+      .then(r => { if (!r.ok) throw new Error("Cal.com respondió " + r.status); return r.json(); });
+    const user = cfg.calUsername;
+    btn.disabled = true; btn.textContent = "Leyendo Cal.com…";
+    try {
+      const types = await calGet(`/event-types?username=${encodeURIComponent(user)}`, "2024-06-14");
+      const length = {};
+      (types.data || []).forEach(t => { length[t.slug] = t.lengthInMinutes || 60; });
+      const from = todayStr(), to = addDays(from, 21);
+      const found = new Map();   // "clase|día|hora" → minutos
+      const baseLen = {};        // duración de la clase = la de su evento principal
+      await Promise.all((cfg.classes || []).map(async cls => {
+        const evs = (cls.variants && cls.variants.length) ? cls.variants.map(v => v.slug) : [cls.slug];
+        baseLen[cls.slug] = Math.max(...evs.map(s => length[s] || 60));
+        await Promise.all(evs.map(async ev => {
+          const q = `/slots?username=${encodeURIComponent(user)}&eventTypeSlug=${encodeURIComponent(ev)}&start=${from}&end=${to}&timeZone=${encodeURIComponent(TZ)}`;
+          const res = await calGet(q, "2024-09-04");
+          Object.entries(res.data || {}).forEach(([date, list]) => list.forEach(sl => {
+            const key = `${cls.slug}|${dayKey(date)}|${sl.start.slice(11, 16)}`;
+            found.set(key, Math.max(found.get(key) || 0, length[ev] || 60));   // dos variantes a la misma hora: la más larga
+          }));
+        }));
+      }));
+      if (!found.size) { alert("Cal.com no devolvió horarios en las próximas 3 semanas."); return; }
+
+      const items = [...found].map(([k, min]) => { const [classId, day, start] = k.split("|"); return { classId, day, start, min }; })
+        .sort((a, b) => DAYS.findIndex(d => d[0] === a.day) - DAYS.findIndex(d => d[0] === b.day) || a.start.localeCompare(b.start) || a.classId.localeCompare(b.classId));
+      const labelOf = id => (cfg.classes.find(c => c.slug === id) || {}).label || id;
+      const summary = items.map(i => `${dayName(i.day)} ${i.start}–${addMin(i.start, i.min)} · ${labelOf(i.classId)}`).join("\n");
+      if (!confirm(`Encontré ${items.length} horarios semanales:\n\n${summary}\n\n¿Crearlos? Después puedes editarlos uno por uno.`)) return;
+
+      const batch = fs.writeBatch(db);
+      (cfg.classes || []).forEach((c, i) => {
+        if (classOf(c.slug) || !items.some(x => x.classId === c.slug)) return;
+        batch.set(fs.doc(db, "classes", c.slug), { label: c.label, tone: c.tone || "oro", page: c.page || "", order: i + 1, active: true, duration: baseLen[c.slug], capacity: DEFAULT_CAP });
+      });
+      items.forEach(i => {
+        const cls = classOf(i.classId);
+        const data = { classId: i.classId, day: i.day, start: i.start, active: true };
+        if (i.min !== (cls ? cls.duration : baseLen[i.classId])) data.duration = i.min;
+        batch.set(fs.doc(fs.collection(db, "slots")), data);
+      });
+      await batch.commit();
+      await loadBase();
+      toast("Horario importado");
+      render();
+    } catch (e) {
+      console.warn(e);
+      alert("No se pudo importar: " + (e.code ? saveError(e) : e.message));
+    } finally {
+      if (btn.isConnected) { btn.disabled = false; btn.textContent = "Importar horario desde Cal.com"; }
+    }
+  }
+
   function setRange(from, to) {
     if (!from || !to || from > to) return;
     range = { from, to };
@@ -397,6 +461,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       const n = slots.filter(s => s.classId === id).length;
       return n ? `Esta clase tiene ${n} horario${n > 1 ? "s" : ""}. Si la borras, esos horarios dejan de mostrarse. ¿Borrarla?` : "¿Borrar esta clase?";
     }, id => { classes = classes.filter(c => c.id !== id); })) return;
+
+    if (t.closest("#importCal")) return importFromCal(t.closest("#importCal"));
 
     if (t.closest("#seedClasses")) {
       const b = fs.writeBatch(db);

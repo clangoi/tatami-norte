@@ -65,7 +65,7 @@ Cada clase aparece como «Judo (3/15)» y en la descripción lista a los inscrit
 ### 5. Cargar las clases
 
 1. `/admin` → **Clases → Clases** → **Cargar las clases de siempre** (trae las de `site.config.js`) y ajusta duración, cupos y colores.
-2. **Horario semanal** → **Nuevo horario**: clase, día, hora (y cupos o duración si difieren de la clase).
+2. **Horario semanal**: si vienes de Cal.com, el botón **Importar horario desde Cal.com** lee tus horarios de las próximas 3 semanas, te muestra la lista y, si aceptas, crea las clases y los horarios que falten (los cupos quedan en los habituales de cada clase). El botón solo aparece mientras no haya ningún horario y puede borrarse del código después (`importFromCal` en `js/admin-clases.js`). También puedes crear cada uno a mano con **Nuevo horario**.
 3. **Cierres**: feriados o clases suspendidas.
 
 El `código` de cada clase es el que usan `judo.html` y `bjj.html` en `TNBooking.mount(…, { slugs: [...] })` para mostrar solo sus clases.

@@ -122,6 +122,7 @@ $$("[data-tab]").forEach(b => b.addEventListener("click", () => {
   closePost(); closePlan();
   $$("[data-tab]").forEach(x => x.setAttribute("aria-pressed", x === b));
   $$("[data-view]").forEach(v => v.hidden = v.dataset.view !== b.dataset.tab);
+  if (b.dataset.tab === "classes") clases.activate();
 }));
 
 /* ==========================================================

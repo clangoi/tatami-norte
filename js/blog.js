@@ -25,6 +25,8 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const fmtDate = iso => new Date(iso + "T12:00:00").toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
   // Patrón de portada estable para cada artículo
+  // Un artículo puede tener varios temas (cats); los antiguos tienen uno solo (cat)
+  const catsOf = p => Array.isArray(p.cats) ? p.cats : (p.cat ? [p.cat] : []);
   const pattern = slug => [...slug].reduce((n, c) => n + c.charCodeAt(0), 0) % 4;
 
   const href = (p, base) => `${base}blog/articulo.html?p=${encodeURIComponent(p.slug)}`;
@@ -38,7 +40,7 @@
 
   function card(p, base, lead){
     return `<a class="post${lead ? " lead" : ""}" href="${href(p, base)}">
-      <div class="cover"><div class="pat pat-${p.pattern ?? pattern(p.slug)}"></div><span class="big" aria-hidden="true">${esc(p.letter)}</span><span class="cat">${esc(p.cat)}</span></div>
+      <div class="cover"><div class="pat pat-${p.pattern ?? pattern(p.slug)}"></div><span class="big" aria-hidden="true">${esc(p.letter)}</span>${catsOf(p).length ? `<span class="cat">${esc(catsOf(p).join(" · "))}</span>` : ""}</div>
       <span class="meta">${fmtDate(p.date)} · ${p.read} min de lectura</span>
       <h3>${esc(p.title)}</h3><p class="ex">${esc(p.ex)}</p>
     </a>`;
@@ -53,10 +55,10 @@
     const sortSel = document.querySelector("[data-blog-sort]");
     let cur = "Todo";
     const render = () => {
-      const cats = ["Todo", ...new Set(all.map(p => p.cat).filter(Boolean))].sort((a, b) => a === "Todo" ? -1 : b === "Todo" ? 1 : a.localeCompare(b, "es"));
+      const cats = ["Todo", ...new Set(all.flatMap(catsOf))].sort((a, b) => a === "Todo" ? -1 : b === "Todo" ? 1 : a.localeCompare(b, "es"));
       if (!cats.includes(cur)) cur = "Todo";
       const sort = sortSel?.value || "new";
-      const list = all.filter(p => cur === "Todo" || p.cat === cur).sort(SORTS[sort] || SORTS.new);
+      const list = all.filter(p => cur === "Todo" || catsOf(p).includes(cur)).sort(SORTS[sort] || SORTS.new);
       el.innerHTML = list.map((p, i) => card(p, base, sort === "new" && i === 0 && list.length > 2)).join("") ||
         '<p class="empty">Todavía no hay artículos en esta categoría.</p>';
       if (filters) filters.innerHTML = cats.map(c => `<button type="button" aria-pressed="${c === cur}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
@@ -85,7 +87,7 @@
     renders.push(() => {
       const current = all.find(p => p.slug === el.dataset.current);
       const others = all.filter(p => p.slug !== el.dataset.current);
-      const same = current ? others.filter(p => p.cat === current.cat) : [];
+      const same = current ? others.filter(p => catsOf(p).some(c => catsOf(current).includes(c))) : [];
       const list = [...same, ...others.filter(p => !same.includes(p))].slice(0, n);
       el.innerHTML = list.map(p => card(p, el.dataset.base || "", false)).join("");
       const wrap = el.closest("[data-blog-related-section]");

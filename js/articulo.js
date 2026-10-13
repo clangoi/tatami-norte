@@ -10,6 +10,7 @@ const $ = s => document.querySelector(`[data-a="${s}"]`);
 const slug = new URLSearchParams(location.search).get("p") || "";
 const locale = window.SITE_CONFIG?.currency?.locale || "es-CL";
 const fmtDate = iso => new Date(iso + "T12:00:00").toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
+const catsOf = p => Array.isArray(p.cats) ? p.cats : (p.cat ? [p.cat] : []);
 const pattern = s => [...s].reduce((n, c) => n + c.charCodeAt(0), 0) % 4;
 
 function notFound(offline){
@@ -49,8 +50,8 @@ async function load(){
 
   $("pat").className = `pat pat-${p.pattern ?? pattern(slug)}`;
   $("letter").textContent = p.letter || "";
-  $("cat").textContent = p.cat || "";
-  $("cat").hidden = !p.cat;
+  $("cat").textContent = catsOf(p).join(" · ");
+  $("cat").hidden = !catsOf(p).length;
   $("title").textContent = p.title;
   $("date").dateTime = p.date;
   $("date").textContent = fmtDate(p.date);

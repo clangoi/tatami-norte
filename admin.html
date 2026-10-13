@@ -76,13 +76,16 @@
       <div><div class="eyebrow">Administración</div><h1>Panel</h1></div>
       <div class="filters" role="tablist" aria-label="Secciones">
         <button type="button" role="tab" aria-pressed="true" data-tab="blog">Blog</button>
-        <button type="button" role="tab" aria-pressed="false" data-tab="topics">Temas</button>
         <button type="button" role="tab" aria-pressed="false" data-tab="plans">Planes</button>
       </div>
     </div>
 
     <!-- ===== Blog ===== -->
     <div class="wrap" data-view="blog">
+      <div class="filters adm-subnav" id="blogSubnav" role="tablist" aria-label="Blog">
+        <button type="button" role="tab" aria-pressed="true" data-sub="articles">Artículos</button>
+        <button type="button" role="tab" aria-pressed="false" data-sub="topics">Temas</button>
+      </div>
       <div id="postList">
         <div class="adm-bar">
           <h2>Artículos</h2>
@@ -124,8 +127,9 @@
             <div class="field"><label for="fEx">Resumen</label><textarea id="fEx" rows="2" maxlength="300" placeholder="Una o dos líneas. Aparece en las tarjetas y en Google."></textarea></div>
             <div class="row2">
               <div class="field">
-                <label for="fCat">Tema</label>
-                <div class="adm-inline"><select id="fCat"></select><button class="btn small ghost" type="button" id="newTopicInline">Nuevo tema</button></div>
+                <label id="fCatsLabel">Temas (puedes elegir varios)</label>
+                <div class="adm-checks" id="fCats" role="group" aria-labelledby="fCatsLabel"></div>
+                <button class="btn small ghost" type="button" id="newTopicInline">Nuevo tema</button>
               </div>
               <div class="field"><label for="fDate">Fecha</label><input id="fDate" type="date" required></div>
             </div>
@@ -158,20 +162,19 @@
           </div>
         </div>
       </form>
-    </div>
-
-    <!-- ===== Temas ===== -->
-    <div class="wrap" data-view="topics" hidden>
-      <div class="adm-bar">
-        <h2>Temas del blog</h2>
+      <!-- ===== Temas ===== -->
+      <div id="topicsPanel" hidden>
+        <div class="adm-bar">
+          <h2>Temas del blog</h2>
+        </div>
+        <p class="adm-help adm-note">Los temas son las categorías con las que se filtran y ordenan los artículos. Un tema sin artículos no aparece en el blog. Si lo renombras, se actualizan sus artículos.</p>
+        <form id="topicForm" class="adm-inline adm-topic-add" novalidate>
+          <input id="topicName" maxlength="30" placeholder="Nuevo tema, por ejemplo Competencia" aria-label="Nombre del tema">
+          <button class="btn" type="submit">Agregar tema</button>
+        </form>
+        <div class="err" id="topicErr" role="alert"></div>
+        <div class="adm-rows" id="topicsRows"></div>
       </div>
-      <p class="adm-help adm-note">Los temas son las categorías con las que se filtran y ordenan los artículos. Un tema sin artículos no aparece en el blog. Si lo renombras, se actualizan sus artículos.</p>
-      <form id="topicForm" class="adm-inline adm-topic-add" novalidate>
-        <input id="topicName" maxlength="30" placeholder="Nuevo tema, por ejemplo Competencia" aria-label="Nombre del tema">
-        <button class="btn" type="submit">Agregar tema</button>
-      </form>
-      <div class="err" id="topicErr" role="alert"></div>
-      <div class="adm-rows" id="topicsRows"></div>
     </div>
 
     <!-- ===== Planes ===== -->

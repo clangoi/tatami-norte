@@ -88,3 +88,6 @@
 .adm-inline select,.adm-inline input{flex:1;min-width:0;background:var(--navy-2);border:1px solid var(--navy-3);color:var(--cream);font:500 16px/1.2 var(--body);padding:13px 14px;border-radius:0}
 .adm-inline select:focus,.adm-inline input:focus{outline:none;border-color:var(--gold)}
 .adm-topic-add{max-width:520px;margin:14px 0 6px}
+.adm-subnav{margin:18px 0 4px}
+.adm-checks{display:flex;flex-wrap:wrap;gap:4px 22px;margin:6px 0 10px}
+.adm-checks .check{margin:4px 0}

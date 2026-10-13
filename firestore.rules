@@ -27,6 +27,7 @@ service cloud.firestore {
         && d.published is bool
         && shortText(d, 'ex', 300)
         && shortText(d, 'cat', 30)
+        && (!('cats' in d) || (d.cats is list && d.cats.size() <= 10))
         && shortText(d, 'letter', 3);
     }
 

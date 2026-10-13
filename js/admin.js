@@ -24,6 +24,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const locale = S.config.currency?.locale || "es-CL";
 const fmtDate = iso => iso ? new Date(iso + "T12:00:00").toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" }) : "";
 const today = () => new Date().toLocaleDateString("sv-SE"); // AAAA-MM-DD en hora local
+const catsOf = p => Array.isArray(p.cats) ? p.cats : (p.cat ? [p.cat] : []);
 const collate = (a, b) => String(a).localeCompare(String(b), "es", { sensitivity: "base" });
 const slugify = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
   .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
@@ -132,7 +133,7 @@ const SORTS = {
   old:   (x, y) => (x.date || "").localeCompare(y.date || ""),
   az:    (x, y) => collate(x.title, y.title),
   za:    (x, y) => collate(y.title, x.title),
-  topic: (x, y) => collate(x.cat || "\uffff", y.cat || "\uffff") || collate(x.title, y.title)
+  topic: (x, y) => collate(catsOf(x)[0] || "\uffff", catsOf(y)[0] || "\uffff") || collate(x.title, y.title)
 };
 
 async function loadPosts(){
@@ -153,7 +154,7 @@ async function loadPosts(){
 // Los temas que ya usan los artículos y aún no están en la lista se guardan solos
 async function adoptTopics(){
   const known = new Set(topics.map(t => t.name.toLowerCase()));
-  const missing = [...new Set(posts.map(p => p.cat).filter(Boolean))].filter(c => !known.has(c.toLowerCase()));
+  const missing = [...new Set(posts.flatMap(catsOf))].filter(c => !known.has(c.toLowerCase()));
   if (!missing.length) return;
   const batch = fs.writeBatch(db);
   missing.forEach(name => batch.set(fs.doc(db, "topics", slugify(name) || "tema"), { name, createdAt: fs.serverTimestamp() }));
@@ -177,14 +178,14 @@ function renderPosts(){
     </div>`;
     return;
   }
-  const list = posts.filter(p => !filter.value || p.cat === filter.value).sort(SORTS[$("#postSort").value] || SORTS.new);
+  const list = posts.filter(p => !filter.value || catsOf(p).includes(filter.value)).sort(SORTS[$("#postSort").value] || SORTS.new);
   if (!list.length) { $("#posts").innerHTML = '<p class="adm-empty">No hay artículos con ese tema.</p>'; return; }
   $("#posts").innerHTML = list.map(p => {
     const status = p.published ? '<span class="adm-tag on">Publicado</span>' : '<span class="adm-tag">Borrador</span>';
     return `<div class="adm-row">
       <div class="adm-row-main">
         <b>${esc(p.title)}</b>
-        <span>${esc(p.cat || "Sin tema")} · ${fmtDate(p.date)}</span>
+        <span>${esc(catsOf(p).join(" · ") || "Sin tema")} · ${fmtDate(p.date)}</span>
       </div>
       ${status}
       <div class="adm-row-actions">
@@ -205,7 +206,7 @@ async function seedPosts(btn){
   const cats = new Set();
   SEED_POSTS.forEach(({ slug, ...p }) => {
     cats.add(p.cat);
-    batch.set(fs.doc(db, "posts", slug), { ...p, read: readingMinutes(p.body), published: true, updatedAt: fs.serverTimestamp() });
+    batch.set(fs.doc(db, "posts", slug), { ...p, cats: [p.cat], read: readingMinutes(p.body), published: true, updatedAt: fs.serverTimestamp() });
   });
   topics.forEach(t => cats.delete(t.name));
   cats.forEach(name => batch.set(fs.doc(db, "topics", slugify(name)), { name, createdAt: fs.serverTimestamp() }));
@@ -237,17 +238,20 @@ $("#posts").addEventListener("click", async e => {
 $("#newPost").addEventListener("click", () => openPost(null));
 
 const F = {
-  title: $("#fTitle"), slug: $("#fSlug"), ex: $("#fEx"), cat: $("#fCat"), date: $("#fDate"),
+  title: $("#fTitle"), slug: $("#fSlug"), ex: $("#fEx"), cats: $("#fCats"), date: $("#fDate"),
   letter: $("#fLetter"), pat: $("#fPat"), body: $("#fBody"), published: $("#fPublished")
 };
 let slugTouched = false;
 
-function fillTopicSelect(selected){
+// Casillas de temas; `selected` es la lista de nombres marcados
+function fillTopicChecks(selected){
   const names = sortedTopics().map(t => t.name);
-  if (selected && !names.includes(selected)) names.push(selected);
-  F.cat.innerHTML = '<option value="">Sin tema</option>' + names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
-  F.cat.value = selected;
+  selected.forEach(n => { if (!names.includes(n)) names.push(n); });
+  F.cats.innerHTML = names.length
+    ? names.map(n => `<label class="check"><input type="checkbox" value="${esc(n)}"${selected.includes(n) ? " checked" : ""}> ${esc(n)}</label>`).join("")
+    : '<p class="adm-help">Todavía no hay temas. Crea el primero con “Nuevo tema”.</p>';
 }
+const selectedTopics = () => [...F.cats.querySelectorAll("input:checked")].map(i => i.value);
 
 function openPost(p){
   editingSlug = p ? p.slug : null;
@@ -257,7 +261,7 @@ function openPost(p){
   F.slug.value = p?.slug || "";
   F.slug.readOnly = !!p;
   F.ex.value = p?.ex || "";
-  fillTopicSelect(p?.cat || "");
+  fillTopicChecks(p ? catsOf(p) : []);
   F.date.value = p?.date || today();
   F.letter.value = p?.letter || "";
   F.pat.value = String(p?.pattern ?? 0);
@@ -265,6 +269,8 @@ function openPost(p){
   F.published.checked = p ? !!p.published : false;
   $("#postErr").textContent = "";
   $("#postList").hidden = true;
+  $("#topicsPanel").hidden = true;
+  $("#blogSubnav").hidden = true;
   $("#postForm").hidden = false;
   dirty = false;
   previewPost();
@@ -272,9 +278,21 @@ function openPost(p){
   F.title.focus();
 }
 
+// Artículos / Temas: dos vistas dentro de la sección Blog
+function showSub(name){
+  $$("[data-sub]").forEach(x => x.setAttribute("aria-pressed", x.dataset.sub === name));
+  $("#postList").hidden = name !== "articles";
+  $("#topicsPanel").hidden = name !== "topics";
+}
+$("#blogSubnav").addEventListener("click", e => {
+  const b = e.target.closest("[data-sub]");
+  if (b) showSub(b.dataset.sub);
+});
+
 function closePost(){
   $("#postForm").hidden = true;
-  $("#postList").hidden = false;
+  $("#blogSubnav").hidden = false;
+  showSub("articles");
   dirty = false;
 }
 
@@ -290,7 +308,7 @@ function previewPost(){
   const slug = F.slug.value || "articulo";
   const letter = F.letter.value || F.title.value.slice(0, 2);
   $("#pvCard").innerHTML = `
-    <div class="cover"><div class="pat pat-${F.pat.value}"></div><span class="big" aria-hidden="true">${esc(letter)}</span>${F.cat.value ? `<span class="cat">${esc(F.cat.value)}</span>` : ""}</div>
+    <div class="cover"><div class="pat pat-${F.pat.value}"></div><span class="big" aria-hidden="true">${esc(letter)}</span>${selectedTopics().length ? `<span class="cat">${esc(selectedTopics().join(" · "))}</span>` : ""}</div>
     <span class="meta">${fmtDate(F.date.value)} · ${readingMinutes(F.body.value)} min de lectura</span>
     <h3>${esc(F.title.value || "Título del artículo")}</h3><p class="ex">${esc(F.ex.value)}</p>`;
   $("#pvTitle").textContent = F.title.value;
@@ -335,7 +353,8 @@ $("#postForm").addEventListener("submit", async e => {
   const data = {
     title,
     ex: F.ex.value.trim(),
-    cat: F.cat.value.trim(),
+    cats: selectedTopics(),
+    cat: selectedTopics()[0] || "",
     date: F.date.value,
     letter: (F.letter.value.trim() || title.slice(0, 2)).toUpperCase(),
     pattern: +F.pat.value,
@@ -378,7 +397,7 @@ async function addTopic(raw){
 function renderTopics(){
   if (!topics.length) { $("#topicsRows").innerHTML = '<p class="adm-empty">Todavía no hay temas. Agrega el primero arriba.</p>'; return; }
   $("#topicsRows").innerHTML = sortedTopics().map(t => {
-    const n = posts.filter(p => p.cat === t.name).length;
+    const n = posts.filter(p => catsOf(p).includes(t.name)).length;
     return `<div class="adm-row">
       <div class="adm-row-main"><b>${esc(t.name)}</b><span>${n} ${n === 1 ? "artículo" : "artículos"}</span></div>
       <span></span>
@@ -407,7 +426,7 @@ $("#newTopicInline").addEventListener("click", async () => {
   if (raw === null) return;
   try {
     const name = await addTopic(raw);
-    fillTopicSelect(name);
+    fillTopicChecks([...selectedTopics(), name]);
     dirty = true; previewPost();
     toast("Tema agregado");
   } catch (e2) { alert(e2.code ? saveError(e2) : e2.message); }
@@ -423,13 +442,14 @@ $("#topicsRows").addEventListener("click", async e => {
     if (!name || name === t.name) return;
     if (name.length > 30) { alert("Máximo 30 letras."); return; }
     if (topics.some(x => x !== t && x.name.toLowerCase() === name.toLowerCase())) { alert("Ya existe un tema con ese nombre."); return; }
-    const affected = posts.filter(p => p.cat === t.name);
+    const affected = posts.filter(p => catsOf(p).includes(t.name));
+    const renamed = p => catsOf(p).map(c => c === t.name ? name : c);
     const batch = fs.writeBatch(db);
     batch.update(fs.doc(db, "topics", t.id), { name });
-    affected.forEach(p => batch.update(fs.doc(db, "posts", p.slug), { cat: name }));
+    affected.forEach(p => batch.update(fs.doc(db, "posts", p.slug), { cats: renamed(p), cat: renamed(p)[0] || "" }));
     try {
       await batch.commit();
-      affected.forEach(p => p.cat = name);
+      affected.forEach(p => { p.cats = renamed(p); p.cat = p.cats[0] || ""; });
       t.name = name;
       renderTopics(); renderPosts();
       toast("Tema renombrado");
@@ -439,7 +459,7 @@ $("#topicsRows").addEventListener("click", async e => {
   const del = e.target.closest("[data-tdel]");
   if (del) {
     const t = topics.find(x => x.id === del.dataset.tdel);
-    const n = posts.filter(p => p.cat === t.name).length;
+    const n = posts.filter(p => catsOf(p).includes(t.name)).length;
     if (n) { alert(`“${t.name}” tiene ${n} ${n === 1 ? "artículo" : "artículos"}. Cámbialos de tema (o bórralos) antes de borrar el tema.`); return; }
     if (!confirm(`¿Borrar el tema “${t.name}”?`)) return;
     try {

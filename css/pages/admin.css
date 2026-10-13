@@ -118,5 +118,9 @@
 .adm .sch-class.is-past{opacity:.55}
 .adm .sch-class.is-selected{outline:3px solid var(--cream);outline-offset:2px}
 .adm .sch-class{cursor:pointer}
-.adm-detail{margin-top:26px}
-.adm-detail-title{font:800 28px/1.05 var(--display);text-transform:uppercase;color:var(--gold);margin:0 0 12px}
+.adm-detail{margin:6px 0 28px;padding:18px;border:1px solid var(--gold);background:var(--navy-2)}
+.adm-detail-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.adm-detail .adm-sess{border:0;padding:0;background:transparent}
+.adm-detail .adm-sess header > div:first-child{display:none}
+.adm .sch-day{font-size:13px;letter-spacing:.06em;padding:12px 4px;overflow-wrap:anywhere}
+.adm-detail-title{font:800 28px/1.05 var(--display);text-transform:uppercase;color:var(--gold);margin:0}

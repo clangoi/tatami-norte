@@ -278,8 +278,8 @@
     if(ig) return `https://ig.me/m/${ig}`;
     return '#reservas';
   }
-  function renderPlans(){
-    $('#plans').innerHTML=PLANS.map(p=>{
+  function cardsHtml(){
+    return PLANS.map(p=>{
       const priced=p.m!=null;
       return `<article class="plan${p.feat?' feat':''}">
       ${p.feat?'<span class="badge">Más elegido</span>':''}
@@ -296,30 +296,51 @@
     </article>`;
     }).join('');
   }
-  /* flechas del carrusel: solo aparecen si hay planes fuera de vista */
-  const track=$('#plans'), nav=$('#plansNav');
-  function syncNav(){
-    const max=track.scrollWidth-track.clientWidth;
-    nav.hidden=max<=2;
+  /* carrusel infinito: se renderizan 3 copias de los planes y, al quedar quieto,
+     se salta de una copia a otra sin que se note (solo si hay más planes que ancho) */
+  const track=$('#plans'), nav=$('#plansNav'), GAP=20;
+  let looping=false, setW=0, idleT, lastW=0;
+  function renderPlans(){
+    const prev=looping?track.scrollLeft-setW:0;
+    track.innerHTML=cardsHtml();
+    looping=false; setW=0; nav.hidden=true;
+    const card=track.firstElementChild;
+    if(card&&track.scrollWidth>track.clientWidth+2){
+      setW=PLANS.length*(card.offsetWidth+GAP);
+      const real=[...track.children];
+      for(let i=0;i<2;i++) real.forEach(k=>{
+        const c=k.cloneNode(true);
+        c.setAttribute('aria-hidden','true');
+        c.querySelectorAll('a,button').forEach(x=>{x.tabIndex=-1;});
+        track.append(c);
+      });
+      looping=true; nav.hidden=false;
+      track.scrollLeft=setW+((prev%setW)+setW)%setW;
+    }
   }
+  function wrapScroll(){
+    if(!looping) return;
+    const l=track.scrollLeft;
+    if(l>=2*setW) track.scrollLeft=l-setW;
+    else if(l<setW) track.scrollLeft=l+setW;
+  }
+  track.addEventListener('scroll',()=>{ clearTimeout(idleT); idleT=setTimeout(wrapScroll,120); },{passive:true});
   nav.addEventListener('click',e=>{
-    const b=e.target.closest('button'); if(!b) return;
+    const bt=e.target.closest('button'); if(!bt) return;
     const card=track.firstElementChild; if(!card) return;
-    const dir=+b.dataset.dir, max=track.scrollWidth-track.clientWidth;
-    /* sin tope: del último vuelve al primero y viceversa */
-    if(dir>0&&track.scrollLeft>=max-2) track.scrollTo({left:0,behavior:"smooth"});
-    else if(dir<0&&track.scrollLeft<=2) track.scrollTo({left:max,behavior:"smooth"});
-    else track.scrollBy({left:dir*(card.offsetWidth+20),behavior:"smooth"});
+    track.scrollBy({left:+bt.dataset.dir*(card.offsetWidth+GAP),behavior:'smooth'});
   });
-  track.addEventListener('scroll',syncNav,{passive:true});
-  window.addEventListener('resize',syncNav);
-  new MutationObserver(syncNav).observe(track,{childList:true});
+  let resizeT;
+  window.addEventListener('resize',()=>{
+    clearTimeout(resizeT);
+    resizeT=setTimeout(()=>{ if(track.clientWidth!==lastW){ lastW=track.clientWidth; renderPlans(); } },150);
+  });
   document.querySelectorAll('.toggle button').forEach(b=>b.addEventListener('click',()=>{
     cycle=b.dataset.cycle;
     document.querySelectorAll('.toggle button').forEach(x=>x.setAttribute('aria-pressed',x===b));
     renderPlans();
   }));
-  renderPlans();
+  renderPlans(); lastW=track.clientWidth;
   window.TNPlans={
     set(list){
       PLANS=list.map(p=>({id:p.id,name:p.name||'',for:p.for||'',feat:!!p.featured,feats:p.feats||[],m:toPrice(p.price)}));

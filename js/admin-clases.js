@@ -190,8 +190,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       bookings = [...mine, ...snap.docs.map(d => ({ id: d.id, ...d.data() }))];
     } catch (e) { alert(saveError(e)); }
     render();
-    const el = root.querySelector(".adm-detail");
-    if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    const dlg = root.querySelector(".adm-detail");
+    if (dlg) dlg.focus({ preventScroll: true });
   }
 
   const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -258,13 +258,16 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       const slot = slots.find(s => s.id === m[1]);
       if (slot && classOf(slot.classId)) {
         const s = makeSession(slot, m[2]);
-        detail = `<section class="adm-detail" aria-label="Detalle de la clase">
-          <div class="adm-detail-head">
-            <h3 class="adm-detail-title">${esc(s.label)} · ${esc(cap1(longDate(s.date)))}</h3>
-            <button class="btn small ghost" type="button" data-close-detail>Cerrar</button>
-          </div>
-          ${sessionCard(s)}
-        </section>`;
+        detail = `<div class="adm-modal">
+          <div class="adm-modal-bg" data-close-detail></div>
+          <section class="adm-detail" role="dialog" aria-modal="true" aria-label="Inscritos de ${esc(s.label)}" tabindex="-1">
+            <div class="adm-detail-head">
+              <h3 class="adm-detail-title">${esc(s.label)} · ${esc(cap1(longDate(s.date)))}</h3>
+              <button class="btn small ghost" type="button" data-close-detail>Cerrar</button>
+            </div>
+            ${sessionCard(s)}
+          </section>
+        </div>`;
       }
     }
 
@@ -277,8 +280,9 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         ${classSelect()}
       </div>
       <p class="sch-range adm-weeklabel">Del ${esc(dayMonth(from))} al ${esc(dayMonth(to))} · ${list.length} clase${list.length === 1 ? "" : "s"} · ${total} inscrito${total === 1 ? "" : "s"}${filterLabel() ? ` · ${esc(filterLabel())}` : ""}</p>
-      ${detail || '<p class="adm-help adm-note">Toca una clase para ver quiénes están inscritos, quiénes cancelaron y quiénes reprogramaron. Si su fecha ya pasó, verás su próxima fecha.</p>'}
-      ${list.length ? grid + mobile : '<p class="adm-empty">No hay clases esa semana.</p>'}`;
+      <p class="adm-help adm-note">Toca una clase para ver quiénes están inscritos, quiénes cancelaron y quiénes reprogramaron. Si su fecha ya pasó, verás su próxima fecha.</p>
+      ${list.length ? grid + mobile : '<p class="adm-empty">No hay clases esa semana.</p>'}
+      ${detail}`;
   }
 
   function renderPeople() {
@@ -412,6 +416,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         ${SUBS.map(([k, n]) => `<button type="button" role="tab" aria-pressed="${k === sub}" data-csub="${k}">${n}</button>`).join("")}
       </div>
       <div>${{ people: renderPeople, slots: renderSlots, classes: renderClasses, closures: renderClosures }[sub]()}</div>`;
+    document.body.classList.toggle("adm-modal-open", !!root.querySelector(".adm-modal"));
     const strip = root.querySelector("[data-weeks-scroll]");
     const on = strip && strip.querySelector('[aria-pressed="true"]');
     if (on) {
@@ -608,6 +613,10 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       });
       try { await b.commit(); await loadBase(); toast("Clases cargadas"); render(); } catch (err) { alert(saveError(err)); }
     }
+  });
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && selectedKey && root.querySelector(".adm-modal")) { selectedKey = null; render(); }
   });
 
   root.addEventListener("change", e => {

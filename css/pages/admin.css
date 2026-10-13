@@ -118,7 +118,10 @@
 .adm .sch-class.is-past{opacity:.55}
 .adm .sch-class.is-selected{outline:3px solid var(--cream);outline-offset:2px}
 .adm .sch-class{cursor:pointer}
-.adm-detail{margin:6px 0 28px;padding:18px;border:1px solid var(--gold);background:var(--navy-2)}
+.adm-modal{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-start;justify-content:center;padding:clamp(16px,6vh,64px) 16px;overflow-y:auto}
+.adm-modal-bg{position:fixed;inset:0;background:rgba(8,11,20,.82);backdrop-filter:blur(2px)}
+.adm-detail{position:relative;width:100%;max-width:680px;padding:22px;border:1px solid var(--gold);background:var(--navy-2);box-shadow:0 24px 70px rgba(0,0,0,.6);outline:none}
+body.adm-modal-open{overflow:hidden}
 .adm-detail-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .adm-detail .adm-sess{border:0;padding:0;background:transparent}
 .adm-detail .adm-sess header > div:first-child{display:none}

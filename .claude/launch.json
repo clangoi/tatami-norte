@@ -4,8 +4,19 @@
     {
       "name": "sitio",
       "runtimeExecutable": "node",
-      "runtimeArgs": [".claude/serve.js"],
+      "runtimeArgs": [
+        ".claude/serve.js"
+      ],
       "port": 5173,
+      "autoPort": true
+    },
+    {
+      "name": "reservas",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        ".claude/dev.js"
+      ],
+      "port": 5174,
       "autoPort": true
     }
   ]

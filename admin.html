@@ -3,7 +3,7 @@
 <head>
 <!--
   PANEL DE ADMINISTRACIÓN (ver ADMIN.md)
-  Escribe artículos del blog y edita los planes. Los datos se guardan
+  Escribe artículos del blog, edita los planes y administra las clases y sus reservas. Los datos se guardan
   en Firestore; el sitio los lee con js/content.js.
 -->
 <meta charset="utf-8">
@@ -77,6 +77,7 @@
       <div class="filters" role="tablist" aria-label="Secciones">
         <button type="button" role="tab" aria-pressed="true" data-tab="blog">Blog</button>
         <button type="button" role="tab" aria-pressed="false" data-tab="plans">Planes</button>
+        <button type="button" role="tab" aria-pressed="false" data-tab="classes">Clases</button>
       </div>
     </div>
 
@@ -218,6 +219,11 @@
           </div>
         </div>
       </form>
+    </div>
+
+    <!-- ===== Clases y reservas ===== -->
+    <div class="wrap" data-view="classes" hidden>
+      <div id="classesRoot"></div>
     </div>
   </section>
 </main>

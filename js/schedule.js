@@ -107,6 +107,36 @@
     return data;
   }
 
+  /* Reservas propias: las sesiones de /api/clases en los próximos 7 días,
+     con la misma lógica de semana que Cal.com. Las llenas se marcan. */
+  async function fromOwn(){
+    const res = await fetch("/api/clases").then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+    const disciplinas = {};
+    res.classes.forEach(c => { disciplinas[c.id] = { nombre: c.label, tono: c.tone || "oro", pagina: c.page || "" }; });
+
+    const todayIso = res.today;
+    const addDay = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return isoDate(d); };
+    const lastIso = addDay(todayIso, 7);
+    const byDate = {};
+    res.sessions.forEach(s => {
+      if (s.date > lastIso || !disciplinas[s.classId]) return;
+      (byDate[s.date] = byDate[s.date] || []).push({
+        dia: dayOf(s.date), fecha: s.date, inicio: s.start, fin: s.end, disciplina: s.classId, pick: s.classId,
+        nota: s.full ? "Completa" : ""
+      });
+    });
+
+    const fechas = {};
+    for (let i = 0; i <= 7; i++) {
+      const iso = addDay(todayIso, i), dia = dayOf(iso);
+      if (i === 7) { if (!(byDate[todayIso] || []).length) fechas[dia] = iso; }
+      else fechas[dia] = iso;
+    }
+    const clases = [];
+    Object.values(fechas).forEach(iso => clases.push(...(byDate[iso] || [])));
+    return { disciplinas, clases, fechas, hoy: todayIso, nota: cfg.note || "" };
+  }
+
   function fromJson(){
     return fetch(cfg.url || "data/horario.json", { cache: "no-cache" })
       .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
@@ -193,7 +223,7 @@
   }));
 
   blocks.forEach(el => { el.innerHTML = '<p class="sch-loading">Cargando horario…</p>'; });
-  (cfg.source === "json" ? fromJson() : fromCal())
+  (cfg.source === "json" ? fromJson() : booking.provider === "own" ? fromOwn() : fromCal())
     .then(data => blocks.forEach(el => render(el, data)))
     .catch(() => blocks.forEach(el => {
       el.innerHTML = '<p class="sch-empty">No pudimos cargar el horario. Revisa las clases disponibles en el calendario de reservas.</p>';

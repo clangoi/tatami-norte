@@ -84,14 +84,24 @@ window.SITE_CONFIG = {
     url: "data/horario.json"                     // solo si source es "json"
   },
 
-  /* ---- Clases y reservas (Cal.com) · ver CAL-SETUP.md ----
-     Una pestaña por clase. slug = la parte final de la URL en Cal.com
+  /* ---- Clases y reservas ----
+     provider "own": reservas propias. Las clases, los horarios y los cupos
+       se administran en admin.html → Clases (ver RESERVAS.md).
+     provider "cal": reservas con Cal.com (ver CAL-SETUP.md); usa
+       calUsername y classes de más abajo. El resto solo lo usa Cal.com.
+
+     Cal.com: una pestaña por clase. slug = la parte final de la URL en Cal.com
      (cal.com/hccombat/judo → "judo").
      tone: color en el horario (oro, bronce, cobre, marino, acero, plata, crema, linea).
      page: página de la disciplina ("" si no tiene).
      variants: varios eventos de Cal.com que en el sitio son una sola clase
      (en reservas aparece un selector de duración). */
   booking: {
+    provider: "own",                             // "own" (reservas propias) o "cal" (Cal.com)
+    timeZone: "America/Santiago",                // hora de las clases
+    minNoticeMinutes: 120,                       // no se reserva con menos aviso que este
+    horizonDays: 21,                             // cuántos días hacia adelante se puede reservar
+    defaultCapacity: 15,                         // cupos si la clase o el horario no definen otro
     calUsername: "hccombat",                     // cal.com/<usuario>
     calOrigin: "https://app.cal.com",
     classes: [

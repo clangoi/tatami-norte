@@ -1,5 +1,8 @@
 # Reservas con Cal.com
 
+> Las reservas ahora son propias (`RESERVAS.md`). Este documento aplica solo si `booking.provider` es `"cal"` en `site.config.js`.
+
+
 La sección "Agenda tu clase" muestra el calendario de Cal.com directamente en la página, con una pestaña por clase. Cal.com controla los cupos, guarda cada reserva con el nombre y el teléfono de la persona, y permite cancelarla o cambiarla.
 
 Cuenta conectada: **cal.com/hccombat**

@@ -91,3 +91,24 @@
 .adm-subnav{margin:18px 0 4px}
 .adm-checks{display:flex;flex-wrap:wrap;gap:4px 22px;margin:6px 0 10px}
 .adm-checks .check{margin:4px 0}
+
+/* Clases y reservas */
+.adm-formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 24px;margin-top:20px}
+.adm-day{font:800 26px/1 var(--display);text-transform:uppercase;color:var(--gold);margin:28px 0 4px}
+.adm-sessions{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+.adm-sess{border:1px solid var(--navy-3);background:var(--navy-2);padding:16px 18px}
+.adm-sess.is-empty{background:transparent;padding-block:12px}
+.adm-sess.is-closed{border-color:var(--danger)}
+.adm-sess header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.adm-sess header b{display:block;font:800 24px/1.05 var(--display);text-transform:uppercase}
+.adm-sess header span{font-size:14px;color:var(--steel)}
+.adm-sess-tags{display:flex;gap:6px;flex-wrap:wrap}
+.adm-group{margin-top:14px}
+.adm-group h5{font:700 13px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 4px}
+.adm-person{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--navy-3)}
+.adm-person-main{display:flex;flex-direction:column;gap:3px;min-width:0}
+.adm-person-main b{font-size:16px;font-weight:600}
+.adm-person-main span{font-size:14px;color:var(--steel);overflow-wrap:anywhere}
+.adm-person-main .adm-tag{align-self:flex-start;margin-top:2px}
+.adm-person-main .adm-reason{color:var(--text-soft)}
+.adm-nick{color:var(--gold)}

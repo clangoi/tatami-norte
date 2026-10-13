@@ -11,6 +11,7 @@
    ========================================================== */
 (function(){
   const cfg = (window.SITE_CONFIG && window.SITE_CONFIG.booking) || {};
+  if (cfg.provider === "own") return;   // reservas propias: las maneja js/reservas.js
   const username = (cfg.calUsername || "").trim();
   const origin = cfg.calOrigin || "https://app.cal.com";
   const classes = (cfg.classes || []).filter(c => c && c.slug);

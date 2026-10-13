@@ -1,5 +1,8 @@
 # Horario semanal
 
+> Con reservas propias (`booking.provider: "own"`) el horario sale de las clases y horarios de `/admin` → Clases (`RESERVAS.md`). Lo de abajo aplica con Cal.com.
+
+
 El horario de la portada (sección "Horario") y de las páginas de Judo y BJJ se arma **solo, con la disponibilidad de Cal.com**. Para cambiarlo, cambia la disponibilidad de las clases en Cal.com: el sitio lo refleja en unos minutos, sin tocar código ni hacer `git push`.
 
 ## Cómo se calcula

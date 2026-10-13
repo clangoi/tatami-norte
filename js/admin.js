@@ -9,6 +9,7 @@
 import { SDK, app, db, fs, cacheImage, hydrateImages } from "./firebase.js";
 import { toHtml, readingMinutes } from "./markdown.js";
 import { SEED_POSTS } from "./seed-posts.js";
+import { initClases } from "./admin-clases.js";
 
 const {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail
@@ -28,6 +29,8 @@ const catsOf = p => Array.isArray(p.cats) ? p.cats : (p.cat ? [p.cat] : []);
 const collate = (a, b) => String(a).localeCompare(String(b), "es", { sensitivity: "base" });
 const slugify = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
   .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+// Pestaña Clases (horario, cupos y reservas): js/admin-clases.js
+const clases = initClases({ db, fs, esc, toast: msg => toast(msg), saveError: e => saveError(e) });
 const pattern = s => [...s].reduce((n, c) => n + c.charCodeAt(0), 0) % 4;
 
 function toast(msg){

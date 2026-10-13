@@ -72,7 +72,6 @@ service cloud.firestore {
         && id.matches('^[A-Za-z0-9_-]{8,40}$')
         && request.resource.data.keys().hasOnly(['data', 'createdAt'])
         && request.resource.data.data is string
-        && request.resource.data.data.matches('^data:image/(webp|jpeg|png);base64,.*')
         && request.resource.data.data.size() <= 900000;
       allow delete: if isAdmin();
     }

@@ -299,17 +299,18 @@
   }
   /* flechas del carrusel: solo aparecen si hay planes fuera de vista */
   const track=$('#plans'), nav=$('#plansNav');
-  const [prevB,nextB]=nav.querySelectorAll('button');
   function syncNav(){
     const max=track.scrollWidth-track.clientWidth;
     nav.hidden=max<=2;
-    prevB.disabled=track.scrollLeft<=2;
-    nextB.disabled=track.scrollLeft>=max-2;
   }
   nav.addEventListener('click',e=>{
     const b=e.target.closest('button'); if(!b) return;
     const card=track.firstElementChild; if(!card) return;
-    track.scrollBy({left:+b.dataset.dir*(card.offsetWidth+20),behavior:'smooth'});
+    const dir=+b.dataset.dir, max=track.scrollWidth-track.clientWidth;
+    /* sin tope: del último vuelve al primero y viceversa */
+    if(dir>0&&track.scrollLeft>=max-2) track.scrollTo({left:0,behavior:"smooth"});
+    else if(dir<0&&track.scrollLeft<=2) track.scrollTo({left:max,behavior:"smooth"});
+    else track.scrollBy({left:dir*(card.offsetWidth+20),behavior:"smooth"});
   });
   track.addEventListener('scroll',syncNav,{passive:true});
   window.addEventListener('resize',syncNav);

@@ -173,18 +173,9 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   const emptyNotice = '<div class="notice adm-seed"><p><strong>Todavía no hay horario.</strong> Crea las clases en la pestaña <b>Clases</b> y sus horarios en <b>Horario semanal</b>; después aparecerán aquí con sus inscritos.</p></div>';
   const feedNote = '<p class="adm-help adm-note">Para ver las clases y sus inscritos en tu calendario (Google, Apple, Outlook), suscríbete a <code>/api/calendario?feed=TU_SECRETO</code>. Ver RESERVAS.md.</p>';
 
-  // La clase elegida en la grilla: si su fecha ya pasó, se muestra su próxima fecha
-  function nextOccurrence(key) {
-    const m = /^(.+)_(\d{4}-\d{2}-\d{2})$/.exec(key);
-    if (!m) return null;
-    let date = m[2];
-    while (date < todayStr()) date = addDays(date, 7);
-    return `${m[1]}_${date}`;
-  }
-
+  // Al tocar una clase del horario se muestran los inscritos de esa fecha exacta (pasada o futura)
   async function selectClass(key) {
-    const target = nextOccurrence(key);
-    if (!target) return;
+    const target = key;
     selectedKey = target;
     const mine = bookings.filter(b => b.sessionKey !== target);
     try {
@@ -282,7 +273,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         ${classSelect()}
       </div>
       <p class="sch-range adm-weeklabel">Del ${esc(dayMonth(from))} al ${esc(dayMonth(to))} · ${list.length} clase${list.length === 1 ? "" : "s"} · ${total} inscrito${total === 1 ? "" : "s"}${filterLabel() ? ` · ${esc(filterLabel())}` : ""}</p>
-      <p class="adm-help adm-note">Toca una clase para ver quiénes están inscritos, quiénes cancelaron y quiénes reprogramaron. Si su fecha ya pasó, verás su próxima fecha.</p>
+      <p class="adm-help adm-note">Toca una clase para ver quiénes están inscritos, quiénes cancelaron y quiénes reprogramaron en esa fecha, aunque ya haya pasado.</p>
       ${list.length ? grid + mobile : '<p class="adm-empty">No hay clases esa semana.</p>'}
       ${detail}`;
   }
@@ -356,7 +347,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     </div>`;
 
     return `<div class="adm-bar"><h2>Horario semanal</h2></div>
-      <p class="adm-help adm-note">Toca un bloque del horario para agregar una clase en ese día y hora, o toca una clase para ajustarla. Cada clase dura lo que defines en <b>Clases</b>. Los extremos (${hourLabel(start)} y ${hourLabel(end)}) se pueden cambiar tocándolos. Para un feriado o una semana sin clase usa <b>Cierres</b>; los cambios valen para las fechas futuras y las reservas ya hechas no se mueven.</p>
+      <p class="adm-help adm-note">Toca un bloque del horario para agregar una clase en ese día y hora, o toca una clase para ajustarla. Cada clase dura lo que defines en <b>Clases</b>. Para un feriado o una semana sin clase usa <b>Cierres</b>; los cambios valen para las fechas futuras y las reservas ya hechas no se mueven.</p>
       ${importBox}
       ${grid}
       ${slotEditorModal()}`;

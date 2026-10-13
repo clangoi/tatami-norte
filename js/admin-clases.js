@@ -24,6 +24,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   let editing = null;       // { kind: "slot"|"class"|"closure", item|null }
   let classFilter = "";     // Inscritos: id de la clase, "group:judo" / "group:bjj" ("" = todas)
   let weekStart = null;     // lunes de la semana que muestra la vista semanal
+  let weeks = [];           // lunes de los bloques de semana visibles (crecen al avanzar)
   let selectedKey = null;   // clase elegida en la vista semanal
 
   /* ---------- Fechas ---------- */
@@ -60,6 +61,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       root.innerHTML = '<p class="adm-loading">Cargando clases…</p>';
       try {
         weekStart = mondayOf(todayStr());
+        weeks = [weekStart, addDays(weekStart, 7)];
         await Promise.all([loadBase(), loadBookings()]);
         loaded = true;
       } catch (e) {
@@ -191,6 +193,12 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 
+  const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  const weekRange = monday => {
+    const [, m1, d1] = monday.split("-").map(Number);
+    const [, m2, d2] = addDays(monday, 6).split("-").map(Number);
+    return m1 === m2 ? `${d1} – ${d2} ${MONTHS[m1 - 1]}` : `${d1} ${MONTHS[m1 - 1]} – ${d2} ${MONTHS[m2 - 1]}`;
+  };
   const dayMonth = date => shortDate(date).replace(/^[^,]*,?\s*/, "");
 
   // Vista global por disciplina: todas las clases de Judo o de BJJ, sea cual sea su tipo
@@ -260,10 +268,9 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     }
 
     return `<div class="adm-toolbar">
-        <div class="adm-daynav" role="group" aria-label="Semana">
+        <div class="adm-daynav adm-weeks" role="group" aria-label="Semana">
           <button class="btn small ghost" type="button" data-week="prev" aria-label="Semana anterior">‹</button>
-          <button class="btn small ghost" type="button" data-week="current" aria-pressed="${weekStart === mondayOf(today)}">Semana actual</button>
-          <button class="btn small ghost" type="button" data-week="next" aria-pressed="${weekStart === addDays(mondayOf(today), 7)}">Próxima semana</button>
+          ${[...weeks].sort().map(w => `<button class="btn small ghost" type="button" data-week-go="${w}" aria-pressed="${w === weekStart}">${esc(weekRange(w))}${w === mondayOf(today) ? "<small>Actual</small>" : ""}</button>`).join("")}
           <button class="btn small ghost" type="button" data-week="after" aria-label="Semana siguiente">›</button>
         </div>
         ${classSelect()}
@@ -553,10 +560,11 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     if (t.closest("[data-close-detail]")) { selectedKey = null; render(); return; }
     const pk = t.closest("[data-pick]");
     if (pk) { e.preventDefault(); return selectClass(pk.dataset.pick); }
-    const wk = t.closest("[data-week]");
+    const wk = t.closest("[data-week], [data-week-go]");
     if (wk) {
-      const base = mondayOf(todayStr());
-      weekStart = { current: base, next: addDays(base, 7), prev: addDays(weekStart, -7), after: addDays(weekStart, 7) }[wk.dataset.week];
+      // Cada semana a la que se llega queda como un bloque con sus fechas
+      weekStart = wk.dataset.weekGo || addDays(weekStart, wk.dataset.week === "prev" ? -7 : 7);
+      if (!weeks.includes(weekStart)) weeks.push(weekStart);
       selectedKey = null;
       root.querySelector(".adm-toolbar").insertAdjacentHTML("afterend", '<p class="adm-loading">Cargando…</p>');
       loadBookings().then(render).catch(err => { root.innerHTML = `<p class="err">${esc(saveError(err))}</p>`; });

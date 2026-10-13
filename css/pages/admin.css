@@ -124,3 +124,6 @@
 .adm-detail .adm-sess header > div:first-child{display:none}
 .adm .sch-day{font-size:13px;letter-spacing:.06em;padding:12px 4px;overflow-wrap:anywhere}
 .adm-detail-title{font:800 28px/1.05 var(--display);text-transform:uppercase;color:var(--gold);margin:0}
+.adm-weeks{flex-wrap:wrap}
+.adm-weeks .btn small{margin-left:8px;background:var(--gold);color:var(--navy);font:700 10px/1 var(--label);letter-spacing:.12em;padding:3px 5px;text-transform:uppercase}
+.adm-weeks .btn[aria-pressed="true"] small{background:var(--navy);color:var(--gold)}

@@ -389,8 +389,48 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     </div>`;
   }
 
-  // "Termina a las 19:30" según la clase y la hora elegidas
+  /* ---- Solapes ----
+     Cada clase ocupa desde su hora de inicio hasta que cumple su duración. Se compara en minutos
+     de la semana (lunes 00:00 = 0), así también se detecta una clase que pasa de medianoche. */
+  const WEEK_MIN = 7 * 1440;
+  const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+  const spanOf = (day, start, min) => { const a = DAYS.findIndex(d => d[0] === day) * 1440 + toMin(start); return [a, a + min]; };
+  const minutesOf = sl => sl.duration || (classOf(sl.classId) || {}).duration || 60;
+
+  // Mensajes de cada choque con el resto del horario (solo cuentan las clases activas)
+  function findOverlaps({ days, start, minutes, excludeId }) {
+    const found = [];
+    days.forEach(day => {
+      const [a, b] = spanOf(day, start, minutes);
+      liveSlots().filter(o => o.active !== false && o.id !== excludeId).forEach(o => {
+        const len = minutesOf(o);
+        const [c, d] = spanOf(o.day, o.start, len);
+        if (![0, WEEK_MIN, -WEEK_MIN].some(k => a < d + k && c + k < b)) return;
+        const name = (classOf(o.classId) || {}).label || o.classId;
+        found.push(`El ${dayName(day).toLowerCase()} ${start}–${addMin(start, minutes)} se solapa con «${name}» (${dayName(o.day).toLowerCase()} ${o.start}–${addMin(o.start, len)}).`);
+      });
+    });
+    return [...new Set(found)];
+  }
+
+  // Choques de lo que hay escrito en la ventana (vacío si todo está bien o aún falta algún dato)
+  function formOverlaps(form) {
+    const f = form.elements;
+    const cls = classOf(f.classId.value), start = f.start.value;
+    if (!cls || !/^([01]\d|2[0-3]):[0-5]\d$/.test(start) || !f.active.checked) return [];
+    const item = slotEditor && slotEditor.slot;
+    const days = [...form.querySelectorAll('input[name="days"]:checked')].map(i => i.value);
+    if (item && !days.includes(item.day)) days.push(item.day);
+    // Un horario con duración propia la conserva mientras no se cambie de clase ni se pida usar la de la clase
+    const keepOwn = item && item.duration && item.classId === cls.id && !(f.useClassDur && f.useClassDur.checked);
+    return findOverlaps({ days, start, minutes: keepOwn ? item.duration : (cls.duration || 60), excludeId: item && item.id });
+  }
+
+  // "Termina a las 19:30" según la clase y la hora elegidas; avisa en vivo si se solapa
   function editorHint(form) {
+    const clash = formOverlaps(form);
+    const errBox = form.querySelector("[data-err]");
+    if (errBox) errBox.textContent = clash.length ? clash.join("\n") : "";
     const opt = form.elements.classId.selectedOptions[0];
     const t = form.elements.start.value;
     const hint = form.querySelector("[data-hint]");
@@ -420,6 +460,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     if (item && !days.includes(item.day)) days.push(item.day);
     if (!days.length) return fail("Elige al menos un día.");
     const active = f.active.checked;
+    const clash = formOverlaps(form);
+    if (clash.length) return fail(["No se puede guardar: la clase se solapa con otra del horario.", ...clash].join("\n"));
     const batch = fs.writeBatch(db);
     let updated = null;
     const created = [];

@@ -57,19 +57,7 @@ service cloud.firestore {
     match /topics/{id} {
       allow read: if isAdmin();
       allow create, update: if isAdmin()
-        && id.matches('^[a-z0-9-]{1,40}
-      allow read: if resource.data.visible == true || isAdmin();
-      allow create, update: if isAdmin() && validPlan(request.resource.data);
-      allow delete: if isAdmin();
-    }
-
-    // Todo lo demás, cerrado
-    match /{document=**} {
-      allow read, write: if false;
-    }
-  }
-}
-)
+        && id.matches('^[a-z0-9-]{1,40}$')
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 30;

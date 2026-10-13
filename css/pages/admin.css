@@ -112,3 +112,11 @@
 .adm-person-main .adm-tag{align-self:flex-start;margin-top:2px}
 .adm-person-main .adm-reason{color:var(--text-soft)}
 .adm-nick{color:var(--gold)}
+.adm-daynav{display:flex;gap:6px;align-items:center}
+.adm-daynav .btn[aria-pressed="true"]{background:var(--gold);color:var(--navy)}
+.adm-weeklabel{margin:14px 0 14px}
+.adm .sch-class.is-past{opacity:.55}
+.adm .sch-class.is-selected{outline:3px solid var(--cream);outline-offset:2px}
+.adm .sch-class{cursor:pointer}
+.adm-detail{margin-top:26px}
+.adm-detail-title{font:800 28px/1.05 var(--display);text-transform:uppercase;color:var(--gold);margin:0 0 12px}

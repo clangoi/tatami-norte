@@ -23,11 +23,16 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   let sub = "people";
   let editing = null;       // { kind: "slot"|"class"|"closure", item|null }
   let range = null;         // { from, to } en "AAAA-MM-DD"
+  let classFilter = "";     // id de la clase a mostrar en Inscritos ("" = todas)
+  let view = "week";        // Inscritos: "week" (horario de la semana) | "list" (por fechas)
+  let weekStart = null;     // lunes de la semana que muestra la vista semanal
+  let selectedKey = null;   // clase elegida en la vista semanal
 
   /* ---------- Fechas ---------- */
   const todayStr = () => new Date().toLocaleDateString("sv-SE", { timeZone: TZ });
   const addDays = (date, n) => { const d = new Date(date + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   const dayKey = date => DAY_BY_DOW[new Date(date + "T12:00:00Z").getUTCDay()];
+  const mondayOf = date => addDays(date, -((new Date(date + "T12:00:00Z").getUTCDay() + 6) % 7));
   const dayName = key => (DAYS.find(d => d[0] === key) || [, key])[1];
   const longDate = date => new Date(date + "T12:00:00").toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long" });
   const shortDate = date => new Date(date + "T12:00:00").toLocaleDateString("es-CL", { weekday: "short", day: "numeric", month: "short" });
@@ -46,7 +51,11 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     closures = x.docs.map(d => ({ id: d.id, ...d.data() }));
   }
   async function loadBookings() {
-    const q = fs.query(fs.collection(db, "bookings"), fs.where("date", ">=", range.from), fs.where("date", "<=", range.to));
+    // Se cargan el rango de la lista y la semana de la vista semanal
+    const from = range.from < weekStart ? range.from : weekStart;
+    const lastDay = addDays(weekStart, 6);
+    const to = range.to > lastDay ? range.to : lastDay;
+    const q = fs.query(fs.collection(db, "bookings"), fs.where("date", ">=", from), fs.where("date", "<=", to));
     const snap = await fs.getDocs(q);
     bookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   }
@@ -55,7 +64,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     if (!loaded) {
       root.innerHTML = '<p class="adm-loading">Cargando clases…</p>';
       try {
-        range = { from: todayStr(), to: addDays(todayStr(), 14) };
+        weekStart = mondayOf(todayStr());
+        range = { from: weekStart, to: addDays(weekStart, 6) };
         await Promise.all([loadBase(), loadBookings()]);
         loaded = true;
       } catch (e) {
@@ -68,26 +78,30 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   }
 
   /* ---------- Sesiones (horario semanal + fechas) ---------- */
-  function sessionsInRange() {
+  // Un horario semanal en una fecha concreta, con sus inscritos ya cargados
+  function makeSession(s, date) {
+    const key = `${s.id}_${date}`;
+    const cls = classOf(s.classId);
+    const duration = s.duration || cls.duration || 60;
+    const closed = closures.some(c => c.date === date && (!c.slotId || c.slotId === s.id));
+    return {
+      key, date, slotId: s.id, start: s.start, end: addMin(s.start, duration), label: cls.label, classId: s.classId, tone: cls.tone || "oro",
+      capacity: s.capacity || cls.capacity || DEFAULT_CAP, closed, people: bookings.filter(b => b.sessionKey === key)
+    };
+  }
+
+  function sessionsInRange(from = range.from, to = range.to) {
     const map = new Map();
-    const closedAll = new Set(closures.filter(c => !c.slotId).map(c => c.date));
-    const closedSlot = new Set(closures.filter(c => c.slotId).map(c => `${c.slotId}_${c.date}`));
-    for (let date = range.from; date <= range.to; date = addDays(date, 1)) {
+    for (let date = from; date <= to; date = addDays(date, 1)) {
       slots.filter(s => s.active !== false && s.day === dayKey(date) && classOf(s.classId)).forEach(s => {
-        const key = `${s.id}_${date}`;
-        const cls = classOf(s.classId);
-        const duration = s.duration || cls.duration || 60;
-        map.set(key, {
-          key, date, start: s.start, end: addMin(s.start, duration), label: cls.label,
-          capacity: s.capacity || cls.capacity || DEFAULT_CAP,
-          closed: closedAll.has(date) || closedSlot.has(key), people: []
-        });
+        const x = makeSession(s, date);
+        map.set(x.key, { ...x, people: [] });
       });
     }
     // Reservas de clases que ya no están en el horario también se muestran
-    bookings.forEach(b => {
+    bookings.filter(b => b.date >= from && b.date <= to).forEach(b => {
       if (!map.has(b.sessionKey)) {
-        map.set(b.sessionKey, { key: b.sessionKey, date: b.date, start: b.start, end: b.end, label: b.classLabel, capacity: null, closed: false, orphan: true, people: [] });
+        map.set(b.sessionKey, { key: b.sessionKey, date: b.date, start: b.start, end: b.end, label: b.classLabel, classId: b.classId, capacity: null, closed: false, orphan: true, people: [] });
       }
       map.get(b.sessionKey).people.push(b);
     });
@@ -146,19 +160,128 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     </article>`;
   }
 
-  function renderPeople() {
-    const list = sessionsInRange();
-    const hasData = classes.length && slots.length;
+  const classSelect = () => `<label>Tipo de clase
+          <select id="rgClass"><option value="">Todas</option>${classes.map(c => `<option value="${esc(c.id)}"${c.id === classFilter ? " selected" : ""}>${esc(c.label)}</option>`).join("")}</select>
+        </label>`;
+
+  const viewSwitch = () => `<div class="filters adm-subnav" role="group" aria-label="Vista">
+        <button type="button" aria-pressed="${view === "week"}" data-view-mode="week">Horario de la semana</button>
+        <button type="button" aria-pressed="${view === "list"}" data-view-mode="list">Lista por fechas</button>
+      </div>`;
+
+  const emptyNotice = '<div class="notice adm-seed"><p><strong>Todavía no hay horario.</strong> Crea las clases en la pestaña <b>Clases</b> y sus horarios en <b>Horario semanal</b>; después aparecerán aquí con sus inscritos.</p></div>';
+  const feedNote = '<p class="adm-help adm-note">Para ver las clases y sus inscritos en tu calendario (Google, Apple, Outlook), suscríbete a <code>/api/calendario?feed=TU_SECRETO</code>. Ver RESERVAS.md.</p>';
+
+  // La clase elegida en la grilla: si su fecha ya pasó, se muestra su próxima fecha
+  function nextOccurrence(key) {
+    const m = /^(.+)_(\d{4}-\d{2}-\d{2})$/.exec(key);
+    if (!m) return null;
+    let date = m[2];
+    while (date < todayStr()) date = addDays(date, 7);
+    return `${m[1]}_${date}`;
+  }
+
+  async function selectClass(key) {
+    const target = nextOccurrence(key);
+    if (!target) return;
+    selectedKey = target;
+    const mine = bookings.filter(b => b.sessionKey !== target);
+    try {
+      const snap = await fs.getDocs(fs.query(fs.collection(db, "bookings"), fs.where("sessionKey", "==", target)));
+      bookings = [...mine, ...snap.docs.map(d => ({ id: d.id, ...d.data() }))];
+    } catch (e) { alert(saveError(e)); }
+    render();
+    const el = root.querySelector(".adm-detail");
+    if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+
+  const dayMonth = date => shortDate(date).replace(/^[^,]*,?\s*/, "");
+
+  // Horario de la semana, con el mismo formato que el de la portada
+  function renderWeek() {
+    const from = weekStart, to = addDays(weekStart, 6);
+    const list = sessionsInRange(from, to).filter(s => !s.orphan && (!classFilter || s.classId === classFilter));
+    const days = DAYS.filter(([k]) => k !== "domingo" || list.some(s => dayKey(s.date) === "domingo"));
+    const dateOf = key => addDays(weekStart, DAYS.findIndex(d => d[0] === key));
+    const times = [...new Set(list.map(s => s.start))].sort();
+    const today = todayStr();
+    const ok = s => s.people.filter(b => b.status === "confirmed").length;
+
+    // La clase tocada puede ser de otra fecha (su próxima ocurrencia): se marca la celda de su horario
+    const pickedSlot = selectedKey && selectedKey.replace(/_\d{4}-\d{2}-\d{2}$/, "");
+    const cell = s => `<a class="sch-class t-${esc(s.tone)}${s.date < today ? " is-past" : ""}${pickedSlot === s.slotId ? " is-selected" : ""}" href="#" data-pick="${esc(s.key)}">
+        <span class="sch-name">${esc(s.label)}</span>
+        <span class="sch-time">${esc(s.start)}–${esc(s.end)}</span>
+        <span class="sch-note">${s.closed ? "Cerrada" : `${ok(s)} / ${s.capacity} inscritos`}</span>
+      </a>`;
+    const grid = `<div class="sch-grid" style="--days:${days.length}" role="table" aria-label="Horario de la semana">
+        <div class="sch-row sch-head" role="row">
+          <div class="sch-corner" role="columnheader"></div>
+          ${days.map(([k, , short]) => `<div class="sch-day${dateOf(k) === today ? " is-today" : ""}" role="columnheader">${short}${dateOf(k) === today ? "<small>Hoy</small>" : ""}<span class="sch-date">${esc(dayMonth(dateOf(k)))}</span></div>`).join("")}
+        </div>
+        ${times.map(t => `<div class="sch-row" role="row"><div class="sch-hour" role="rowheader">${esc(t)}</div>
+          ${days.map(([k]) => `<div class="sch-cell${dateOf(k) === today ? " is-today" : ""}" role="cell">${list.filter(s => s.start === t && s.date === dateOf(k)).map(cell).join("")}</div>`).join("")}</div>`).join("")}
+      </div>`;
+    const mobile = `<div class="sch-list">${days.map(([k, name]) => {
+        const here = list.filter(s => s.date === dateOf(k));
+        return `<div class="sch-list-day${dateOf(k) === today ? " is-today" : ""}"><h3>${name}<span class="sch-date">${esc(dayMonth(dateOf(k)))}</span></h3>
+          ${here.length ? here.map(cell).join("") : '<p class="sch-rest">Sin clases</p>'}</div>`;
+      }).join("")}</div>`;
+
+    // Detalle de la clase elegida
+    let detail = '<p class="adm-help adm-note">Toca una clase para ver quiénes están inscritos hasta ahora. Si su fecha ya pasó, verás su próxima fecha.</p>';
+    if (selectedKey) {
+      const m = /^(.+)_(\d{4}-\d{2}-\d{2})$/.exec(selectedKey);
+      const slot = slots.find(s => s.id === m[1]);
+      if (slot && classOf(slot.classId)) {
+        const s = makeSession(slot, m[2]);
+        detail = `<div class="adm-detail"><h3 class="adm-detail-title">Inscritos hasta ahora · ${esc(cap1(longDate(s.date)))}</h3>${sessionCard(s)}</div>`;
+      }
+    }
+
     return `<div class="adm-toolbar">
+        <div class="adm-daynav" role="group" aria-label="Semana">
+          <button class="btn small ghost" type="button" data-week="prev" aria-label="Semana anterior">‹</button>
+          <button class="btn small ghost" type="button" data-week="current" aria-pressed="${weekStart === mondayOf(today)}">Semana actual</button>
+          <button class="btn small ghost" type="button" data-week="next" aria-pressed="${weekStart === addDays(mondayOf(today), 7)}">Próxima semana</button>
+          <button class="btn small ghost" type="button" data-week="after" aria-label="Semana siguiente">›</button>
+        </div>
+        ${classSelect()}
+      </div>
+      <p class="sch-range adm-weeklabel">Del ${esc(dayMonth(from))} al ${esc(dayMonth(to))}</p>
+      ${list.length ? grid + mobile : '<p class="adm-empty">No hay clases esa semana.</p>'}
+      ${detail}`;
+  }
+
+  function renderList() {
+    const list = sessionsInRange().filter(s => !classFilter || s.classId === classFilter);
+    const single = range.from === range.to;
+    const people = list.reduce((n, s) => n + s.people.filter(b => b.status === "confirmed").length, 0);
+    const thisWeek = mondayOf(todayStr());
+    const is = (a, b) => range.from === a && range.to === b;
+    return `<div class="adm-toolbar">
+        <div class="adm-daynav" role="group" aria-label="Día">
+          <button class="btn small ghost" type="button" data-range="prev" aria-label="Día anterior">‹</button>
+          <button class="btn small ghost" type="button" data-range="today" aria-pressed="${single && range.from === todayStr()}">Hoy</button>
+          <button class="btn small ghost" type="button" data-range="tomorrow" aria-pressed="${single && range.from === addDays(todayStr(), 1)}">Mañana</button>
+          <button class="btn small ghost" type="button" data-range="next" aria-label="Día siguiente">›</button>
+        </div>
+        ${classSelect()}
+      </div>
+      <div class="adm-toolbar">
         <label>Desde <input type="date" id="rgFrom" value="${esc(range.from)}"></label>
         <label>Hasta <input type="date" id="rgTo" value="${esc(range.to)}"></label>
-        <button class="btn small ghost" type="button" data-range="week">Próximos 7 días</button>
-        <button class="btn small ghost" type="button" data-range="two">Próximos 14 días</button>
+        <button class="btn small ghost" type="button" data-range="week" aria-pressed="${is(thisWeek, addDays(thisWeek, 6))}">Semana actual</button>
+        <button class="btn small ghost" type="button" data-range="two" aria-pressed="${is(addDays(thisWeek, 7), addDays(thisWeek, 13))}">Próxima semana</button>
         <button class="btn small ghost" type="button" data-range="past">Últimos 14 días</button>
       </div>
-      ${hasData ? "" : '<div class="notice adm-seed"><p><strong>Todavía no hay horario.</strong> Crea las clases en la pestaña <b>Clases</b> y sus horarios en <b>Horario semanal</b>; después aparecerán aquí con sus inscritos.</p></div>'}
-      <div class="adm-sessions">${list.length ? list.map(sessionCard).join("") : '<p class="adm-empty">No hay clases en ese rango.</p>'}</div>
-      <p class="adm-help adm-note">Para ver las clases y sus inscritos en tu calendario (Google, Apple, Outlook), suscríbete a <code>/api/calendario?feed=TU_SECRETO</code>. Ver RESERVAS.md.</p>`;
+      <p class="adm-help adm-note">${list.length} clase${list.length === 1 ? "" : "s"} · ${people} inscrito${people === 1 ? "" : "s"}${single ? ` · ${esc(cap1(longDate(range.from)))}` : ""}${classFilter && classOf(classFilter) ? ` · ${esc(classOf(classFilter).label)}` : ""}</p>
+      <div class="adm-sessions">${list.length ? list.map(sessionCard).join("") : '<p class="adm-empty">No hay clases en ese rango.</p>'}</div>`;
+  }
+
+  function renderPeople() {
+    if (!(classes.length && slots.length)) return emptyNotice;
+    return `${viewSwitch()}${view === "week" ? renderWeek() : renderList()}${feedNote}`;
   }
 
   /* ---------- Horario semanal ---------- */
@@ -423,7 +546,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   function setRange(from, to) {
     if (!from || !to || from > to) return;
     range = { from, to };
-    root.querySelector(".adm-sessions").innerHTML = '<p class="adm-loading">Cargando…</p>';
+    const box = root.querySelector(".adm-sessions");
+    if (box) box.innerHTML = '<p class="adm-loading">Cargando…</p>';
     loadBookings().then(render).catch(e => { root.innerHTML = `<p class="err">${esc(saveError(e))}</p>`; });
   }
 
@@ -440,10 +564,27 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     if (ec) { editing = { kind: "class", item: classOf(ec.dataset.editClass) }; render(); window.scrollTo({ top: 0 }); return; }
     const cb = t.closest("[data-cancel-booking]");
     if (cb) return cancelBooking(cb.dataset.cancelBooking);
+    const vm = t.closest("[data-view-mode]");
+    if (vm) { view = vm.dataset.viewMode; render(); return; }
+    const pk = t.closest("[data-pick]");
+    if (pk) { e.preventDefault(); return selectClass(pk.dataset.pick); }
+    const wk = t.closest("[data-week]");
+    if (wk) {
+      const base = mondayOf(todayStr());
+      weekStart = { current: base, next: addDays(base, 7), prev: addDays(weekStart, -7), after: addDays(weekStart, 7) }[wk.dataset.week];
+      selectedKey = null;
+      root.querySelector(".adm-toolbar").insertAdjacentHTML("afterend", '<p class="adm-loading">Cargando…</p>');
+      loadBookings().then(render).catch(err => { root.innerHTML = `<p class="err">${esc(saveError(err))}</p>`; });
+      return;
+    }
     const rg = t.closest("[data-range]");
     if (rg) {
       const today = todayStr();
-      const r = { week: [today, addDays(today, 7)], two: [today, addDays(today, 14)], past: [addDays(today, -14), today] }[rg.dataset.range];
+      const step = n => { const d = range.from === range.to ? addDays(range.from, n) : range.from; return [d, d]; };
+      const r = {
+        today: [today, today], tomorrow: [addDays(today, 1), addDays(today, 1)], prev: step(-1), next: step(1),
+        week: [mondayOf(today), addDays(mondayOf(today), 6)], two: [addDays(mondayOf(today), 7), addDays(mondayOf(today), 13)], past: [addDays(today, -14), today]
+      }[rg.dataset.range];
       return setRange(...r);
     }
 
@@ -475,6 +616,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   });
 
   root.addEventListener("change", e => {
+    if (e.target.id === "rgClass") { classFilter = e.target.value; render(); return; }
     if (e.target.id === "rgFrom" || e.target.id === "rgTo") setRange(root.querySelector("#rgFrom").value, root.querySelector("#rgTo").value);
   });
   root.addEventListener("submit", e => { e.preventDefault(); saveForm(e.target); });

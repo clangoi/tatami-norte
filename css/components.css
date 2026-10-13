@@ -122,6 +122,7 @@
 .plans-nav button{position:absolute;top:50%;translate:0 -50%;pointer-events:auto;width:48px;height:48px;display:grid;place-items:center;background:var(--navy);color:var(--gold);border:1px solid var(--gold);cursor:pointer;z-index:2;box-shadow:0 4px 14px rgba(0,0,0,.45);transition:background .15s,color .15s}
 .plans-nav button[data-dir="-1"]{left:-10px}
 .plans-nav button[data-dir="1"]{right:-10px}
+@media (max-width:600px){.plans-nav button{width:34px;height:34px}.plans-nav button svg{width:16px;height:16px}.plans-nav button[data-dir="-1"]{left:-6px}.plans-nav button[data-dir="1"]{right:-6px}}
 .plans-nav button:hover:not(:disabled){background:var(--gold);color:var(--navy)}
 .plans-nav button:disabled{opacity:.3;cursor:default}
 .plans-nav button:focus-visible,.plans:focus-visible{outline:2px solid var(--gold);outline-offset:3px}

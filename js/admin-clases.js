@@ -10,6 +10,7 @@
 const DAYS = [["lunes", "Lunes"], ["martes", "Martes"], ["miercoles", "Miércoles"], ["jueves", "Jueves"], ["viernes", "Viernes"], ["sabado", "Sábado"], ["domingo", "Domingo"]];
 const DAY_BY_DOW = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
 const TONES = [["oro", "Oro"], ["bronce", "Bronce"], ["cobre", "Cobre"], ["marino", "Marino"], ["acero", "Acero"], ["plata", "Plata"], ["crema", "Crema"], ["linea", "Línea"]];
+const WEEKS_BEFORE = 4, WEEKS_AHEAD = 12;   // bloques de semana creados de antemano
 const SUBS = [["people", "Inscritos"], ["slots", "Horario semanal"], ["classes", "Clases"], ["closures", "Cierres"]];
 
 export function initClases({ db, fs, esc, toast, saveError }) {
@@ -24,7 +25,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   let editing = null;       // { kind: "slot"|"class"|"closure", item|null }
   let classFilter = "";     // Inscritos: id de la clase, "group:judo" / "group:bjj" ("" = todas)
   let weekStart = null;     // lunes de la semana que muestra la vista semanal
-  let weeks = [];           // lunes de los bloques de semana visibles (crecen al avanzar)
+  let weeks = [];           // lunes de los bloques de semana (los de WEEKS_*; crecen si se avanza más allá)
   let selectedKey = null;   // clase elegida en la vista semanal
 
   /* ---------- Fechas ---------- */
@@ -61,7 +62,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       root.innerHTML = '<p class="adm-loading">Cargando clases…</p>';
       try {
         weekStart = mondayOf(todayStr());
-        weeks = [weekStart, addDays(weekStart, 7)];
+        weeks = Array.from({ length: WEEKS_BEFORE + WEEKS_AHEAD + 1 }, (_, i) => addDays(weekStart, (i - WEEKS_BEFORE) * 7));
         await Promise.all([loadBase(), loadBookings()]);
         loaded = true;
       } catch (e) {
@@ -270,7 +271,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     return `<div class="adm-toolbar">
         <div class="adm-daynav adm-weeks" role="group" aria-label="Semana">
           <button class="btn small ghost" type="button" data-week="prev" aria-label="Semana anterior">‹</button>
-          ${[...weeks].sort().map(w => `<button class="btn small ghost" type="button" data-week-go="${w}" aria-pressed="${w === weekStart}">${esc(weekRange(w))}${w === mondayOf(today) ? "<small>Actual</small>" : ""}</button>`).join("")}
+          <div class="adm-weeks-scroll" data-weeks-scroll>${[...weeks].sort().map(w => `<button class="btn small ghost" type="button" data-week-go="${w}" aria-pressed="${w === weekStart}">${esc(weekRange(w))}${w === mondayOf(today) ? "<small>Actual</small>" : ""}</button>`).join("")}</div>
           <button class="btn small ghost" type="button" data-week="after" aria-label="Semana siguiente">›</button>
         </div>
         ${classSelect()}
@@ -405,10 +406,22 @@ export function initClases({ db, fs, esc, toast, saveError }) {
 
   /* ---------- Dibujo ---------- */
   function render() {
+    const before = root.querySelector("[data-weeks-scroll]");
+    const lastScroll = before ? before.scrollLeft : null;
     root.innerHTML = `<div class="filters adm-subnav" role="tablist" aria-label="Clases">
         ${SUBS.map(([k, n]) => `<button type="button" role="tab" aria-pressed="${k === sub}" data-csub="${k}">${n}</button>`).join("")}
       </div>
       <div>${{ people: renderPeople, slots: renderSlots, classes: renderClasses, closures: renderClosures }[sub]()}</div>`;
+    const strip = root.querySelector("[data-weeks-scroll]");
+    const on = strip && strip.querySelector('[aria-pressed="true"]');
+    if (on) {
+      const target = on.offsetLeft - (strip.clientWidth - on.offsetWidth) / 2;
+      if (lastScroll == null) { strip.style.scrollBehavior = "auto"; strip.scrollLeft = target; strip.style.scrollBehavior = ""; }
+      else {
+        strip.style.scrollBehavior = "auto"; strip.scrollLeft = lastScroll; strip.style.scrollBehavior = "";
+        requestAnimationFrame(() => { strip.scrollLeft = target; });
+      }
+    }
   }
 
   /* ---------- Acciones ---------- */

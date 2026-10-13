@@ -124,6 +124,9 @@
 .adm-detail .adm-sess header > div:first-child{display:none}
 .adm .sch-day{font-size:13px;letter-spacing:.06em;padding:12px 4px;overflow-wrap:anywhere}
 .adm-detail-title{font:800 28px/1.05 var(--display);text-transform:uppercase;color:var(--gold);margin:0}
-.adm-weeks{flex-wrap:wrap}
+.adm-weeks{flex-wrap:nowrap;max-width:100%;min-width:0}
+.adm-weeks-scroll{position:relative;display:flex;gap:6px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--navy-3) transparent;padding-bottom:6px;min-width:0;max-width:min(560px,calc(100vw - 150px))}
+.adm-weeks-scroll .btn{flex:none;white-space:nowrap}
+.adm-weeks>.btn{flex:none}
 .adm-weeks .btn small{margin-left:8px;background:var(--gold);color:var(--navy);font:700 10px/1 var(--label);letter-spacing:.12em;padding:3px 5px;text-transform:uppercase}
 .adm-weeks .btn[aria-pressed="true"] small{background:var(--navy);color:var(--gold)}

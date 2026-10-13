@@ -106,7 +106,7 @@ window.SITE_CONFIG = {
       { label: "Judo No-Gi", slug: "judo-no-gi",    tone: "crema",  page: "judo.html" },
       { label: "Judo Kids",  slug: "judo-kids",     tone: "plata",  page: "judo.html" },
       { label: "Físico",    slug: "fisico",         tone: "acero",  page: "" },
-      { label: "Sala libre / Randoris", slug: "sala-libre-randoris", tone: "linea", page: "" }
+      { label: "Judo Randoris",         slug: "sala-libre-randoris", tone: "linea", page: "" }
     ]
   },
 

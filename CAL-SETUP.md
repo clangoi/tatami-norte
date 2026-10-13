@@ -1,6 +1,6 @@
 # Reservas con Cal.com
 
-La sección "Agenda tu clase" muestra el calendario de Cal.com directamente en la página, con una pestaña por clase. Cal.com controla los cupos, manda los correos de confirmación y recordatorio, y permite cancelar o cambiar la reserva.
+La sección "Agenda tu clase" muestra el calendario de Cal.com directamente en la página, con una pestaña por clase. Cal.com controla los cupos, guarda cada reserva con el nombre y el teléfono de la persona, y permite cancelarla o cambiarla.
 
 Cuenta conectada: **cal.com/hccombat**
 
@@ -25,8 +25,8 @@ Con una sola clase no se muestran pestañas; con dos o más aparecen solas, en e
 - **Availability**: crea un horario propio para la clase donde cada bloque dure lo mismo que la clase (por ejemplo, Judo lunes y miércoles 19:00–20:00). Así solo hay un horario de inicio por bloque.
 - **Duración**: una sola duración por clase. Judo hoy ofrece 60 y 75 min; si es la misma clase, deja solo una.
 - **Limits → Minimum notice**: 2 horas.
-- **Booking questions**: agrega "Teléfono" y "¿Es tu primera clase?" si quieres esos datos.
-- **Workflows** (opcional): recordatorio por correo o WhatsApp 3 horas antes.
+- **Booking questions**: deja **Nombre** y **Teléfono** (`attendeePhoneNumber`) como obligatorios y el correo oculto, igual en todas las clases.
+- **Workflows** (opcional): recordatorio por SMS o WhatsApp 3 horas antes al teléfono de la reserva.
 - Borra o oculta "Reunión de 15 min" y "Reunión de 30 min" si no las usas; no aparecen en el sitio, pero sí en tu perfil público de Cal.com.
 
 ## Publicar

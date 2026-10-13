@@ -91,7 +91,7 @@
   }
 
   /* ---- Reservas hechas desde este navegador ----
-     Cal.com guarda las reales y envía los correos; aquí solo se recuerdan
+     Cal.com guarda las reservas reales; aquí solo se recuerdan
      para mostrar "Tus reservas". Se descartan las que ya pasaron. */
   const STORE_KEY = "tn_cal_bookings";
   function readBookings(){
@@ -196,7 +196,7 @@
           const d = confirm.querySelector("[data-cal-confirm-date]");
           const t = confirm.querySelector("[data-cal-confirm-text]");
           if (d) d.textContent = fmtDate(data.startTime);
-          if (t) t.textContent = `${data.title || "Tu clase"} está confirmada. Te enviamos los detalles por correo. Llega 10 minutos antes.`;
+          if (t) t.textContent = `${data.title || "Tu clase"} está confirmada. Si necesitas cambiarla o cancelarla, usa el enlace en «Tus reservas». Llega 10 minutos antes.`;
           confirm.hidden = false;
         }
         renderMine(root);

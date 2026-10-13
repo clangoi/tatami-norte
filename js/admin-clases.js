@@ -306,9 +306,11 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   let slotEditor = null;                    // { slot|null, day, hour } mientras la ventana está abierta
 
   // Los límites se amplían solos si ya hay clases fuera de ellos
+  const liveSlots = () => slots.filter(s => classOf(s.classId));
+
   function schedRange() {
     let start = limits.start, end = limits.end;
-    slots.forEach(s => {
+    liveSlots().forEach(s => {
       const h = parseInt(s.start, 10);
       if (Number.isInteger(h)) { start = Math.min(start, h); end = Math.max(end, h + 1); }
     });
@@ -345,7 +347,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
             ? `<select class="adm-limit" id="limStart" aria-label="Hora inicial del horario">${hourOptions(0, end - 1, start)}</select>`
             : hourLabel(h)}</div>
           ${DAYS.map(([k, n]) => `<div class="sch-cell adm-sched-cell" role="button" tabindex="0" data-sched-add data-day="${k}" data-hour="${h}" aria-label="Agregar una clase el ${n} desde las ${hourLabel(h)}">
-            ${slots.filter(s => s.day === k && parseInt(s.start, 10) === h).sort((a, b) => a.start.localeCompare(b.start)).map(chip).join("")}
+            ${liveSlots().filter(s => s.day === k && parseInt(s.start, 10) === h).sort((a, b) => a.start.localeCompare(b.start)).map(chip).join("")}
           </div>`).join("")}
         </div>`).join("")}
         <div class="sch-row adm-sched-foot" role="row"><div class="sch-hour" role="rowheader"><select class="adm-limit" id="limEnd" aria-label="Hora final del horario">${hourOptions(start + 1, 24, end)}</select></div>
@@ -456,13 +458,39 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   async function deleteSched(id) {
     const s = slots.find(x => x.id === id);
     if (!s || !confirm("¿Borrar esta clase de este día del horario? Las reservas ya hechas se conservan.")) return;
+    slotEditor = null;   // la ventana se cierra sola al confirmar
+    render();
     try {
       await fs.deleteDoc(fs.doc(db, "slots", id));
       slots = slots.filter(x => x.id !== id);
-      slotEditor = null;
       toast("Borrado");
+    } catch (e) {
+      console.warn(e);
+      alert(saveError(e));
+    }
+    render();
+  }
+
+  // Borrar una clase borra también sus horarios; si no, quedarían sueltos en el horario semanal
+  async function deleteClass(id) {
+    const c = classOf(id);
+    if (!c) return;
+    const mine = slots.filter(s => s.classId === id);
+    const msg = mine.length
+      ? `¿Borrar “${c.label}”? También se borrar${mine.length > 1 ? "án sus " + mine.length + " horarios" : "á su horario"} del horario semanal. Las reservas ya hechas se conservan.`
+      : `¿Borrar “${c.label}”?`;
+    if (!confirm(msg)) return;
+    try {
+      const batch = fs.writeBatch(db);
+      mine.forEach(x => batch.delete(fs.doc(db, "slots", x.id)));
+      batch.delete(fs.doc(db, "classes", id));
+      await batch.commit();
+      slots = slots.filter(x => x.classId !== id);
+      classes = classes.filter(x => x.id !== id);
+      if (classFilter === id) classFilter = "";
+      toast("Clase borrada");
       render();
-    } catch (e) { alert(saveError(e)); }
+    } catch (e) { console.warn(e); alert(saveError(e)); }
   }
 
   /* ---------- Clases ---------- */
@@ -740,10 +768,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       return true;
     };
     if (del("data-del-closure", "closures", () => "¿Borrar este cierre? Esa clase volverá a poder reservarse.", id => { closures = closures.filter(c => c.id !== id); })) return;
-    if (del("data-del-class", "classes", id => {
-      const n = slots.filter(s => s.classId === id).length;
-      return n ? `Esta clase tiene ${n} horario${n > 1 ? "s" : ""}. Si la borras, esos horarios dejan de mostrarse. ¿Borrarla?` : "¿Borrar esta clase?";
-    }, id => { classes = classes.filter(c => c.id !== id); })) return;
+    const dc = t.closest("[data-del-class]");
+    if (dc) return deleteClass(dc.dataset.delClass);
 
     if (t.closest("#importCal")) return importFromCal(t.closest("#importCal"));
 

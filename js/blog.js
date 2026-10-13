@@ -1,6 +1,6 @@
 /* ==========================================================
    Kizuna · Blog
-   Arma tarjetas de artículos a partir de js/posts.js.
+   Arma tarjetas de artículos con los datos de Firestore (js/content.js).
 
    <div data-blog-list data-base="">          todas, con filtros en [data-blog-filters]
    <div data-blog-latest="3" data-base="">    las 3 más recientes
@@ -10,13 +10,16 @@
    data-base: ruta hasta la raíz del sitio ("" en la raíz,
    "../" dentro de blog/).
 
-   Los artículos escritos en admin.html llegan después desde
-   Firestore (js/content.js) con TNBlog.add(lista).
+   Los artículos se escriben en admin.html y llegan desde Firestore
+   (js/content.js) con TNBlog.add(lista).
+
+   <select data-blog-sort> en la página del listado elige el orden:
+   new (más recientes), old (más antiguos), az y za (por título).
    ========================================================== */
 (function(){
   let all = [];
   const setPosts = list => { all = list.slice().sort((a, b) => b.date.localeCompare(a.date)); };
-  setPosts(window.BLOG_POSTS || []);
+  setPosts([]);
   const locale = window.SITE_CONFIG?.currency?.locale || "es-CL";
 
   const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -24,10 +27,14 @@
   // Patrón de portada estable para cada artículo
   const pattern = slug => [...slug].reduce((n, c) => n + c.charCodeAt(0), 0) % 4;
 
-  // Los del panel se muestran todos con blog/articulo.html
-  const href = (p, base) => p.src === "db"
-    ? `${base}blog/articulo.html?p=${encodeURIComponent(p.slug)}`
-    : `${base}blog/${esc(p.slug)}.html`;
+  const href = (p, base) => `${base}blog/articulo.html?p=${encodeURIComponent(p.slug)}`;
+
+  const SORTS = {
+    new: (a, b) => b.date.localeCompare(a.date),
+    old: (a, b) => a.date.localeCompare(b.date),
+    az:  (a, b) => a.title.localeCompare(b.title, "es", { sensitivity: "base" }),
+    za:  (a, b) => b.title.localeCompare(a.title, "es", { sensitivity: "base" })
+  };
 
   function card(p, base, lead){
     return `<a class="post${lead ? " lead" : ""}" href="${href(p, base)}">
@@ -43,11 +50,14 @@
   document.querySelectorAll("[data-blog-list]").forEach(el => {
     const base = el.dataset.base || "";
     const filters = document.querySelector("[data-blog-filters]");
+    const sortSel = document.querySelector("[data-blog-sort]");
     let cur = "Todo";
     const render = () => {
-      const cats = ["Todo", ...new Set(all.map(p => p.cat))];
-      const list = all.filter(p => cur === "Todo" || p.cat === cur);
-      el.innerHTML = list.map((p, i) => card(p, base, i === 0 && list.length > 2)).join("") ||
+      const cats = ["Todo", ...new Set(all.map(p => p.cat).filter(Boolean))].sort((a, b) => a === "Todo" ? -1 : b === "Todo" ? 1 : a.localeCompare(b, "es"));
+      if (!cats.includes(cur)) cur = "Todo";
+      const sort = sortSel?.value || "new";
+      const list = all.filter(p => cur === "Todo" || p.cat === cur).sort(SORTS[sort] || SORTS.new);
+      el.innerHTML = list.map((p, i) => card(p, base, sort === "new" && i === 0 && list.length > 2)).join("") ||
         '<p class="empty">Todavía no hay artículos en esta categoría.</p>';
       if (filters) filters.innerHTML = cats.map(c => `<button type="button" aria-pressed="${c === cur}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
     };
@@ -57,6 +67,7 @@
       cur = b.dataset.cat;
       render();
     });
+    if (sortSel) sortSel.addEventListener("change", render);
     renders.push(render);
   });
 
@@ -87,7 +98,6 @@
 
   window.TNBlog = {
     // Suma artículos (p. ej. los de Firestore) y vuelve a dibujar.
-    // Si un slug ya existe como página en blog/, gana la página.
     add(list){
       const taken = new Set(all.map(p => p.slug));
       setPosts([...all, ...list.filter(p => !taken.has(p.slug))]);

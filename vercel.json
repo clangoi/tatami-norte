@@ -2,12 +2,41 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/pagar.js": { "includeFiles": "site.config.js" }
+    "api/pagar.js": {
+      "includeFiles": "site.config.js"
+    }
   },
   "headers": [
     {
       "source": "/admin",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/blog/primera-clase-jiu-jitsu",
+      "destination": "/blog/articulo?p=primera-clase-jiu-jitsu",
+      "permanent": true
+    },
+    {
+      "source": "/blog/ukemi-judo-caidas",
+      "destination": "/blog/articulo?p=ukemi-judo-caidas",
+      "permanent": true
+    },
+    {
+      "source": "/blog/tu-cinturon-importa-menos",
+      "destination": "/blog/articulo?p=tu-cinturon-importa-menos",
+      "permanent": true
+    },
+    {
+      "source": "/blog/ejercicios-de-agarre-grappling",
+      "destination": "/blog/articulo?p=ejercicios-de-agarre-grappling",
+      "permanent": true
     }
   ]
 }

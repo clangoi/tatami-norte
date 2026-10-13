@@ -2,11 +2,13 @@
    Kizuna · Panel de administración (admin.html)
    Inicio de sesión con Firebase Auth y edición de:
    posts/{slug}  artículos del blog (texto en Markdown, js/markdown.js)
+   topics/{id}   temas (categorías) con los que se filtran y ordenan
    plans/{id}    planes de suscripción
    Quién puede entrar lo deciden admins/{uid} y firestore.rules.
    ========================================================== */
 import { SDK, app, db, fs } from "./firebase.js";
 import { toHtml, readingMinutes } from "./markdown.js";
+import { SEED_POSTS } from "./seed-posts.js";
 
 const {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail
@@ -22,6 +24,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const locale = S.config.currency?.locale || "es-CL";
 const fmtDate = iso => iso ? new Date(iso + "T12:00:00").toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" }) : "";
 const today = () => new Date().toLocaleDateString("sv-SE"); // AAAA-MM-DD en hora local
+const collate = (a, b) => String(a).localeCompare(String(b), "es", { sensitivity: "base" });
 const slugify = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
   .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 const pattern = s => [...s].reduce((n, c) => n + c.charCodeAt(0), 0) % 4;
@@ -121,14 +124,25 @@ $$("[data-tab]").forEach(b => b.addEventListener("click", () => {
    Blog
    ========================================================== */
 let posts = [];
+let topics = []; // { id, name }
 let editingSlug = null; // null = artículo nuevo
-const STATIC = (window.BLOG_POSTS || []).map(p => ({ ...p, src: "file" }));
+
+const SORTS = {
+  new:   (x, y) => (y.date || "").localeCompare(x.date || ""),
+  old:   (x, y) => (x.date || "").localeCompare(y.date || ""),
+  az:    (x, y) => collate(x.title, y.title),
+  za:    (x, y) => collate(y.title, x.title),
+  topic: (x, y) => collate(x.cat || "\uffff", y.cat || "\uffff") || collate(x.title, y.title)
+};
 
 async function loadPosts(){
   $("#posts").innerHTML = '<p class="adm-loading">Cargando artículos…</p>';
   try {
-    const snap = await fs.getDocs(fs.collection(db, "posts"));
-    posts = snap.docs.map(d => ({ ...d.data(), slug: d.id }));
+    const [pSnap, tSnap] = await Promise.all([fs.getDocs(fs.collection(db, "posts")), fs.getDocs(fs.collection(db, "topics"))]);
+    posts = pSnap.docs.map(d => ({ ...d.data(), slug: d.id }));
+    topics = tSnap.docs.map(d => ({ id: d.id, name: d.data().name }));
+    await adoptTopics();
+    renderTopics();
     renderPosts();
   } catch (e) {
     console.warn(e);
@@ -136,31 +150,74 @@ async function loadPosts(){
   }
 }
 
+// Los temas que ya usan los artículos y aún no están en la lista se guardan solos
+async function adoptTopics(){
+  const known = new Set(topics.map(t => t.name.toLowerCase()));
+  const missing = [...new Set(posts.map(p => p.cat).filter(Boolean))].filter(c => !known.has(c.toLowerCase()));
+  if (!missing.length) return;
+  const batch = fs.writeBatch(db);
+  missing.forEach(name => batch.set(fs.doc(db, "topics", slugify(name) || "tema"), { name, createdAt: fs.serverTimestamp() }));
+  await batch.commit();
+  missing.forEach(name => topics.push({ id: slugify(name) || "tema", name }));
+}
+
+const sortedTopics = () => topics.slice().sort((x, y) => collate(x.name, y.name));
+
 function renderPosts(){
-  const all = [...posts, ...STATIC].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-  $("#cats").innerHTML = [...new Set(all.map(p => p.cat).filter(Boolean))].map(c => `<option value="${esc(c)}">`).join("");
-  if (!all.length) { $("#posts").innerHTML = '<p class="adm-empty">Todavía no hay artículos.</p>'; return; }
-  $("#posts").innerHTML = all.map(p => {
-    const fixed = p.src === "file";
-    const status = fixed ? '<span class="adm-tag">Página fija</span>'
-      : p.published ? '<span class="adm-tag on">Publicado</span>' : '<span class="adm-tag">Borrador</span>';
-    const actions = fixed
-      ? `<a class="btn small ghost" href="blog/${esc(p.slug)}.html" target="_blank" rel="noopener">Ver</a>`
-      : `${p.published ? `<a class="btn small ghost" href="blog/articulo.html?p=${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">Ver</a>` : ""}
-         <button class="btn small ghost" type="button" data-edit="${esc(p.slug)}">Editar</button>
-         <button class="btn small ghost adm-danger" type="button" data-del="${esc(p.slug)}">Borrar</button>`;
-    return `<div class="adm-row${fixed ? " is-fixed" : ""}">
+  // Filtro de tema
+  const filter = $("#postFilter");
+  const cur = filter.value;
+  filter.innerHTML = '<option value="">Todos</option>' + sortedTopics().map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join("");
+  filter.value = topics.some(t => t.name === cur) ? cur : "";
+
+  if (!posts.length) {
+    $("#posts").innerHTML = `<div class="notice adm-seed">
+      <p><strong>Aún no hay artículos en el panel.</strong> Puedes cargar los cuatro que traía el sitio para editarlos o borrarlos como cualquier otro.</p>
+      <button class="btn small" type="button" id="seedPosts">Cargar los artículos de siempre</button>
+    </div>`;
+    return;
+  }
+  const list = posts.filter(p => !filter.value || p.cat === filter.value).sort(SORTS[$("#postSort").value] || SORTS.new);
+  if (!list.length) { $("#posts").innerHTML = '<p class="adm-empty">No hay artículos con ese tema.</p>'; return; }
+  $("#posts").innerHTML = list.map(p => {
+    const status = p.published ? '<span class="adm-tag on">Publicado</span>' : '<span class="adm-tag">Borrador</span>';
+    return `<div class="adm-row">
       <div class="adm-row-main">
         <b>${esc(p.title)}</b>
-        <span>${esc(p.cat || "Sin categoría")} · ${fmtDate(p.date)}${fixed ? " · se edita en el código (BLOG.md)" : ""}</span>
+        <span>${esc(p.cat || "Sin tema")} · ${fmtDate(p.date)}</span>
       </div>
       ${status}
-      <div class="adm-row-actions">${actions}</div>
+      <div class="adm-row-actions">
+        ${p.published ? `<a class="btn small ghost" href="blog/articulo.html?p=${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">Ver</a>` : ""}
+        <button class="btn small ghost" type="button" data-edit="${esc(p.slug)}">Editar</button>
+        <button class="btn small ghost adm-danger" type="button" data-del="${esc(p.slug)}">Borrar</button>
+      </div>
     </div>`;
   }).join("");
 }
 
+$("#postFilter").addEventListener("change", renderPosts);
+$("#postSort").addEventListener("change", renderPosts);
+
+async function seedPosts(btn){
+  btn.disabled = true;
+  const batch = fs.writeBatch(db);
+  const cats = new Set();
+  SEED_POSTS.forEach(({ slug, ...p }) => {
+    cats.add(p.cat);
+    batch.set(fs.doc(db, "posts", slug), { ...p, read: readingMinutes(p.body), published: true, updatedAt: fs.serverTimestamp() });
+  });
+  topics.forEach(t => cats.delete(t.name));
+  cats.forEach(name => batch.set(fs.doc(db, "topics", slugify(name)), { name, createdAt: fs.serverTimestamp() }));
+  try {
+    await batch.commit();
+    await loadPosts();
+    toast("Artículos cargados");
+  } catch (err) { alert(saveError(err)); btn.disabled = false; }
+}
+
 $("#posts").addEventListener("click", async e => {
+  if (e.target.closest("#seedPosts")) return seedPosts(e.target.closest("#seedPosts"));
   const ed = e.target.closest("[data-edit]");
   if (ed) { openPost(posts.find(p => p.slug === ed.dataset.edit)); return; }
   const del = e.target.closest("[data-del]");
@@ -171,6 +228,7 @@ $("#posts").addEventListener("click", async e => {
       await fs.deleteDoc(fs.doc(db, "posts", p.slug));
       posts = posts.filter(x => x !== p);
       renderPosts();
+      renderTopics();
       toast("Artículo borrado");
     } catch (err) { alert(saveError(err)); }
   }
@@ -184,6 +242,13 @@ const F = {
 };
 let slugTouched = false;
 
+function fillTopicSelect(selected){
+  const names = sortedTopics().map(t => t.name);
+  if (selected && !names.includes(selected)) names.push(selected);
+  F.cat.innerHTML = '<option value="">Sin tema</option>' + names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
+  F.cat.value = selected;
+}
+
 function openPost(p){
   editingSlug = p ? p.slug : null;
   slugTouched = !!p;
@@ -192,7 +257,7 @@ function openPost(p){
   F.slug.value = p?.slug || "";
   F.slug.readOnly = !!p;
   F.ex.value = p?.ex || "";
-  F.cat.value = p?.cat || "";
+  fillTopicSelect(p?.cat || "");
   F.date.value = p?.date || today();
   F.letter.value = p?.letter || "";
   F.pat.value = String(p?.pattern ?? 0);
@@ -262,7 +327,7 @@ $("#postForm").addEventListener("submit", async e => {
   if (!title) { err.textContent = "Falta el título."; F.title.focus(); return; }
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) { err.textContent = "La dirección solo puede tener minúsculas, números y guiones."; F.slug.focus(); return; }
   if (!F.date.value) { err.textContent = "Falta la fecha."; F.date.focus(); return; }
-  if (!editingSlug && (posts.some(p => p.slug === slug) || STATIC.some(p => p.slug === slug))) {
+  if (!editingSlug && posts.some(p => p.slug === slug)) {
     err.textContent = "Ya existe un artículo con esa dirección. Cambia la dirección."; F.slug.focus(); return;
   }
   if (F.published.checked && !F.body.value.trim()) { err.textContent = "No se puede publicar un artículo sin texto."; F.body.focus(); return; }
@@ -286,10 +351,104 @@ $("#postForm").addEventListener("submit", async e => {
     posts = [...posts.filter(p => p.slug !== slug), local];
     closePost();
     renderPosts();
+    renderTopics();
     toast(data.published ? "Artículo publicado" : "Borrador guardado");
   } catch (e2) {
     err.textContent = saveError(e2);
   } finally { btn.disabled = false; }
+});
+
+/* ==========================================================
+   Temas
+   ========================================================== */
+// Crea el tema si no existe. Devuelve su nombre o lanza Error con un mensaje para mostrar.
+async function addTopic(raw){
+  const name = raw.trim().replace(/\s+/g, " ");
+  const id = slugify(name);
+  if (!name || !id) throw new Error("Escribe el nombre del tema.");
+  if (name.length > 30) throw new Error("Máximo 30 letras.");
+  const dup = topics.find(t => t.name.toLowerCase() === name.toLowerCase() || t.id === id);
+  if (dup) throw new Error(`Ya existe el tema “${dup.name}”.`);
+  await fs.setDoc(fs.doc(db, "topics", id), { name, createdAt: fs.serverTimestamp() });
+  topics.push({ id, name });
+  renderTopics();
+  return name;
+}
+
+function renderTopics(){
+  if (!topics.length) { $("#topicsRows").innerHTML = '<p class="adm-empty">Todavía no hay temas. Agrega el primero arriba.</p>'; return; }
+  $("#topicsRows").innerHTML = sortedTopics().map(t => {
+    const n = posts.filter(p => p.cat === t.name).length;
+    return `<div class="adm-row">
+      <div class="adm-row-main"><b>${esc(t.name)}</b><span>${n} ${n === 1 ? "artículo" : "artículos"}</span></div>
+      <span></span>
+      <div class="adm-row-actions">
+        <button class="btn small ghost" type="button" data-trename="${esc(t.id)}">Renombrar</button>
+        <button class="btn small ghost adm-danger" type="button" data-tdel="${esc(t.id)}">Borrar</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+$("#topicForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const err = $("#topicErr"); err.textContent = "";
+  const btn = e.submitter; btn.disabled = true;
+  try {
+    await addTopic($("#topicName").value);
+    $("#topicName").value = "";
+    toast("Tema agregado");
+  } catch (e2) { err.textContent = e2.code ? saveError(e2) : e2.message; }
+  finally { btn.disabled = false; }
+});
+
+$("#newTopicInline").addEventListener("click", async () => {
+  const raw = prompt("Nombre del nuevo tema:");
+  if (raw === null) return;
+  try {
+    const name = await addTopic(raw);
+    fillTopicSelect(name);
+    dirty = true; previewPost();
+    toast("Tema agregado");
+  } catch (e2) { alert(e2.code ? saveError(e2) : e2.message); }
+});
+
+$("#topicsRows").addEventListener("click", async e => {
+  const ren = e.target.closest("[data-trename]");
+  if (ren) {
+    const t = topics.find(x => x.id === ren.dataset.trename);
+    const raw = prompt("Nuevo nombre del tema:", t.name);
+    if (raw === null) return;
+    const name = raw.trim().replace(/\s+/g, " ");
+    if (!name || name === t.name) return;
+    if (name.length > 30) { alert("Máximo 30 letras."); return; }
+    if (topics.some(x => x !== t && x.name.toLowerCase() === name.toLowerCase())) { alert("Ya existe un tema con ese nombre."); return; }
+    const affected = posts.filter(p => p.cat === t.name);
+    const batch = fs.writeBatch(db);
+    batch.update(fs.doc(db, "topics", t.id), { name });
+    affected.forEach(p => batch.update(fs.doc(db, "posts", p.slug), { cat: name }));
+    try {
+      await batch.commit();
+      affected.forEach(p => p.cat = name);
+      t.name = name;
+      renderTopics(); renderPosts();
+      toast("Tema renombrado");
+    } catch (err) { alert(saveError(err)); }
+    return;
+  }
+  const del = e.target.closest("[data-tdel]");
+  if (del) {
+    const t = topics.find(x => x.id === del.dataset.tdel);
+    const n = posts.filter(p => p.cat === t.name).length;
+    if (n) { alert(`“${t.name}” tiene ${n} ${n === 1 ? "artículo" : "artículos"}. Cámbialos de tema (o bórralos) antes de borrar el tema.`); return; }
+    if (!confirm(`¿Borrar el tema “${t.name}”?`)) return;
+    try {
+      await fs.deleteDoc(fs.doc(db, "topics", t.id));
+      topics = topics.filter(x => x !== t);
+      renderTopics(); renderPosts();
+      toast("Tema borrado");
+    } catch (err) { alert(saveError(err)); }
+  }
 });
 
 /* ==========================================================

@@ -35,7 +35,17 @@
 <main>
   <section class="sec light">
     <div class="wrap">
-      <div class="filters blog-filters" data-blog-filters role="group" aria-label="Filtrar por categoría"></div>
+      <div class="blog-toolbar">
+        <div class="filters blog-filters" data-blog-filters role="group" aria-label="Filtrar por tema"></div>
+        <label class="blog-sort">Ordenar por
+          <select data-blog-sort>
+            <option value="new">Más recientes</option>
+            <option value="old">Más antiguos</option>
+            <option value="az">Título (A–Z)</option>
+            <option value="za">Título (Z–A)</option>
+          </select>
+        </label>
+      </div>
       <div class="posts" data-blog-list data-base=""></div>
     </div>
   </section>
@@ -45,7 +55,6 @@
 
 <script src="site.config.js"></script>
 <script src="js/site.js"></script>
-<script src="js/posts.js"></script>
 <script src="js/blog.js"></script>
 <script type="module" src="js/content.js"></script>
 </body>

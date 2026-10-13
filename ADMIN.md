@@ -36,7 +36,15 @@ Para sumar otra persona: créale un usuario en Authentication y repite el paso 3
 - **Nuevo artículo** → escribe título, resumen, categoría y texto. La vista previa de la derecha muestra cómo va a quedar.
 - Marca **Publicado** para que aparezca en el sitio; si no, queda como borrador.
 - La dirección queda como `/blog/articulo?p=<direccion>`.
-- Los artículos que ya existían como páginas en `blog/` aparecen como **Página fija**: se siguen editando en el código (ver `BLOG.md`).
+- Todos los artículos se editan y se borran desde el panel. La primera vez, **Cargar los artículos de siempre** copia al panel los cuatro que traía el sitio.
+- Arriba de la lista puedes filtrar por **tema** y ordenar por fecha (más recientes / más antiguos), por título (A–Z / Z–A) o por tema. El blog público tiene los mismos filtros y orden.
+- Imágenes y videos en el texto: `![descripción](/assets/images/foto.png "pie de foto")` y `@[título](ID_YOUTUBE?start=21&end=57 "pie")`.
+
+### Temas
+
+- La pestaña **Temas** crea, renombra y borra temas. Renombrar actualiza también los artículos que lo usan; un tema con artículos no se puede borrar.
+- Al escribir un artículo, el tema se elige de la lista; **Nuevo tema** crea uno sin salir del editor.
+- Para que funcione, vuelve a publicar `firestore.rules` (hay una regla nueva para `topics`).
 
 Formato del texto:
 
@@ -59,4 +67,4 @@ El primer párrafo sale un poco más grande. Deja una línea en blanco entre pá
 - Las flechas ↑ ↓ cambian el orden en el sitio. **Visible** los muestra u oculta sin borrarlos.
 - El descuento del pago anual sigue en `site.config.js` → `annualDiscount`.
 
-Si Firebase no responde, el sitio sigue mostrando los artículos de `js/posts.js` y los tres planes por defecto.
+Si Firebase no responde, el blog queda vacío y el sitio muestra los tres planes por defecto.

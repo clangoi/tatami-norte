@@ -2,7 +2,7 @@
    Kizuna · Contenido editable
    Trae desde Firestore lo que se escribe en admin.html y lo
    suma a la página. Si Firestore no responde, el sitio sigue
-   mostrando lo que ya tiene (js/posts.js y los planes por defecto).
+   mostrando lo que ya tiene (los planes por defecto).
 
    <script type="module" src="js/content.js"></script>
    Va después de js/blog.js y del script de planes.

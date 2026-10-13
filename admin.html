@@ -76,6 +76,7 @@
       <div><div class="eyebrow">Administración</div><h1>Panel</h1></div>
       <div class="filters" role="tablist" aria-label="Secciones">
         <button type="button" role="tab" aria-pressed="true" data-tab="blog">Blog</button>
+        <button type="button" role="tab" aria-pressed="false" data-tab="topics">Temas</button>
         <button type="button" role="tab" aria-pressed="false" data-tab="plans">Planes</button>
       </div>
     </div>
@@ -86,6 +87,20 @@
         <div class="adm-bar">
           <h2>Artículos</h2>
           <button class="btn" type="button" id="newPost">Nuevo artículo</button>
+        </div>
+        <div class="adm-toolbar">
+          <label>Tema
+            <select id="postFilter"><option value="">Todos</option></select>
+          </label>
+          <label>Ordenar por
+            <select id="postSort">
+              <option value="new">Más recientes</option>
+              <option value="old">Más antiguos</option>
+              <option value="az">Título (A–Z)</option>
+              <option value="za">Título (Z–A)</option>
+              <option value="topic">Tema (A–Z)</option>
+            </select>
+          </label>
         </div>
         <div class="adm-rows" id="posts"></div>
       </div>
@@ -108,7 +123,10 @@
             </div>
             <div class="field"><label for="fEx">Resumen</label><textarea id="fEx" rows="2" maxlength="300" placeholder="Una o dos líneas. Aparece en las tarjetas y en Google."></textarea></div>
             <div class="row2">
-              <div class="field"><label for="fCat">Categoría</label><input id="fCat" list="cats" maxlength="30"><datalist id="cats"></datalist></div>
+              <div class="field">
+                <label for="fCat">Tema</label>
+                <div class="adm-inline"><select id="fCat"></select><button class="btn small ghost" type="button" id="newTopicInline">Nuevo tema</button></div>
+              </div>
               <div class="field"><label for="fDate">Fecha</label><input id="fDate" type="date" required></div>
             </div>
             <div class="row2">
@@ -140,6 +158,20 @@
           </div>
         </div>
       </form>
+    </div>
+
+    <!-- ===== Temas ===== -->
+    <div class="wrap" data-view="topics" hidden>
+      <div class="adm-bar">
+        <h2>Temas del blog</h2>
+      </div>
+      <p class="adm-help adm-note">Los temas son las categorías con las que se filtran y ordenan los artículos. Un tema sin artículos no aparece en el blog. Si lo renombras, se actualizan sus artículos.</p>
+      <form id="topicForm" class="adm-inline adm-topic-add" novalidate>
+        <input id="topicName" maxlength="30" placeholder="Nuevo tema, por ejemplo Competencia" aria-label="Nombre del tema">
+        <button class="btn" type="submit">Agregar tema</button>
+      </form>
+      <div class="err" id="topicErr" role="alert"></div>
+      <div class="adm-rows" id="topicsRows"></div>
     </div>
 
     <!-- ===== Planes ===== -->
@@ -189,7 +221,6 @@
 
 <script src="site.config.js"></script>
 <script src="js/site.js"></script>
-<script src="js/posts.js"></script>
 <script type="module" src="js/admin.js"></script>
 </body>
 </html>

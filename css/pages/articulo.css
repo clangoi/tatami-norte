@@ -36,3 +36,4 @@
 .post-cta{max-width:68ch;margin:48px auto 0;background:var(--navy);color:var(--cream);padding:28px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between}
 .post-cta p{font:800 28px/1.05 var(--display);text-transform:uppercase}
 .post-cta p span{display:block;font:500 16px/1.4 var(--body);text-transform:none;color:var(--text-soft);margin-top:6px}
+.post-gallery.one{grid-template-columns:1fr;max-width:420px}

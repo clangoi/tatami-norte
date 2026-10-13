@@ -144,6 +144,9 @@
 .post{display:flex;flex-direction:column;gap:14px;cursor:pointer;background:none;border:0;padding:0;text-align:left;color:inherit;font:inherit;text-decoration:none}
 .posts .empty{color:var(--text-soft-light)}
 .blog-filters{margin-bottom:8px}
+.blog-toolbar{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 24px}
+.blog-sort{display:flex;align-items:center;gap:10px;font:600 14px/1 var(--body,inherit);color:var(--text-soft-light)}
+.blog-sort select{font:inherit;color:var(--navy);background:transparent;border:1px solid var(--line-light);border-radius:4px;padding:9px 12px;min-height:40px}
 .sec:not(.light) .post .ex{color:var(--text-soft)}
 .post.lead{grid-column:span 2}
 @media (max-width:580px){.post.lead{grid-column:auto}}

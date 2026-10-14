@@ -2,7 +2,7 @@
 
 Script que avisa por WhatsApp a quienes tienen una **reserva confirmada** unas horas antes de su clase. Vive en `scripts/wsp/` y **se ejecuta en un computador** (no en Vercel): controla WhatsApp Web, como un navegador.
 
-> **Riesgo:** automatizar WhatsApp Web va contra los términos de WhatsApp y el número puede ser bloqueado. El script es prudente (solo escribe a quien reservó, pausa de 8 a 20 s entre mensajes, tope por vuelta y horario de silencio), pero el riesgo no desaparece. Para algo estable, la alternativa es la API oficial de WhatsApp Business (Cloud API de Meta).
+> **Riesgo:** automatizar WhatsApp Web va contra los términos de WhatsApp y el número puede ser bloqueado. El script es prudente (solo escribe a quien reservó, pausa de 50 a 80 s entre mensajes, tope por vuelta y horario de silencio), pero el riesgo no desaparece. Para algo estable, la alternativa es la API oficial de WhatsApp Business (Cloud API de Meta).
 
 ## Instalación (una vez)
 
@@ -26,12 +26,14 @@ La primera vez aparece un **QR** en la terminal: escanéalo con WhatsApp → *Di
 
 ## Qué envía y cuándo
 
-- A cada reserva `confirmed` cuya clase empieza dentro de las próximas **3 horas** (`REMIND_HOURS`) y que aún no tiene recordatorio.
-- Texto: nombre, clase, hora (hoy o mañana) y el enlace `/reserva?t=…` para cambiar o cancelar, si defines `SITE_URL`.
-- **No envía entre las 22:00 y las 07:00** (hora de la escuela; `QUIET_FROM` y `QUIET_TO`), ni más de 25 mensajes por vuelta (`MAX_PER_RUN`).
+- Cada clase es un **lote**: **4 horas antes** de que empiece, se escribe a todos sus inscritos confirmados (`REMIND_HOURS`).
+- Si esas 4 horas caen **antes de las 08:00**, el lote sale **a las 08:00** (`EARLIEST_HOUR`). Una clase que empieza antes de las 08:00 no recibe recordatorio, porque llegaría tarde.
+- Entre un mensaje y el siguiente hay una pausa aleatoria de **50 a 80 segundos**. Un lote de 15 personas tarda unos 16 minutos, y si hay varias clases a la misma hora, los lotes salen uno tras otro.
+- No envía nada desde las 22:00 hasta las 08:00 (`QUIET_FROM`), ni más de 60 mensajes por vuelta (`MAX_PER_RUN`).
+- Texto: nombre, clase, hora (hoy) y el enlace `/reserva?t=…` para cambiar o cancelar, si defines `SITE_URL`.
 - Al enviar marca la reserva con `reminderSentAt`, así que nunca repite. Si el número no tiene WhatsApp, la marca con `reminderError` y no insiste. Un error de red no marca nada: se reintenta en la siguiente vuelta.
 
-Variables: `SITE_URL`, `REMIND_HOURS`, `QUIET_FROM`, `QUIET_TO`, `MAX_PER_RUN`, `FIREBASE_SERVICE_ACCOUNT`. Ejemplo en PowerShell:
+Variables: `SITE_URL`, `REMIND_HOURS`, `EARLIEST_HOUR`, `QUIET_FROM`, `MAX_PER_RUN`, `FIREBASE_SERVICE_ACCOUNT`. Ejemplo en PowerShell:
 
 ```powershell
 $env:SITE_URL = "https://tu-sitio.cl"; node recordatorios.js

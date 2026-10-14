@@ -1,10 +1,13 @@
 /* ==========================================================
    Kizuna · Recordatorios de clase por WhatsApp (WhatsApp Web automatizado)
-   Avisa por WhatsApp a quienes tienen una reserva confirmada unas horas antes de la clase.
+   Avisa por WhatsApp a quienes tienen una reserva confirmada 4 horas antes de la clase. Cada clase
+   es un lote: llegada la hora, se escribe a todos sus inscritos, con 50 a 80 segundos entre mensajes.
+   Si las 4 horas caen antes de las 08:00, el lote sale a las 08:00 (una clase que empieza antes de
+   las 08:00 no recibe recordatorio, porque sería tarde).
 
    OJO: automatizar WhatsApp Web va contra los términos de WhatsApp y el número puede ser
    bloqueado. Por eso el script es prudente: solo escribe a personas que reservaron una clase,
-   espacia los mensajes, tiene tope por vuelta y no envía de madrugada. Úsalo con un número
+   espacia los mensajes (50 a 80 s), tiene tope por vuelta y no envía de noche. Úsalo con un número
    que puedas arriesgar o, mejor, pasa a la API oficial de WhatsApp Business.
 
    Uso (desde esta carpeta, ver WHATSAPP.md):
@@ -15,9 +18,10 @@
 
    Variables de entorno (todas opcionales):
      SITE_URL            https://tu-sitio.cl  (para el enlace de cambiar o cancelar)
-     REMIND_HOURS        horas antes de la clase (3)
-     QUIET_FROM / QUIET_TO   horas en que NO se envía (22 y 7; hora de la escuela)
-     MAX_PER_RUN         tope de mensajes por vuelta (25)
+     REMIND_HOURS        horas antes de la clase (4)
+     EARLIEST_HOUR       hora más temprana a la que sale un lote (8; hora de la escuela)
+     QUIET_FROM          desde esta hora no se envía nada (22)
+     MAX_PER_RUN         tope de mensajes por vuelta (60)
      FIREBASE_SERVICE_ACCOUNT  JSON de la cuenta de servicio; si no, se usa .claude/service-account.json
    ========================================================== */
 const fs = require("fs");
@@ -30,10 +34,11 @@ const arg = n => process.argv.includes(n);
 const argVal = n => { const i = process.argv.indexOf(n); return i >= 0 ? process.argv[i + 1] : null; };
 const DRY = arg("--dry"), ONCE = arg("--once"), TEST_TO = argVal("--test");
 
-const REMIND_HOURS = Number(process.env.REMIND_HOURS) || 3;
+const REMIND_HOURS = Number(process.env.REMIND_HOURS) || 4;
+const EARLIEST_HOUR = process.env.EARLIEST_HOUR !== undefined ? Number(process.env.EARLIEST_HOUR) : 8;
 const QUIET_FROM = process.env.QUIET_FROM !== undefined ? Number(process.env.QUIET_FROM) : 22;
-const QUIET_TO = process.env.QUIET_TO !== undefined ? Number(process.env.QUIET_TO) : 7;
-const MAX_PER_RUN = Number(process.env.MAX_PER_RUN) || 25;
+const PAUSE_MIN_S = 50, PAUSE_MAX_S = 80;   // pausa entre mensajes
+const MAX_PER_RUN = Number(process.env.MAX_PER_RUN) || 60;
 const SITE_URL = (process.env.SITE_URL || "").replace(/\/$/, "");
 const EVERY_MS = 5 * 60 * 1000;
 
@@ -42,10 +47,12 @@ const T = require(path.join(ROOT, "api/_lib/time.js"));
 const { timeZone } = bookingSettings();
 const school = (siteConfig().shortName || siteConfig().name || "la escuela");
 
+// FAKE_NOW=2026-10-14T17:00:00Z sirve para probar el reloj sin esperar (solo para pruebas)
+const nowMs = () => (process.env.FAKE_NOW ? Date.parse(process.env.FAKE_NOW) : Date.now());
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const log = (...a) => console.log(new Date().toLocaleString("es-CL", { timeZone }), "·", ...a);
-const hourNow = () => Number(new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", hourCycle: "h23" }).format(new Date()));
-const isQuiet = () => { const h = hourNow(); return QUIET_FROM > QUIET_TO ? (h >= QUIET_FROM || h < QUIET_TO) : (h >= QUIET_FROM && h < QUIET_TO); };
+const hourNow = () => Number(new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", hourCycle: "h23" }).format(new Date(nowMs())));
+const isQuiet = () => { const h = hourNow(); return h >= QUIET_FROM || h < EARLIEST_HOUR; };
 
 /* ---------- Firestore (solo lectura, más la marca reminderSentAt) ---------- */
 function getDb() {
@@ -61,23 +68,27 @@ function getDb() {
   return admin.firestore();
 }
 
-// Reservas confirmadas que empiezan dentro de las próximas REMIND_HOURS horas y aún no tienen recordatorio
+// Hora en que sale el lote de una clase: REMIND_HOURS antes, pero nunca antes de EARLIEST_HOUR de ese día
+const sendAtOf = b => Math.max(new Date(b.startAt).getTime() - REMIND_HOURS * 3600e3,
+  T.zonedToUtc(b.date, String(EARLIEST_HOUR).padStart(2, "0") + ":00", timeZone));
+
+// Reservas confirmadas de clases de hoy cuyo lote ya debe salir (y que no han empezado) y sin recordatorio
 async function dueBookings(db) {
-  const today = T.todayIn(timeZone);
-  const now = Date.now(), limit = now + REMIND_HOURS * 3600e3;
-  const snap = await db.collection("bookings").where("date", ">=", today).where("date", "<=", T.addDays(today, 1)).get();
+  const today = T.todayIn(timeZone, nowMs());
+  const now = nowMs();
+  const snap = await db.collection("bookings").where("date", "==", today).get();
   return snap.docs
     .map(d => ({ id: d.id, ref: d.ref, ...d.data() }))
     .filter(b => b.status === "confirmed" && !b.reminderSentAt && !b.reminderError)
-    .filter(b => { const t = new Date(b.startAt).getTime(); return t > now && t <= limit; })
-    .sort((a, b) => a.startAt.localeCompare(b.startAt));
+    .filter(b => { const start = new Date(b.startAt).getTime(); return now >= sendAtOf(b) && now < start; })
+    .sort((a, b) => a.startAt.localeCompare(b.startAt) || (a.createdAt || "").localeCompare(b.createdAt || ""));
 }
 
 /* ---------- Mensaje ---------- */
-const dayWord = date => { const t = T.todayIn(timeZone); return date === t ? "hoy" : date === T.addDays(t, 1) ? "mañana" : "el " + date; };
+const dayWord = date => { const t = T.todayIn(timeZone, nowMs()); return date === t ? "hoy" : date === T.addDays(t, 1) ? "mañana" : "el " + date; };
 const firstName = n => String(n || "").trim().split(/\s+/)[0] || "";
 function messageFor(b) {
-  const when = Math.round((new Date(b.startAt).getTime() - Date.now()) / 60000);
+  const when = Math.round((new Date(b.startAt).getTime() - nowMs()) / 60000);
   const hasta = when >= 90 ? `en unas ${Math.round(when / 60)} horas` : when >= 45 ? "en menos de una hora" : "muy pronto";
   const lines = [
     `Hola ${firstName(b.name)} 👋, te recordamos tu clase de *${b.classLabel}* ${dayWord(b.date)} a las *${b.start}* (${hasta}) en ${school}.`,
@@ -116,7 +127,7 @@ async function sendTo(client, waPhone, text) {
 
 /* ---------- Vuelta ---------- */
 async function pass(db, client) {
-  if (isQuiet()) { log(`Horario de silencio (${QUIET_FROM}:00–${QUIET_TO}:00): no se envía nada`); return; }
+  if (isQuiet()) { log(`Fuera de horario (solo entre las ${EARLIEST_HOUR}:00 y las ${QUIET_FROM}:00): no se envía nada`); return; }
   const due = await dueBookings(db);
   log(`${due.length} recordatorio(s) pendiente(s)${due.length > MAX_PER_RUN ? ` (se envían ${MAX_PER_RUN} en esta vuelta)` : ""}`);
   let sent = 0;
@@ -128,7 +139,7 @@ async function pass(db, client) {
       if (r.ok) { await b.ref.update({ reminderSentAt: new Date().toISOString(), reminderChannel: "whatsapp" }); sent++; log("Enviado a", b.name); }
       else { await b.ref.update({ reminderError: r.error }); log("Omitido", b.name, "—", r.error); }
     } catch (e) { log("Error con", b.name, "—", e.message); }   // sin marca: se reintenta en la próxima vuelta
-    await sleep(8000 + Math.random() * 12000);                  // pausa entre mensajes para no parecer un robot
+    await sleep((PAUSE_MIN_S + Math.random() * (PAUSE_MAX_S - PAUSE_MIN_S)) * 1000);   // pausa de 50 a 80 s entre mensajes
   }
   if (!DRY) log(`Vuelta lista: ${sent} enviado(s)`);
 }
@@ -145,5 +156,10 @@ async function pass(db, client) {
   await pass(db, client);
   if (DRY || ONCE) { if (client) await client.destroy(); process.exit(0); }
   log(`Revisando cada ${EVERY_MS / 60000} minutos. Ctrl+C para salir.`);
-  setInterval(() => pass(db, client).catch(e => log("Error en la vuelta:", e.message)), EVERY_MS);
+  let running = false;
+  setInterval(async () => {
+    if (running) return;               // un lote largo puede durar más de 5 minutos: no se encima otro
+    running = true;
+    try { await pass(db, client); } catch (e) { log("Error en la vuelta:", e.message); } finally { running = false; }
+  }, EVERY_MS);
 })().catch(e => { console.error(e); process.exit(1); });

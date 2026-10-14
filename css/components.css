@@ -322,3 +322,14 @@
 /* Días de la semana en curso que ya pasaron: más claros y sin poder reservarse */
 .sch-day.is-past,.sch-cell.is-past,.sch-list-day.is-past{opacity:.45}
 .is-past .sch-class{pointer-events:none}
+
+/* Horario (inicio): título y filtros comparten la cabecera en computador, sin hueco a la derecha */
+@media (min-width:900px){
+  #horario .wrap>[data-schedule]{display:contents}
+  #horario .wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);column-gap:56px;align-items:end}
+  #horario .sec-head{grid-column:1;grid-row:1;display:block;margin-bottom:24px}
+  #horario .sec-head p{margin-top:20px;max-width:36ch}
+  #horario .sch-range{grid-column:1;grid-row:2;margin:0 0 32px}
+  #horario .sch-legend{grid-column:2;grid-row:1/3;align-self:start;margin:0 0 32px;padding:22px 24px;border:1px solid var(--line);background:rgba(255,255,255,.03);gap:14px}
+  #horario .sch-grid,#horario .sch-list,#horario .sch-foot,#horario .sch-loading,#horario .sch-empty{grid-column:1/-1}
+}

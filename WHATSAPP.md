@@ -39,4 +39,4 @@ Variables: `SITE_URL`, `REMIND_HOURS`, `EARLIEST_HOUR`, `QUIET_FROM`, `MAX_PER_R
 $env:SITE_URL = "https://tu-sitio.cl"; node recordatorios.js
 ```
 
-El texto del mensaje está en `messageFor()` de `recordatorios.js`.
+El texto del mensaje se edita en el panel: **Clases → Configuración → Mensaje de WhatsApp** (con vista previa y datos como `{nombre}`, `{clase}`, `{hora}`, `{enlace}`). El script lo lee de Firestore en cada vuelta, así que un cambio se usa en el siguiente envío, sin reiniciar nada. Si no hay texto guardado, usa el original.

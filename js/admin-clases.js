@@ -1118,7 +1118,40 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         ${section("types", "Tipos", "Cada tipo tiene su propio diseño de bloque. Una clase puede no tener tipo.", types, "Agregar tipo")}
       </div>
       <div class="err" data-err role="alert"></div>
-    </form>`;
+    </form>
+    ${waSection()}`;
+  }
+
+  /* Mensaje de WhatsApp: el texto del recordatorio que envía scripts/wsp (ver WHATSAPP.md) */
+  const WA_DEFAULT = "Hola {nombre} 👋, te recordamos tu clase de *{clase}* {dia} a las *{hora}* ({cuando}) en {escuela}.\nLlega 10 minutos antes. ¡Te esperamos! 🥋\n\n¿No puedes venir? Cámbiala o cancélala aquí para liberar tu cupo: {enlace}";
+  const WA_FIELDS = [["{nombre}", "primer nombre de la persona"], ["{clase}", "nombre de la clase"], ["{dia}", "hoy o mañana"], ["{hora}", "hora de inicio"], ["{cuando}", "«en unas 4 horas»"], ["{escuela}", "nombre corto de la escuela"], ["{enlace}", "enlace para cambiar o cancelar"]];
+  const waRender = text => {
+    const sample = { nombre: "Camila", clase: "Judo · Kizuna", dia: "hoy", hora: "19:00", cuando: "en unas 4 horas", escuela: (window.SITE_CONFIG && (window.SITE_CONFIG.shortName || window.SITE_CONFIG.name)) || "la escuela", enlace: "https://tu-sitio.cl/reserva?t=…" };
+    return String(text).replace(/\{(\w+)\}/g, (m, k) => (k in sample ? sample[k] : m));
+  };
+  function waSection() {
+    const text = catalog.waTemplate || WA_DEFAULT;
+    return `<section class="adm-cfg adm-wa">
+      <h3>Mensaje de WhatsApp</h3>
+      <p class="adm-help">Texto del recordatorio que se envía por WhatsApp 4 horas antes de cada clase. Puedes usar estos datos escribiéndolos entre llaves; se reemplazan solos al enviar.</p>
+      <ul class="adm-wa-fields">${WA_FIELDS.map(([k, d]) => `<li><code>${k}</code> ${esc(d)}</li>`).join("")}</ul>
+      <textarea id="waTemplate" rows="8" maxlength="1000" aria-label="Texto del mensaje">${esc(text)}</textarea>
+      <div class="adm-wa-preview"><span class="adm-help">Así lo recibirá la persona (con datos de ejemplo):</span><div class="adm-wa-bubble" data-wa-preview>${esc(waRender(text))}</div></div>
+      <div class="adm-actions"><button class="btn ghost small" type="button" data-wa-reset>Restaurar texto original</button><button class="btn small" type="button" data-wa-save>Guardar mensaje</button></div>
+      <div class="err" data-wa-err role="alert"></div>
+    </section>`;
+  }
+  async function saveWa() {
+    const box = root.querySelector("#waTemplate"), err = root.querySelector("[data-wa-err]");
+    const text = box.value.replace(/\r\n/g, "\n").trim();
+    err.textContent = "";
+    if (text.length < 10) return void (err.textContent = "Escribe el mensaje (al menos unas palabras).");
+    try {
+      await fs.setDoc(fs.doc(db, "settings", "catalog"), { waTemplate: text }, { merge: true });
+      catalog.waTemplate = text;
+      if (cfgDraft) cfgDraft.waTemplate = text;
+      toast("Mensaje guardado: se usa en el próximo envío");
+    } catch (e) { console.warn(e); err.textContent = saveError(e); }
   }
 
   // Pasa lo escrito en el formulario a la copia editable
@@ -1268,6 +1301,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const t = e.target;
     const csub = t.closest("[data-csub]");
     if (csub) { e.preventDefault(); sub = csub.dataset.csub; editing = null; draft.clear(); slotEditor = null; render(); return; }
+    if (t.closest("[data-wa-save]")) return saveWa();
+    if (t.closest("[data-wa-reset]")) { const box = root.querySelector("#waTemplate"); box.value = WA_DEFAULT; root.querySelector("[data-wa-preview]").textContent = waRender(WA_DEFAULT); return; }
     const cfgAdd = t.closest("[data-cfg-add]");
     if (cfgAdd) {
       readConfig();
@@ -1372,6 +1407,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     box.querySelector(".sch-name").textContent = label;
   }
   root.addEventListener("input", e => {
+    if (e.target.id === "waTemplate") { root.querySelector("[data-wa-preview]").textContent = waRender(e.target.value); return; }
     const form = e.target.form;
     if (!form) return;
     if (form.dataset.form === "sched") editorHint(form);

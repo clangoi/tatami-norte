@@ -87,15 +87,21 @@ async function dueBookings(db) {
 /* ---------- Mensaje ---------- */
 const dayWord = date => { const t = T.todayIn(timeZone, nowMs()); return date === t ? "hoy" : date === T.addDays(t, 1) ? "mañana" : "el " + date; };
 const firstName = n => String(n || "").trim().split(/\s+/)[0] || "";
-function messageFor(b) {
+// El texto lo edita la escuela en el panel (Clases → Configuración → Mensaje de WhatsApp) y se guarda en
+// settings/catalog.waTemplate. Datos disponibles: {nombre} {clase} {dia} {hora} {cuando} {escuela} {enlace}
+const DEFAULT_TEMPLATE = "Hola {nombre} 👋, te recordamos tu clase de *{clase}* {dia} a las *{hora}* ({cuando}) en {escuela}.\nLlega 10 minutos antes. ¡Te esperamos! 🥋\n\n¿No puedes venir? Cámbiala o cancélala aquí para liberar tu cupo: {enlace}";
+async function loadTemplate(db) {
+  try { const snap = await db.collection("settings").doc("catalog").get(); const t = snap.exists && snap.data().waTemplate; return (t && String(t).trim()) || DEFAULT_TEMPLATE; }
+  catch (e) { log("No se pudo leer el mensaje del panel; se usa el original:", e.message); return DEFAULT_TEMPLATE; }
+}
+function messageFor(b, template) {
   const when = Math.round((new Date(b.startAt).getTime() - nowMs()) / 60000);
-  const hasta = when >= 90 ? `en unas ${Math.round(when / 60)} horas` : when >= 45 ? "en menos de una hora" : "muy pronto";
-  const lines = [
-    `Hola ${firstName(b.name)} 👋, te recordamos tu clase de *${b.classLabel}* ${dayWord(b.date)} a las *${b.start}* (${hasta}) en ${school}.`,
-    "Llega 10 minutos antes. ¡Te esperamos! 🥋"
-  ];
-  if (SITE_URL) lines.push("", `¿No puedes venir? Cámbiala o cancélala aquí para liberar tu cupo: ${SITE_URL}/reserva?t=${b.id}`);
-  return lines.join("\n");
+  const cuando = when >= 90 ? `en unas ${Math.round(when / 60)} horas` : when >= 45 ? "en menos de una hora" : "muy pronto";
+  const link = SITE_URL ? `${SITE_URL}/reserva?t=${b.id}` : "";
+  const data = { nombre: firstName(b.name), clase: b.classLabel, dia: dayWord(b.date), hora: b.start, cuando, escuela: school, enlace: link };
+  // sin SITE_URL no hay enlace: se quita la línea que lo menciona para no dejar un texto cortado
+  const text = link ? template : template.split("\n").filter(l => !l.includes("{enlace}")).join("\n");
+  return text.replace(/\{(\w+)\}/g, (m, k) => (k in data ? data[k] : m)).replace(/\n{3,}/g, "\n\n").trim();
 }
 
 /* ---------- WhatsApp ---------- */
@@ -129,10 +135,11 @@ async function sendTo(client, waPhone, text) {
 async function pass(db, client) {
   if (isQuiet()) { log(`Fuera de horario (solo entre las ${EARLIEST_HOUR}:00 y las ${QUIET_FROM}:00): no se envía nada`); return; }
   const due = await dueBookings(db);
+  const template = await loadTemplate(db);
   log(`${due.length} recordatorio(s) pendiente(s)${due.length > MAX_PER_RUN ? ` (se envían ${MAX_PER_RUN} en esta vuelta)` : ""}`);
   let sent = 0;
   for (const b of due.slice(0, MAX_PER_RUN)) {
-    const text = messageFor(b);
+    const text = messageFor(b, template);
     if (DRY) { console.log(`\n→ ${b.name} (+${b.waPhone}) · ${b.classLabel} ${b.date} ${b.start}\n${text}\n`); continue; }
     try {
       const r = await sendTo(client, b.waPhone, text);

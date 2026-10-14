@@ -39,6 +39,12 @@
 .adm-cfg-sw{width:56px;height:34px;flex:none;padding:0 !important;min-height:0}
 .adm-cfg-empty{margin:0}
 .adm-classcode{display:block;font:600 15px/1.2 var(--label);letter-spacing:.06em;color:var(--steel);padding:8px 0}
+.adm-wa{margin-top:18px}
+.adm-wa textarea{width:100%;font:inherit;line-height:1.45;resize:vertical;background:var(--navy-2);color:var(--cream);border:1px solid var(--navy-3);padding:10px 12px}
+.adm-wa-fields{display:flex;flex-wrap:wrap;gap:6px 18px;list-style:none;margin:0;padding:0;font-size:14px;color:var(--steel)}
+.adm-wa-fields code{color:var(--gold)}
+.adm-wa-bubble{white-space:pre-wrap;background:#1f3a2e;color:#e8f5ec;border-radius:12px 12px 12px 2px;padding:12px 14px;max-width:460px;margin-top:6px;line-height:1.45}
+.adm-wa .adm-actions{justify-content:flex-end}
 .adm-classname{display:block;font:800 22px/1.1 var(--display);text-transform:uppercase;padding:8px 0}
 .adm-classpreview{max-width:240px}
 .adm-classpreview .sch-class{min-height:64px}

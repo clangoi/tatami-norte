@@ -213,8 +213,8 @@
 .sch-class.ty-4{background:repeating-linear-gradient(135deg,var(--c) 0 9px,color-mix(in srgb,var(--c) 72%,#000) 9px 18px);color:var(--ink,var(--navy))}
 .s-oro{--stripe:var(--gold)}.s-bronce{--stripe:var(--bronze)}.s-cobre{--stripe:#B5764F}.s-marino{--stripe:#4a5a8c}
 .s-acero{--stripe:var(--steel)}.s-plata{--stripe:#C3C7CE}.s-crema{--stripe:var(--cream)}.s-linea{--stripe:var(--gold)}
-.sch-class[class*=" s-"]{padding-left:18px}
-.sch-class[class*=" s-"]::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--stripe);box-shadow:1px 0 0 rgba(27,35,56,.55)}
+.sch-class[class*=" s-"]{padding-left:14px}
+.sch-class[class*=" s-"]::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3.5px;background:var(--stripe);box-shadow:1px 0 0 rgba(27,35,56,.55)}
 
 .sch-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
 .sch-chip{display:inline-flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);color:var(--cream);font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;padding:10px 12px;cursor:pointer}

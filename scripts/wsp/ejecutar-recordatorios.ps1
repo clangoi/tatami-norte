@@ -8,6 +8,7 @@ param(
 $ErrorActionPreference = "Continue"
 Set-Location -LiteralPath $PSScriptRoot
 if ($SiteUrl) { $env:SITE_URL = $SiteUrl }
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8   # para que el registro conserve tildes y emojis
 $modo = if ($Dry) { "--dry" } else { "--once" }
 $log = Join-Path $PSScriptRoot "recordatorios.log"
 "=== $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $modo ===" | Out-File -FilePath $log -Append -Encoding utf8

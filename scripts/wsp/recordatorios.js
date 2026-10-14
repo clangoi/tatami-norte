@@ -186,6 +186,12 @@ async function pass(db, client) {
     await client.destroy(); process.exit(r.ok ? 0 : 1);
   }
   const db = getDb();
+  // Con --once (tarea programada) solo se abre WhatsApp si hay algo que enviar: así no se conecta cada 10 minutos para nada
+  if (ONCE && !DRY) {
+    if (isQuiet()) { log(`Fuera de horario (solo entre las ${EARLIEST_HOUR}:00 y las ${QUIET_FROM}:00): no se envía nada`); process.exit(0); }
+    const pending = await dueBookings(db);
+    if (!pending.length) { log("Nada que enviar por ahora"); process.exit(0); }
+  }
   const client = DRY ? null : await startWhatsApp();
   await pass(db, client);
   if (DRY || ONCE) { if (client) await client.destroy(); process.exit(0); }

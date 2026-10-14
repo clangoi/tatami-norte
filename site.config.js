@@ -13,6 +13,7 @@ window.SITE_CONFIG = {
   /* ---- Identidad ---- */
   name: "Escuela de Artes Marciales Kizuna",
   shortName: "Kizuna",                           // nombre corto para el menú
+  siteUrl: "https://www.hccombat.com",           // dirección del sitio (enlaces en los mensajes de WhatsApp)
   initial: "K",                                  // letra del logo en el menú
   motto: "Respeto · Disciplina · Constancia",
   description: "Escuela de Artes Marciales Kizuna en Santiago: BJJ Gi, BJJ No-Gi, Judo y preparación física. Reserva tu clase en línea.",

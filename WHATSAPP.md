@@ -40,3 +40,20 @@ $env:SITE_URL = "https://tu-sitio.cl"; node recordatorios.js
 ```
 
 El texto del mensaje se edita en el panel: **Clases → Configuración → Mensaje de WhatsApp** (con vista previa y datos como `{nombre}`, `{clase}`, `{hora}`, `{enlace}`). El script lo lee de Firestore en cada vuelta, así que un cambio se usa en el siguiente envío, sin reiniciar nada. Si no hay texto guardado, usa el original.
+
+## Programarlo en Windows (Programador de tareas)
+
+Para que se ejecute solo, sin dejar una terminal abierta, crea una tarea que lance `node recordatorios.js --once` cada 10 minutos. Desde PowerShell, en `scripts\wsp`:
+
+```powershell
+.\tarea-windows.ps1
+```
+
+- Cambia la frecuencia con `-Cada 5` (minutos). La dirección del enlace de cambiar o cancelar sale de `siteUrl` en `site.config.js` (`https://www.hccombat.com`); con `-SiteUrl` puedes usar otra.
+- La tarea corre con tu usuario mientras tengas la sesión de Windows iniciada, y no se encima: si una vuelta sigue enviando, la siguiente se omite.
+- Lo que hace queda en `scripts\wsp\recordatorios.log`.
+- Probarla ya: `Start-ScheduledTask -TaskName "Kizuna - Recordatorios WhatsApp"`. Ver su estado: `Get-ScheduledTaskInfo -TaskName "Kizuna - Recordatorios WhatsApp"`.
+- Quitarla: `.\tarea-windows.ps1 -Quitar`.
+- `.\ejecutar-recordatorios.ps1 -Dry` muestra qué enviaría sin tocar nada.
+
+La tarea apunta a la carpeta donde está el script. Úsala desde la copia definitiva del proyecto, con `npm install` hecho y `.claude\service-account.json` en su lugar, y vuelve a crearla si mueves la carpeta.

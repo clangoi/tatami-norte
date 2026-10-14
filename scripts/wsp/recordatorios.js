@@ -17,7 +17,7 @@
      node recordatorios.js                se queda corriendo y revisa cada 5 minutos
 
    Variables de entorno (todas opcionales):
-     SITE_URL            https://tu-sitio.cl  (para el enlace de cambiar o cancelar)
+     SITE_URL            dirección del sitio para el enlace de cambiar o cancelar (por defecto siteUrl de site.config.js)
      REMIND_HOURS        horas antes de la clase (4)
      EARLIEST_HOUR       hora más temprana a la que sale un lote (8; hora de la escuela)
      QUIET_FROM          desde esta hora no se envía nada (22)
@@ -40,13 +40,14 @@ const EARLIEST_HOUR = process.env.EARLIEST_HOUR !== undefined ? Number(process.e
 const QUIET_FROM = process.env.QUIET_FROM !== undefined ? Number(process.env.QUIET_FROM) : 22;
 const PAUSE_MIN_S = 50, PAUSE_MAX_S = 80;   // pausa entre mensajes
 const MAX_PER_RUN = Number(process.env.MAX_PER_RUN) || 60;
-const SITE_URL = (process.env.SITE_URL || "").replace(/\/$/, "");
+let SITE = "";   // dirección del sitio para el enlace de cambiar o cancelar (ver más abajo)
 const EVERY_MS = 5 * 60 * 1000;
 
 const { siteConfig, bookingSettings } = require(path.join(ROOT, "api/_lib/config.js"));
 const T = require(path.join(ROOT, "api/_lib/time.js"));
 const { timeZone } = bookingSettings();
 const school = (siteConfig().shortName || siteConfig().name || "la escuela");
+SITE = String(process.env.SITE_URL || siteConfig().siteUrl || "").replace(/\/$/, "");   // variable SITE_URL, o siteUrl de site.config.js
 
 // FAKE_NOW=2026-10-14T17:00:00Z sirve para probar el reloj sin esperar (solo para pruebas)
 const nowMs = () => (process.env.FAKE_NOW ? Date.parse(process.env.FAKE_NOW) : Date.now());
@@ -100,7 +101,7 @@ async function loadTemplate(db) {
 function messageFor(b, template) {
   const when = Math.round((new Date(b.startAt).getTime() - nowMs()) / 60000);
   const cuando = when >= 90 ? `en unas ${Math.round(when / 60)} horas` : when >= 45 ? "en menos de una hora" : "muy pronto";
-  const link = SITE_URL ? `${SITE_URL}/reserva?t=${b.id}` : "";
+  const link = SITE ? `${SITE}/reserva?t=${b.id}` : "";
   const data = { nombre: firstName(b.name), clase: b.classLabel, dia: dayWord(b.date), hora: b.start, cuando, escuela: school, enlace: link };
   // sin SITE_URL no hay enlace: se quita la línea que lo menciona para no dejar un texto cortado
   const text = link ? template : template.split("\n").filter(l => !l.includes("{enlace}")).join("\n");

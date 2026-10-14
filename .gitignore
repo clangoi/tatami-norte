@@ -7,3 +7,4 @@ scripts/wsp/node_modules
 scripts/wsp/.wwebjs_auth
 scripts/wsp/.wwebjs_cache
 .wwebjs_cache
+scripts/wsp/recordatorios.log

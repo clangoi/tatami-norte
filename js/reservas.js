@@ -1,10 +1,9 @@
 /* ==========================================================
-   Kizuna · Reservas propias (reemplaza a Cal.com)
-   Se activa con site.config.js → booking.provider: "own".
+   Kizuna · Reservas propias
    Las clases y los horarios se administran en admin.html → Clases;
    las reservas pasan por las funciones de api/ (ver RESERVAS.md).
 
-   Mismo uso que booking.js, así las páginas no cambian:
+   Uso en las páginas:
      TNBooking.mount(seccion)                       todas las clases
      TNBooking.mount(seccion, {slugs:["judo"]})     solo algunas (ids de clase)
      TNBooking.select(seccion, "judo")              abre esa clase
@@ -13,7 +12,6 @@
 (function(){
   const SITE = window.SITE_CONFIG || {};
   const cfg = SITE.booking || {};
-  if (cfg.provider !== "own") return;
 
   const API = "/api";
   const STORE_KEY = "tn_bookings";

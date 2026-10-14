@@ -75,44 +75,29 @@ window.SITE_CONFIG = {
   },
 
   /* ---- Horario semanal · ver HORARIO.md ----
-     Se arma solo con la disponibilidad de Cal.com: mira las próximas
-     semanas y muestra qué clases hay cada día a cada hora.
-     Para cambiar el horario, cámbialo en Cal.com. */
+     Se arma solo con las clases y horarios que defines en admin.html → Clases:
+     muestra la semana en curso y aclara los días que ya pasaron. */
   schedule: {
-    source: "cal",                               // "cal" o "json" (archivo en url)
-    weeks: 2,                                    // semanas que se revisan en Cal.com
+    source: "own",                               // "own" (clases del panel) o "json" (archivo en url)
     url: "data/horario.json"                     // solo si source es "json"
   },
 
   /* ---- Clases y reservas ----
-     provider "own": reservas propias. Las clases, los horarios y los cupos
-       se administran en admin.html → Clases (ver RESERVAS.md).
-     provider "cal": reservas con Cal.com (ver CAL-SETUP.md); usa
-       calUsername y classes de más abajo. El resto solo lo usa Cal.com.
-
-     Cal.com: una pestaña por clase. slug = la parte final de la URL en Cal.com
-     (cal.com/hccombat/judo → "judo").
-     tone: color en el horario (oro, bronce, cobre, marino, acero, plata, crema, linea).
-     page: página de la disciplina ("" si no tiene).
-     variants: varios eventos de Cal.com que en el sitio son una sola clase
-     (en reservas aparece un selector de duración). */
+     Las clases, los horarios y los cupos se administran en admin.html → Clases
+     (ver RESERVAS.md). Aquí solo van los ajustes generales y las clases de siempre,
+     que el panel puede cargar con un botón.
+     slug: código de la clase. tone: color en el horario (oro, bronce, cobre, marino,
+     acero, plata, crema, linea). page: página de la disciplina ("" si no tiene). */
   booking: {
-    provider: "own",                             // "own" (reservas propias) o "cal" (Cal.com)
     timeZone: "America/Santiago",                // hora de las clases
     minNoticeMinutes: 120,                       // no se reserva con menos aviso que este
     horizonDays: 21,                             // cuántos días hacia adelante se puede reservar
     defaultCapacity: 15,                         // cupos si la clase o el horario no definen otro
-    calUsername: "hccombat",                     // cal.com/<usuario>
-    calOrigin: "https://app.cal.com",
     classes: [
       { label: "BJJ Gi · Kizuna",    slug: "jiu-jitsu-gi",   tone: "bronce", page: "bjj.html" },
       { label: "BJJ Gi · Núcleo",    slug: "bjj-gi-nucleo",  tone: "cobre",  page: "bjj.html" },
       { label: "BJJ No-Gi · Núcleo", slug: "jiujitsu-no-gi", tone: "marino", page: "bjj.html#no-gi" },
-      { label: "Judo",      slug: "judo",           tone: "oro",    page: "judo.html",
-        variants: [
-          { label: "1 hora",       slug: "judo" },
-          { label: "1 hora 15 min", slug: "judo2" }
-        ] },
+      { label: "Judo",      slug: "judo",           tone: "oro",    page: "judo.html" },
       { label: "Judo No-Gi", slug: "judo-no-gi",    tone: "crema",  page: "judo.html" },
       { label: "Judo Kids",  slug: "judo-kids",     tone: "plata",  page: "judo.html" },
       { label: "Físico",    slug: "fisico",         tone: "acero",  page: "" },

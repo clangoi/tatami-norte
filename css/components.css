@@ -64,7 +64,7 @@
 .disc:has(.disc-link:focus-visible){outline:3px solid var(--gold);outline-offset:-3px}
 .disc:has(.disc-link):hover .disc-link{color:var(--gold)}
 
-/* ---- Reservas: calendario de Cal.com en la página ---- */
+/* ---- Reservas: calendario en la página ---- */
 .cal-grid{display:grid;grid-template-columns:minmax(260px,.7fr) 1.3fr;gap:32px;align-items:start}
 @media (max-width:940px){.cal-grid{grid-template-columns:1fr}.cal-grid .panel{order:2}}
 .first-steps{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:14px;font-size:16px;color:var(--text-soft)}

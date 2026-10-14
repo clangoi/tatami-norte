@@ -2,9 +2,7 @@
    Kizuna · Horario semanal
    Dibuja la semana en cada [data-schedule]. Los datos salen de
    site.config.js → schedule:
-     source "cal"  → lo que ofrece Cal.com en los próximos 7 días (por defecto).
-                     Cada día muestra su fecha; si cambias un horario en Cal.com,
-                     la página lo refleja en cuanto esa semana entra en la ventana.
+     source "own"  → la semana en curso según las clases y horarios del panel (por defecto).
      source "json" → archivo en schedule.url (formato en HORARIO.md)
 
    <div data-schedule></div>                          todas las clases
@@ -26,13 +24,8 @@
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const SITE = window.SITE_CONFIG || {};
   const cfg = SITE.schedule || {};
-  const booking = SITE.booking || {};
 
-  /* ---------- Datos desde Cal.com ---------- */
-  const API = "https://api.cal.com/v2";
-  const TZ = booking.timeZone || "America/Santiago";
-  const CACHE_KEY = "tn_schedule_cal_v2";
-  const CACHE_MIN = 10;
+  /* ---------- Datos ---------- */
   const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
   const pad = n => String(n).padStart(2, "0");
@@ -40,72 +33,6 @@
   const dayOf = iso => DAYS[(new Date(iso + "T12:00:00").getDay() + 6) % 7][0];
   const shortDate = iso => { const [, m, d] = iso.split("-").map(Number); return `${d} ${MONTHS[m - 1]}`; };
   const addMin = (hhmm, min) => { const [h, m] = hhmm.split(":").map(Number); const t = h * 60 + m + min; return `${pad(Math.floor(t / 60) % 24)}:${pad(t % 60)}`; };
-  const calGet = (path, version) => fetch(API + path, { headers: { "cal-api-version": version } })
-    .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
-
-  /* Semana a mostrar: hoy y los 6 días siguientes (un día de cada tipo).
-     Si hoy ya no quedan clases, ese día se muestra con la fecha de la
-     semana siguiente. Cal.com no entrega horarios que ya pasaron. */
-  async function fromCal(){
-    try {
-      const c = JSON.parse(sessionStorage.getItem(CACHE_KEY) || "null");
-      if (c && Date.now() - c.t < CACHE_MIN * 60000) return c.data;
-    } catch (e) {}
-
-    const user = booking.calUsername;
-    const classes = (booking.classes || []).filter(c => c && c.slug);
-    if (!user || !classes.length) throw new Error("Sin clases configuradas");
-
-    // Duración de cada evento
-    const types = await calGet(`/event-types?username=${encodeURIComponent(user)}`, "2024-06-14").catch(() => ({ data: [] }));
-    const length = {};
-    (types.data || []).forEach(t => { length[t.slug] = t.lengthInMinutes || 60; });
-
-    // Hoy + 7 días (el octavo sirve de reemplazo para hoy)
-    const today = new Date();
-    const last = new Date(today); last.setDate(last.getDate() + 7);
-    const todayIso = isoDate(today), lastIso = isoDate(last);
-    const endQ = new Date(last); endQ.setDate(endQ.getDate() + 1);
-
-    const disciplinas = {};
-    const byDate = {};   // "AAAA-MM-DD" → clases de ese día
-    await Promise.all(classes.map(async cls => {
-      disciplinas[cls.slug] = { nombre: cls.label || cls.slug, tono: cls.tone || "oro", pagina: cls.page || "" };
-      const slugs = (cls.variants && cls.variants.length) ? cls.variants.map(v => v.slug) : [cls.slug];
-      await Promise.all(slugs.map(async slug => {
-        const q = `/slots?username=${encodeURIComponent(user)}&eventTypeSlug=${encodeURIComponent(slug)}` +
-                  `&start=${todayIso}&end=${isoDate(endQ)}&timeZone=${encodeURIComponent(TZ)}`;
-        const res = await calGet(q, "2024-09-04");
-        Object.entries(res.data || {}).forEach(([date, slots]) => {
-          if (date < todayIso || date > lastIso) return;
-          slots.forEach(sl => {
-            const inicio = sl.start.slice(11, 16);
-            (byDate[date] = byDate[date] || []).push({ dia: dayOf(date), fecha: date, inicio, fin: addMin(inicio, length[slug] || 60), disciplina: cls.slug, pick: slug });
-          });
-        });
-      }));
-    }));
-
-    // Qué fecha representa a cada día de la semana
-    const fechas = {};
-    for (let i = 0; i <= 7; i++) {
-      const d = new Date(today); d.setDate(d.getDate() + i);
-      const iso = isoDate(d), dia = dayOf(iso);
-      if (i === 7) { if (!(byDate[todayIso] || []).length) fechas[dia] = iso; }
-      else fechas[dia] = iso;
-    }
-
-    // Clases de esas fechas; dos eventos de la misma clase a la misma hora → queda el más largo
-    const found = {};
-    Object.entries(fechas).forEach(([dia, iso]) => (byDate[iso] || []).forEach(c => {
-      const key = `${dia}|${c.inicio}|${c.disciplina}`;
-      if (!found[key] || c.fin > found[key].fin) found[key] = c;
-    }));
-
-    const data = { disciplinas, clases: Object.values(found), fechas, hoy: todayIso, nota: cfg.note || "" };
-    try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), data })); } catch (e) {}
-    return data;
-  }
 
   /* Reservas propias: la semana en curso (de lunes a domingo) según /api/clases.
      Los días que ya pasaron se muestran más claros; al empezar otra semana se muestra esa.
@@ -225,7 +152,7 @@
   }));
 
   blocks.forEach(el => { el.innerHTML = '<p class="sch-loading">Cargando horario…</p>'; });
-  (cfg.source === "json" ? fromJson() : booking.provider === "own" ? fromOwn() : fromCal())
+  (cfg.source === "json" ? fromJson() : fromOwn())
     .then(data => blocks.forEach(el => render(el, data)))
     .catch(() => blocks.forEach(el => {
       el.innerHTML = '<p class="sch-empty">No pudimos cargar el horario. Revisa las clases disponibles en el calendario de reservas.</p>';

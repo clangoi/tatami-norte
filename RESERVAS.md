@@ -1,8 +1,6 @@
 # Reservas propias
 
-Reemplazan a Cal.com. Las clases, los horarios y los cupos se administran en `/admin` → **Clases**; las personas reservan en la portada y en las páginas de Judo y BJJ, y gestionan su reserva desde el enlace del correo (`/reserva?t=…`).
-
-Para volver a Cal.com basta cambiar `booking.provider` a `"cal"` en `site.config.js` (ver `CAL-SETUP.md`).
+Las clases, los horarios y los cupos se administran en `/admin` → **Clases**; las personas reservan en la portada y en las páginas de Judo y BJJ, y gestionan su reserva desde el enlace del correo (`/reserva?t=…`).
 
 ## Qué hace
 
@@ -65,7 +63,7 @@ Cada clase aparece como «Judo (3/15)» y en la descripción lista a los inscrit
 ### 5. Cargar las clases
 
 1. `/admin` → **Clases → Clases** → **Cargar las clases de siempre** (trae las de `site.config.js`) y ajusta duración, cupos y colores.
-2. **Horario semanal**: si vienes de Cal.com, el botón **Importar horario desde Cal.com** lee tus horarios de las próximas 3 semanas, te muestra la lista y, si aceptas, crea las clases y los horarios que falten (los cupos quedan en los habituales de cada clase). El botón solo aparece mientras no haya ningún horario y puede borrarse del código después (`importFromCal` en `js/admin-clases.js`). También puedes crear cada uno a mano con **Nuevo horario**.
+2. **Horario semanal**: ubica cada clase en el día y la hora donde empieza.
 3. **Cancelar una clase solo una semana**: toca la clase en el horario semanal, el tacho y elige «Solo esta semana». Queda inactiva únicamente ese día (se guarda como un cierre) y se puede reactivar desde la misma ventana. «De la planificación semanal» la quita de todas las semanas.
 4. **Clase única**: al agregar una clase al horario se pregunta si es recurrente (se repite cada semana) o única (una sola fecha). Las únicas aparecen en el horario hasta que pasa su fecha.
 

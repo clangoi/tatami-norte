@@ -120,6 +120,7 @@ $("#copyUid").addEventListener("click", () => {
 /* ---------- Pestañas ---------- */
 $$("[data-tab]").forEach(b => b.addEventListener("click", () => {
   if (!confirmLeave()) return;
+  clases.reset();   // lo que estaba en borrador en Clases se olvida
   closePost(); closePlan();
   $$("[data-tab]").forEach(x => x.setAttribute("aria-pressed", x === b));
   $$("[data-view]").forEach(v => v.hidden = v.dataset.view !== b.dataset.tab);

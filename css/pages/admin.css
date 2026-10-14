@@ -191,7 +191,7 @@ body.adm-dragging,body.adm-dragging *{cursor:grabbing !important;user-select:non
 .adm-cal-hour{height:var(--hour-h);padding:6px 6px 0;font:800 17px/1 var(--display);font-variant-numeric:tabular-nums;color:var(--steel);border-bottom:1px solid var(--line);display:flex;align-items:flex-start}
 .adm-cal-col{position:relative;border-left:1px solid var(--line);overflow:hidden}
 .adm-cal-col .adm-sched-cell{display:block;height:var(--hour-h);min-height:0;cursor:cell;border-bottom:1px solid var(--line);
-  background-image:linear-gradient(to bottom,transparent calc(25% - 1px),rgba(214,189,140,.07) calc(25% - 1px),rgba(214,189,140,.07) 25%,transparent 25%,transparent calc(50% - 1px),rgba(214,189,140,.13) calc(50% - 1px),rgba(214,189,140,.13) 50%,transparent 50%,transparent calc(75% - 1px),rgba(214,189,140,.07) calc(75% - 1px),rgba(214,189,140,.07) 75%,transparent 75%)}
+  background-image:linear-gradient(to bottom,transparent calc(25% - 1px),rgba(214,189,140,.025) calc(25% - 1px),rgba(214,189,140,.025) 25%,transparent 25%,transparent calc(50% - 1px),rgba(214,189,140,.05) calc(50% - 1px),rgba(214,189,140,.05) 50%,transparent 50%,transparent calc(75% - 1px),rgba(214,189,140,.025) calc(75% - 1px),rgba(214,189,140,.025) 75%,transparent 75%)}
 .adm-cal-col .adm-sched-cell::after{content:none}
 .adm-cal-foot{border-top:0}
 .adm-cal-foot>div{padding:6px;border-top:0}
@@ -203,3 +203,9 @@ body.adm-dragging,body.adm-dragging *{cursor:grabbing !important;user-select:non
 .adm .adm-block.is-short .sch-time{white-space:nowrap}
 .adm .adm-block .adm-chip-off{position:absolute;right:4px;top:3px}
 body.adm-dragging .adm-block{pointer-events:none}
+
+/* Modo borrador */
+.adm-draft{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;border:1px dashed var(--gold);background:rgba(214,189,140,.08);padding:12px 14px;margin:10px 0;color:var(--text-soft);font-size:15px}
+.adm-draft-badge{background:var(--gold);color:var(--navy);font:800 13px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;padding:6px 9px}
+.adm-draft-actions{display:flex;gap:8px;margin-left:auto}
+.adm .adm-block.is-draft{outline:2px dashed var(--cream);outline-offset:-3px}

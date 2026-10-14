@@ -291,7 +291,6 @@ export function initClases({ db, fs, esc, toast, saveError }) {
      al tocar una clase se ajusta. */
   const LIMITS_KEY = "tn_sched_limits_v2";
   const hourLabel = h => `${String(h).padStart(2, "0")}:00`;
-  const ceil15 = min => Math.ceil(min / 15) * 15;
   const DEFAULT_LIMITS = { start: 6, end: 22 };   // por defecto el horario se ve de 06:00 a 22:00
   let limits = { ...DEFAULT_LIMITS };             // horas de los extremos (se cambian tocándolas)
   try {
@@ -300,15 +299,18 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   } catch (e) { /* sin almacenamiento: se usan los de por defecto */ }
   let slotEditor = null;                          // { slot|null, day, hour, minute } mientras la ventana está abierta
 
-  const liveSlots = () => slots.filter(s => classOf(s.classId));
+  // Modo borrador: lo que se arrastra se acumula aquí y solo se guarda con "Guardar cambios".
+  // Se olvida al cambiar de pestaña. Cada entrada: id del horario → { day, start } nuevos.
+  const draft = new Map();
+  const effective = sl => (draft.has(sl.id) ? { ...sl, ...draft.get(sl.id) } : sl);
+  const liveSlots = () => slots.filter(sl => classOf(sl.classId)).map(effective);
 
-  // Tramo que se dibuja de una clase, en minutos del día, ya aproximado a intervalos de 15 minutos
+  // Tramo que se dibuja de una clase, en minutos del día: su hora y duración exactas
   function spanOfSlot(s) {
     const [h, m] = String(s.start).split(":").map(Number);
-    const a = Math.min(ceil15(h * 60 + m), 24 * 60 - 15);
+    const a = h * 60 + m;
     const dur = (s.duration || (classOf(s.classId) || {}).duration || 60);
-    const b = Math.min(24 * 60, Math.max(a + 15, ceil15(h * 60 + m + dur)));
-    return [a, b];
+    return [a, Math.min(24 * 60, a + dur)];
   }
 
   // Los extremos se amplían solos si ya hay clases fuera de ellos
@@ -364,7 +366,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       const s = it.slot, c = classOf(s.classId);
       const top = (it.a - start * 60) / 60, height = (it.b - it.a) / 60;
       const w = 100 / it.lanes;
-      return `<button type="button" draggable="false" class="sch-class adm-block t-${esc((c && c.tone) || "oro")}${s.active === false ? " is-off" : ""}${it.b - it.a <= 30 ? " is-short" : ""}"
+      return `<button type="button" draggable="false" class="sch-class adm-block t-${esc((c && c.tone) || "oro")}${s.active === false ? " is-off" : ""}${draft.has(s.id) ? " is-draft" : ""}${it.b - it.a <= 30 ? " is-short" : ""}"
         data-sched-edit="${esc(s.id)}" style="top:calc(var(--hour-h) * ${top} + 1px);height:calc(var(--hour-h) * ${height} - 2px);left:calc(${it.lane * w}% + 2px);width:calc(${w}% - 4px)">
         <span class="sch-name">${esc(c ? c.label : s.classId)}</span>
         <span class="sch-time">${hm(it.a)}–${hm(it.b)}</span>
@@ -394,9 +396,17 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     </div>`;
 
     return `<div class="adm-bar"><h2>Horario semanal</h2></div>
-      <p class="adm-help adm-note">Toca el lugar del horario donde empieza la clase (cada hora tiene cuatro intervalos de 15 minutos) o toca una clase para ajustarla. También puedes arrastrarla a otro lugar: se acomoda de 15 en 15 minutos según la altura donde la sueltes. Las horas de los extremos (${hourLabel(start)} y ${hourLabel(end)}) se pueden cambiar tocándolas. Cada clase dura lo que defines en <b>Clases</b>; si una hora no cae en un intervalo de 15 minutos, se aproxima al siguiente. Para un feriado o una semana sin clase usa <b>Cierres</b>; los cambios valen para las fechas futuras y las reservas ya hechas no se mueven.</p>
+      <p class="adm-help adm-note">Toca el lugar del horario donde empieza la clase (cada hora tiene cuatro intervalos de 15 minutos) o toca una clase para ajustarla. También puedes arrastrarla a otro lugar: se acomoda de 15 en 15 minutos y queda en <b>borrador</b> hasta que presiones Guardar. Las horas de los extremos (${hourLabel(start)} y ${hourLabel(end)}) se pueden cambiar tocándolas. Cada clase dura lo que defines en <b>Clases</b>. Para un feriado o una semana sin clase usa <b>Cierres</b>; los cambios valen para las fechas futuras y las reservas ya hechas no se mueven.</p>
       ${importBox}
       <p class="err adm-sched-msg" data-sched-msg role="alert" hidden></p>
+      ${draft.size ? `<div class="adm-draft" role="status">
+        <span class="adm-draft-badge">Modo borrador</span>
+        <span>${draft.size === 1 ? "1 clase movida" : `${draft.size} clases movidas`}: los cambios <b>no están guardados</b> hasta que presiones Guardar. Si cambias de pestaña se descartan.</span>
+        <span class="adm-draft-actions">
+          <button class="btn small" type="button" data-draft-save>Guardar</button>
+          <button class="btn small ghost" type="button" data-draft-discard>Descartar</button>
+        </span>
+      </div>` : ""}
       ${grid}
       ${slotEditorModal()}`;
   }
@@ -418,7 +428,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         <div class="field"><label for="seClass">Clase</label>
           <select id="seClass" name="classId">${options.map(c => `<option value="${esc(c.id)}" data-min="${esc(c.duration || 60)}"${c.id === cur.id ? " selected" : ""}>${esc(c.label)}</option>`).join("")}</select></div>
         <div class="field"><label for="seStart">Hora de inicio</label>
-          <input id="seStart" name="start" type="time" step="900" value="${esc(slot ? slot.start : `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`)}" required>
+          <input id="seStart" name="start" type="time" value="${esc(slot ? slot.start : `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`)}" required>
           <small class="adm-help" data-hint></small></div>
         <div class="field"><label id="seDaysLabel">Días en que se repite</label>
           <div class="adm-days" role="group" aria-labelledby="seDaysLabel">${DAYS.map(([k, n]) => {
@@ -441,7 +451,6 @@ export function initClases({ db, fs, esc, toast, saveError }) {
      Cada clase ocupa desde su hora de inicio hasta que cumple su duración. Se compara en minutos
      de la semana (lunes 00:00 = 0), así también se detecta una clase que pasa de medianoche. */
   const WEEK_MIN = 7 * 1440;
-  const up15 = t => { const [h, m] = t.split(":").map(Number); const v = Math.min(ceil15(h * 60 + m), 24 * 60 - 15); return `${String(Math.floor(v / 60)).padStart(2, "0")}:${String(v % 60).padStart(2, "0")}`; };
   const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
   const spanOf = (day, start, min) => { const a = DAYS.findIndex(d => d[0] === day) * 1440 + toMin(start); return [a, a + min]; };
   const minutesOf = sl => sl.duration || (classOf(sl.classId) || {}).duration || 60;
@@ -465,9 +474,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   // Choques de lo que hay escrito en la ventana (vacío si todo está bien o aún falta algún dato)
   function formOverlaps(form) {
     const f = form.elements;
-    const cls = classOf(f.classId.value), rawStart = f.start.value;
-    if (!cls || !/^([01]\d|2[0-3]):[0-5]\d$/.test(rawStart) || !f.active.checked) return [];
-    const start = up15(rawStart);
+    const cls = classOf(f.classId.value), start = f.start.value;
+    if (!cls || !/^([01]\d|2[0-3]):[0-5]\d$/.test(start) || !f.active.checked) return [];
     const item = slotEditor && slotEditor.slot;
     const days = [...form.querySelectorAll('input[name="days"]:checked')].map(i => i.value);
     if (item && !days.includes(item.day)) days.push(item.day);
@@ -486,10 +494,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const hint = form.querySelector("[data-hint]");
     if (!opt || !hint) return;
     const min = Number(opt.dataset.min) || 60;
-    const ok = /^([01]\d|2[0-3]):[0-5]\d$/.test(t);
-    const at = ok ? up15(t) : t;
-    hint.textContent = ok
-      ? `Dura ${min} min (se define en Clases) · termina a las ${addMin(at, min)}${at !== t ? ` · la hora se aproxima a las ${at} (intervalos de 15 min)` : ""}`
+    hint.textContent = /^([01]\d|2[0-3]):[0-5]\d$/.test(t)
+      ? `Dura ${min} min (se define en Clases) · termina a las ${addMin(t, min)}`
       : `Dura ${min} min (se define en Clases)`;
   }
 
@@ -506,10 +512,9 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const err = form.querySelector("[data-err]");
     const fail = m => { err.textContent = m; };
     err.textContent = "";
-    const classId = f.classId.value, rawStart = f.start.value;
+    const classId = f.classId.value, start = f.start.value;
     if (!classOf(classId)) return fail("Elige la clase.");
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(rawStart)) return fail("Escribe la hora de inicio.");
-    const start = up15(rawStart);
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(start)) return fail("Escribe la hora de inicio.");
     const item = slotEditor.slot;
     const days = [...form.querySelectorAll('input[name="days"]:checked')].map(i => i.value);
     if (item && !days.includes(item.day)) days.push(item.day);
@@ -537,6 +542,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     try {
       await batch.commit();
       slots = slots.map(s => (updated && s.id === updated.id ? updated : s)).concat(created);
+      if (updated) draft.delete(updated.id);
       slotEditor = null;
       toast(item ? "Horario actualizado" : `${created.length} horario${created.length === 1 ? "" : "s"} agregado${created.length === 1 ? "" : "s"}`);
       render();
@@ -551,6 +557,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     try {
       await fs.deleteDoc(fs.doc(db, "slots", id));
       slots = slots.filter(x => x.id !== id);
+      draft.delete(id);
       toast("Borrado");
     } catch (e) {
       console.warn(e);
@@ -689,32 +696,51 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     if (t) moveSlot(slot, t);
   }
 
-  async function moveSlot(slot, t) {
+  // Soltar una clase en otro lugar la deja en borrador; no se guarda todavía
+  function moveSlot(slot, t) {
     const start = clock(t.minutes);
-    if (t.day === slot.day && start === slot.start) return;
+    const cur = effective(slot);
+    if (t.day === cur.day && start === cur.start) return;
     const clash = clashOf(slot, t);
     if (clash.length) {
       showSchedMsg(["No se puede mover: la clase se solapa con otra del horario.", ...clash].join("\n"));
       return;
     }
-    const before = { day: slot.day, start: slot.start };
-    slot.day = t.day; slot.start = start;    // se muestra ya; si Firebase falla se devuelve
+    if (t.day === slot.day && start === slot.start) draft.delete(slot.id);   // volvió a su lugar original
+    else draft.set(slot.id, { day: t.day, start });
     render();
+  }
+
+  function discardDraft() {
+    if (!draft.size) return;
+    draft.clear();
+    render();
+  }
+
+  async function saveDraft() {
+    const ids = [...draft.keys()];
+    if (!ids.length) return;
+    const btn = root.querySelector("[data-draft-save]");
+    if (btn) btn.disabled = true;
     try {
-      await fs.updateDoc(fs.doc(db, "slots", slot.id), { day: t.day, start });
-      toast(`Movida al ${dayName(t.day).toLowerCase()} a las ${start}`);
+      const batch = fs.writeBatch(db);
+      ids.forEach(id => batch.update(fs.doc(db, "slots", id), draft.get(id)));
+      await batch.commit();
+      ids.forEach(id => { const sl = slots.find(x => x.id === id); if (sl) Object.assign(sl, draft.get(id)); });
+      draft.clear();
+      toast(ids.length === 1 ? "Cambio guardado" : `${ids.length} cambios guardados`);
     } catch (e) {
       console.warn(e);
-      Object.assign(slot, before);
-      render();
-      alert(saveError(e));
+      alert(saveError(e));       // el borrador se conserva para reintentar
     }
+    render();
   }
 
   // El navegador no debe iniciar su propio arrastre (que cancela los eventos de puntero)
   root.addEventListener("dragstart", e => { if (e.target.closest && e.target.closest("[data-sched-edit]")) e.preventDefault(); });
 
   root.addEventListener("pointerdown", e => {
+    if (e.target.closest("[data-draft-save], [data-draft-discard]")) return;
     if (e.button !== 0 || !e.isPrimary || slotEditor) return;
     const chip = e.target.closest("[data-sched-edit]");
     const slot = chip && slots.find(x => x.id === chip.dataset.schedEdit);
@@ -947,7 +973,9 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   root.addEventListener("click", async e => {
     const t = e.target;
     const csub = t.closest("[data-csub]");
-    if (csub) { sub = csub.dataset.csub; editing = null; render(); return; }
+    if (csub) { sub = csub.dataset.csub; editing = null; draft.clear(); slotEditor = null; render(); return; }
+    if (t.closest("[data-draft-save]")) return saveDraft();
+    if (t.closest("[data-draft-discard]")) return discardDraft();
     if (t.closest("[data-back]")) { editing = null; render(); return; }
     const nw = t.closest("[data-new]");
     if (nw) { editing = { kind: nw.dataset.new, item: null }; render(); window.scrollTo({ top: 0 }); return; }
@@ -955,7 +983,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const sd = t.closest("[data-sched-del]");
     if (sd) return deleteSched(sd.dataset.schedDel);
     const se = t.closest("[data-sched-edit]");
-    if (se) { const slot = slots.find(x => x.id === se.dataset.schedEdit); if (slot) openSchedEditor({ slot, day: slot.day, hour: parseInt(slot.start, 10) }); return; }
+    if (se) { const slot = slots.find(x => x.id === se.dataset.schedEdit); if (slot) { const cur = effective(slot); openSchedEditor({ slot: cur, day: cur.day, hour: parseInt(cur.start, 10) }); } return; }
     const sa = t.closest("[data-sched-add]");
     if (sa) {
       const r = sa.getBoundingClientRect();
@@ -1030,5 +1058,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     if (e.target.dataset.form === "sched") saveSched(e.target); else saveForm(e.target);
   });
 
-  return { activate };
+  // Al salir de la pestaña Clases se olvida el borrador y lo que estaba abierto
+  const reset = () => { draft.clear(); slotEditor = null; selectedKey = null; };
+
+  return { activate, reset };
 }

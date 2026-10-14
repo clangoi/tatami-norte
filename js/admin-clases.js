@@ -291,8 +291,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
      al tocar una clase se ajusta. */
   const LIMITS_KEY = "tn_sched_limits_v2";
   const hourLabel = h => `${String(h).padStart(2, "0")}:00`;
-  const DEFAULT_LIMITS = { start: 6, end: 22 };   // por defecto el horario se ve de 06:00 a 22:00
-  let limits = { ...DEFAULT_LIMITS };             // horas de los extremos (se cambian tocándolas)
+  const DEFAULT_LIMITS = { start: 6, end: 22 };   // sin clases ni límites elegidos, el horario se ve de 06:00 a 22:00
+  let limits = null;                              // horas de los extremos si se cambiaron tocándolas; si no, salen de las clases
   try {
     const l = JSON.parse(localStorage.getItem(LIMITS_KEY) || "null");
     if (l && Number.isInteger(l.start) && Number.isInteger(l.end) && l.start >= 0 && l.end <= 24 && l.start < l.end) limits = l;
@@ -318,13 +318,15 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   }
 
   // Los extremos se amplían solos si ya hay clases fuera de ellos
+  // Sin límites elegidos, van de la clase más temprana a la más tarde
   function schedRange() {
-    let start = limits.start, end = limits.end;
+    let start = limits ? limits.start : 24, end = limits ? limits.end : 0;
     liveSlots().forEach(s => {
       const [a, b] = spanOfSlot(s);
       start = Math.min(start, Math.floor(a / 60));
       end = Math.max(end, Math.ceil(b / 60));
     });
+    if (start >= end) ({ start, end } = DEFAULT_LIMITS);
     return { start, end: Math.min(24, end) };
   }
 

@@ -107,19 +107,20 @@
     return data;
   }
 
-  /* Reservas propias: las sesiones de /api/clases en los próximos 7 días,
-     con la misma lógica de semana que Cal.com. Las llenas se marcan. */
+  /* Reservas propias: la semana en curso (de lunes a domingo) según /api/clases.
+     Los días que ya pasaron se muestran más claros; al empezar otra semana se muestra esa.
+     Las clases llenas se marcan. */
   async function fromOwn(){
-    const res = await fetch("/api/clases").then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+    const res = await fetch("/api/clases?semana=1").then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
     const disciplinas = {};
     res.classes.forEach(c => { disciplinas[c.id] = { nombre: c.label, tono: c.tone || "oro", pagina: c.page || "" }; });
 
     const todayIso = res.today;
     const addDay = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return isoDate(d); };
-    const lastIso = addDay(todayIso, 7);
+    const mondayIso = addDay(todayIso, -((new Date(todayIso + "T12:00:00").getDay() + 6) % 7));
     const byDate = {};
-    res.sessions.forEach(s => {
-      if (s.date > lastIso || !disciplinas[s.classId]) return;
+    (res.week || res.sessions).forEach(s => {
+      if (!disciplinas[s.classId]) return;
       (byDate[s.date] = byDate[s.date] || []).push({
         dia: dayOf(s.date), fecha: s.date, inicio: s.start, fin: s.end, disciplina: s.classId, pick: s.classId,
         nota: s.full ? "Completa" : ""
@@ -127,10 +128,9 @@
     });
 
     const fechas = {};
-    for (let i = 0; i <= 7; i++) {
-      const iso = addDay(todayIso, i), dia = dayOf(iso);
-      if (i === 7) { if (!(byDate[todayIso] || []).length) fechas[dia] = iso; }
-      else fechas[dia] = iso;
+    for (let i = 0; i < 7; i++) {
+      const iso = addDay(mondayIso, i);
+      fechas[dayOf(iso)] = iso;
     }
     const clases = [];
     Object.values(fechas).forEach(iso => clases.push(...(byDate[iso] || [])));
@@ -152,6 +152,8 @@
     const book = el.dataset.book || "#reservas";
     const fechas = data.fechas || {};
     const isToday = k => fechas[k] ? fechas[k] === data.hoy : k === todayKey;
+    const isPast = k => !!fechas[k] && !!data.hoy && fechas[k] < data.hoy;   // día de esta semana que ya pasó
+    const pastCls = k => (isPast(k) ? " is-past" : "");
     const dateLabel = k => fechas[k] ? `<span class="sch-date">${shortDate(fechas[k])}</span>` : "";
 
     if (!classes.length) {
@@ -181,13 +183,13 @@
     const grid = `<div class="sch-grid" style="--days:${days.length}" role="table" aria-label="Horario semanal">
         <div class="sch-row sch-head" role="row">
           <div class="sch-corner" role="columnheader"></div>
-          ${days.map(([k, , s]) => `<div class="sch-day${isToday(k) ? " is-today" : ""}" role="columnheader">${s}${isToday(k) ? "<small>Hoy</small>" : ""}${dateLabel(k)}</div>`).join("")}
+          ${days.map(([k, , s]) => `<div class="sch-day${isToday(k) ? " is-today" : ""}${pastCls(k)}" role="columnheader">${s}${isToday(k) ? "<small>Hoy</small>" : ""}${dateLabel(k)}</div>`).join("")}
         </div>
         ${times.map(t => `<div class="sch-row" role="row">
           <div class="sch-hour" role="rowheader">${esc(t)}</div>
           ${days.map(([k]) => {
             const here = classes.filter(c => c.dia === k && c.inicio === t);
-            return `<div class="sch-cell${isToday(k) ? " is-today" : ""}" role="cell">${here.map(cell).join("")}</div>`;
+            return `<div class="sch-cell${isToday(k) ? " is-today" : ""}${pastCls(k)}" role="cell">${here.map(cell).join("")}</div>`;
           }).join("")}
         </div>`).join("")}
       </div>`;
@@ -196,7 +198,7 @@
     const list = `<div class="sch-list">
         ${days.map(([k, name]) => {
           const here = classes.filter(c => c.dia === k);
-          return `<div class="sch-list-day${isToday(k) ? " is-today" : ""}">
+          return `<div class="sch-list-day${isToday(k) ? " is-today" : ""}${pastCls(k)}">
             <h3>${name}${isToday(k) ? " <small>Hoy</small>" : ""}${dateLabel(k)}</h3>
             ${here.length ? here.map(cell).join("") : '<p class="sch-rest">Sin clases</p>'}
           </div>`;

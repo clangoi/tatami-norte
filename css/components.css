@@ -290,3 +290,7 @@
 .rv-opt input{margin-top:4px;accent-color:var(--gold)}
 .rv-opt b{color:var(--cream)}
 .rv-opt small{display:block;color:var(--steel);font-size:13px;margin-top:2px}
+
+/* Días de la semana en curso que ya pasaron: más claros y sin poder reservarse */
+.sch-day.is-past,.sch-cell.is-past,.sch-list-day.is-past{opacity:.45}
+.is-past .sch-class{pointer-events:none}

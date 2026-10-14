@@ -44,7 +44,7 @@ const db = {
   }
 };
 const saFile = path.join(__dirname, "service-account.json");
-const REAL = !!(process.env.FIREBASE_SERVICE_ACCOUNT || fs.existsSync(saFile));
+const REAL = !process.env.DEV_FAKE && !!(process.env.FIREBASE_SERVICE_ACCOUNT || fs.existsSync(saFile));   // DEV_FAKE=1 fuerza la base de datos falsa
 if (REAL) {
   if (!process.env.FIREBASE_SERVICE_ACCOUNT) process.env.FIREBASE_SERVICE_ACCOUNT = fs.readFileSync(saFile, "utf8");
   console.log("Usando el Firestore real (horario del panel). Las reservas de prueba también se guardan ahí.");

@@ -1,0 +1,11 @@
+{
+  "name": "kizuna-sitio",
+  "private": true,
+  "description": "Sitio estático de Kizuna con funciones de Vercel en api/ (pagos y reservas).",
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -2,3 +2,9 @@
 .DS_Store
 Thumbs.db
 node_modules
+.claude/service-account.json
+scripts/wsp/node_modules
+scripts/wsp/.wwebjs_auth
+scripts/wsp/.wwebjs_cache
+.wwebjs_cache
+scripts/wsp/recordatorios.log

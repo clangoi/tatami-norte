@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+<!--
+  TU RESERVA (ver RESERVAS.md)
+  Se llega desde el enlace del correo de confirmación: reserva?t=CÓDIGO.
+  Permite ver la clase, añadirla al calendario, reprogramarla o cancelarla.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1B2338">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<title data-site-title="Tu reserva">Tu reserva · Escuela de Artes Marciales Kizuna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/disciplina.css">
+<script src="js/components.js"></script>
+</head>
+<body>
+<site-nav current="reserva"></site-nav>
+
+<header class="page-head">
+  <div class="page-head-word" aria-hidden="true">Reserva</div>
+  <div class="wrap">
+    <div class="eyebrow">Tu clase</div>
+    <h1>Tu reserva</h1>
+    <p>Revisa los datos de tu clase, añádela a tu calendario o avísanos si necesitas cambiarla.</p>
+  </div>
+</header>
+
+<main>
+  <section class="sec light">
+    <div class="wrap">
+      <div class="cal-box rv-manage" id="app" aria-live="polite">
+        <p class="cal-loading">Cargando tu reserva…</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<site-footer></site-footer>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script src="site.config.js"></script>
+<script src="js/site.js"></script>
+<script src="js/reserva.js"></script>
+</body>
+</html>

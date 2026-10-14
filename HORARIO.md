@@ -1,29 +1,19 @@
 # Horario semanal
 
-El horario de la portada (sección "Horario") y de las páginas de Judo y BJJ se arma **solo, con la disponibilidad de Cal.com**. Para cambiarlo, cambia la disponibilidad de las clases en Cal.com: el sitio lo refleja en unos minutos, sin tocar código ni hacer `git push`.
+El horario de la portada (sección "Horario") y de las páginas de Judo y BJJ se arma **solo, con las clases y horarios de `/admin` → Clases** (ver `RESERVAS.md`). Para cambiarlo, edita el horario semanal en el panel: el sitio lo refleja en cuanto guardas, sin tocar código ni hacer `git push`.
 
-## Cómo se calcula
+## Cómo se muestra
 
-1. Por cada clase de `site.config.js → booking.classes`, el sitio consulta en Cal.com los horarios de **hoy y los próximos 7 días**.
-2. Muestra una semana: un lunes, un martes, etc., cada uno con su fecha. Hoy muestra las clases que le quedan; si ya no queda ninguna, se muestra el mismo día de la semana siguiente.
-3. La hora de término sale de la duración del evento en Cal.com.
-4. Si una clase tiene variantes (Judo de 1 h y de 1 h 15), todas aparecen como "Judo". Si dos variantes coinciden el mismo día a la misma hora, se muestra la más larga.
-5. Guarda el resultado 10 minutos en el navegador para no consultar Cal.com en cada página.
+1. Se muestra **la semana en curso**, de lunes a sábado (el domingo solo si tiene clases), cada día con su fecha.
+2. Los días que ya pasaron se ven más claros y sus clases no se pueden reservar. Al empezar una semana nueva se muestran los días de esa semana.
+3. Las clases canceladas solo una semana, o con cierre, no aparecen ese día.
+4. Una clase llena se marca como «Completa».
 
-Por eso, si cambias un horario en Cal.com (por ejemplo, Judo pasa de 11:00 a 12:00 desde la próxima semana), la página muestra el cambio sola en cuanto esa semana entra en los próximos 7 días.
-
-Al tocar una clase del horario se abre el calendario de reservas en esa clase y con la duración que corresponde.
-
-## Cosas a tener en cuenta
-
-- **Clases llenas:** si una clase se llena, Cal.com deja de ofrecerla y ese horario no aparece esa semana. Con 15 cupos es poco probable.
-- **Feriados:** si bloqueas un día en Cal.com, ese día aparece sin clases (o con las que queden) mientras esté dentro de los próximos 7 días. Es lo esperado: muestra la semana real.
-- **Colores y nombres:** se configuran en `site.config.js → booking.classes` (`label`, `tone`, `page`).
-- **Clase nueva:** créala en Cal.com y agrégala a `booking.classes` (ver `CAL-SETUP.md`).
+Al tocar una clase se abre la reserva de esa clase.
 
 ## Alternativa: horario desde un archivo
 
-Si algún día el horario se administra fuera de Cal.com (por ejemplo desde un panel de admin propio), cambia `schedule.source` a `"json"` y apunta `schedule.url` al archivo o a la dirección de la base de datos. El formato es:
+Si algún día el horario se administra fuera del panel, cambia `schedule.source` a `"json"` y apunta `schedule.url` al archivo o a la dirección de la base de datos. El formato es:
 
 ```json
 {
@@ -37,4 +27,4 @@ Si algún día el horario se administra fuera de Cal.com (por ejemplo desde un p
 }
 ```
 
-`dia` va sin tildes (`miercoles`, `sabado`). `pick` es opcional: el evento de Cal.com que se abre al tocar la clase.
+`dia` va sin tildes (`miercoles`, `sabado`). `pick` es opcional: la clase que se abre al tocarla.

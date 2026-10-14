@@ -1,0 +1,18 @@
+{
+  "name": "kizuna-recordatorios-wsp",
+  "private": true,
+  "description": "Recordatorios de clase por WhatsApp Web (se ejecuta en un computador, no en Vercel).",
+  "scripts": {
+    "dry": "node recordatorios.js --dry",
+    "once": "node recordatorios.js --once",
+    "start": "node recordatorios.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.34.7"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

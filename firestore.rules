@@ -5,6 +5,7 @@ rules_version = '2';
 //
 // - Cualquiera puede leer los artículos publicados y los planes visibles.
 // - Solo quien tenga un documento en admins/{su UID} puede escribir en ellos.
+// - classes, slots, closures y bookings (reservas) solo las ve el panel.
 // - La colección admins no se puede editar desde el sitio: se maneja
 //   a mano en la consola de Firebase.
 service cloud.firestore {
@@ -80,6 +81,74 @@ service cloud.firestore {
       allow read: if resource.data.visible == true || isAdmin();
       allow create, update: if isAdmin() && validPlan(request.resource.data);
       allow delete: if isAdmin();
+    }
+
+    // ---- Reservas propias (ver RESERVAS.md) ----
+    // Las crea y cambia solo el servidor (api/*.js, con la cuenta de servicio, que
+    // se salta estas reglas). Desde el sitio nadie puede leer ni escribir reservas:
+    // contienen teléfonos y correos. El panel las lee y puede cancelarlas.
+    function validClass(d) {
+      return d.keys().hasAll(['label', 'active', 'order'])
+        && d.label is string && d.label.size() > 0 && d.label.size() <= 60
+        && d.active is bool
+        && d.order is number
+        && shortText(d, 'tone', 12)
+        && shortText(d, 'clubTone', 12)
+        && shortText(d, 'discipline', 30)
+        && shortText(d, 'type', 20)
+        && shortText(d, 'club', 30)
+        && (!('design' in d) || (d.design is number && d.design >= 0 && d.design <= 10))
+        && shortText(d, 'page', 60)
+        && (!('duration' in d) || (d.duration is number && d.duration >= 10 && d.duration <= 300))
+        && (!('capacity' in d) || (d.capacity is number && d.capacity >= 1 && d.capacity <= 200));
+    }
+
+    function validSlot(d) {
+      return d.keys().hasAll(['classId', 'day', 'start', 'active'])
+        && d.classId is string && d.classId.size() <= 40
+        && d.day in ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
+        && d.start is string && d.start.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+        && d.active is bool
+        && shortText(d, 'note', 60)
+        && (!('date' in d) || (d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
+        && (!('duration' in d) || (d.duration is number && d.duration >= 10 && d.duration <= 300))
+        && (!('capacity' in d) || (d.capacity is number && d.capacity >= 1 && d.capacity <= 200));
+    }
+
+    function validClosure(d) {
+      return d.keys().hasAll(['date'])
+        && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && shortText(d, 'reason', 80)
+        && shortText(d, 'slotId', 40);
+    }
+
+    // Configuración del horario: parámetros de cada club, disciplina y tipo
+    match /settings/{id} {
+      allow read, write: if isAdmin() && id == 'catalog';
+    }
+
+    match /classes/{id} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() && id.matches('^[a-z0-9-]{1,40}$') && validClass(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /slots/{id} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() && validSlot(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /closures/{id} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() && validClosure(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /bookings/{id} {
+      allow read: if isAdmin();
+      allow update: if isAdmin();
+      allow create, delete: if false;
     }
 
     // Todo lo demás, cerrado

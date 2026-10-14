@@ -31,6 +31,23 @@
 /* Filas de listado */
 .adm-row{display:grid;grid-template-columns:1fr auto auto;gap:16px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}
 .adm-row:has(.adm-order){grid-template-columns:auto 1fr auto auto}
+.adm-cfg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;align-items:start;margin-top:14px}
+.adm-cfg{border:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:10px}
+.adm-cfg h3{font:800 22px/1 var(--display);text-transform:uppercase;margin:0}
+.adm-cfg-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.adm-cfg-row input,.adm-cfg-row select{min-width:0;flex:1 1 110px}
+.adm-cfg-sw{width:56px;height:34px;flex:none;padding:0 !important;min-height:0}
+.adm-cfg-empty{margin:0}
+.adm-classcode{display:block;font:600 15px/1.2 var(--label);letter-spacing:.06em;color:var(--steel);padding:8px 0}
+.adm-wa{margin-top:18px}
+.adm-wa textarea{width:100%;font:inherit;line-height:1.45;resize:vertical;background:var(--navy-2);color:var(--cream);border:1px solid var(--navy-3);padding:10px 12px}
+.adm-wa-fields{display:flex;flex-wrap:wrap;gap:6px 18px;list-style:none;margin:0;padding:0;font-size:14px;color:var(--steel)}
+.adm-wa-fields code{color:var(--gold)}
+.adm-wa-bubble{white-space:pre-wrap;background:#1f3a2e;color:#e8f5ec;border-radius:12px 12px 12px 2px;padding:12px 14px;max-width:460px;margin-top:6px;line-height:1.45}
+.adm-wa .adm-actions{justify-content:flex-end}
+.adm-classname{display:block;font:800 22px/1.1 var(--display);text-transform:uppercase;padding:8px 0}
+.adm-classpreview{max-width:240px}
+.adm-classpreview .sch-class{min-height:64px}
 .adm-row-main{display:flex;flex-direction:column;gap:4px;min-width:0}
 .adm-row-main b{font:800 24px/1.05 var(--display);text-transform:uppercase}
 .adm-row-main span{font-size:14px;color:var(--steel)}
@@ -91,3 +108,156 @@
 .adm-subnav{margin:18px 0 4px}
 .adm-checks{display:flex;flex-wrap:wrap;gap:4px 22px;margin:6px 0 10px}
 .adm-checks .check{margin:4px 0}
+
+/* Clases y reservas */
+.adm-formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 24px;margin-top:20px}
+.adm-day{font:800 26px/1 var(--display);text-transform:uppercase;color:var(--gold);margin:28px 0 4px}
+.adm-sessions{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+.adm-sess{border:1px solid var(--navy-3);background:var(--navy-2);padding:16px 18px}
+.adm-sess.is-empty{background:transparent;padding-block:12px}
+.adm-sess.is-closed{border-color:var(--danger)}
+.adm-sess header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.adm-sess header b{display:block;font:800 24px/1.05 var(--display);text-transform:uppercase}
+.adm-sess header span{font-size:14px;color:var(--steel)}
+.adm-sess-tags{display:flex;gap:6px;flex-wrap:wrap}
+.adm-group{margin-top:14px}
+.adm-group h5{font:700 13px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 4px}
+.adm-person{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--navy-3)}
+.adm-person-main{display:flex;flex-direction:column;gap:3px;min-width:0}
+.adm-person-main b{font-size:16px;font-weight:600}
+.adm-person-main span{font-size:14px;color:var(--steel);overflow-wrap:anywhere}
+.adm-person-main .adm-tag{align-self:flex-start;margin-top:2px}
+.adm-person-main .adm-reason{color:var(--text-soft)}
+.adm-nick{color:var(--gold)}
+.adm-daynav{display:flex;gap:6px;align-items:center}
+.adm-daynav .btn[aria-pressed="true"]{background:var(--gold);color:var(--navy)}
+.adm-weeklabel{margin:14px 0 14px}
+.adm .sch-class.is-past{opacity:.55}
+.adm .sch-class.is-selected{outline:3px solid var(--cream);outline-offset:2px}
+.adm .sch-class{cursor:pointer}
+.adm-modal{position:fixed;inset:0;z-index:80;display:flex;padding:24px 16px;overflow-y:auto}
+.adm-modal-bg{position:fixed;inset:0;background:rgba(8,11,20,.82);backdrop-filter:blur(2px)}
+.adm-detail{position:relative;margin:auto;width:100%;max-width:680px;padding:22px;border:1px solid var(--gold);background:var(--navy-2);box-shadow:0 24px 70px rgba(0,0,0,.6);outline:none}
+body.adm-modal-open{overflow:hidden}
+.adm-detail-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.adm-detail .adm-sess{border:0;padding:0;background:transparent}
+.adm-detail .adm-sess header > div:first-child{display:none}
+.adm .sch-day{font-size:13px;letter-spacing:.06em;padding:12px 4px;overflow-wrap:anywhere}
+.adm-detail-title{font:800 28px/1.05 var(--display);text-transform:uppercase;color:var(--gold);margin:0}
+.adm-weeks{flex-wrap:nowrap;max-width:100%;min-width:0}
+.adm-weeks-scroll{position:relative;display:flex;gap:6px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--navy-3) transparent;padding-bottom:6px;min-width:0;max-width:min(560px,calc(100vw - 150px))}
+.adm-weeks-scroll .btn{flex:none;white-space:nowrap}
+.adm-weeks>.btn{flex:none}
+.adm-weeks .btn small{margin-left:8px;background:var(--gold);color:var(--navy);font:700 10px/1 var(--label);letter-spacing:.12em;padding:3px 5px;text-transform:uppercase}
+.adm-weeks .btn[aria-pressed="true"] small{background:var(--navy);color:var(--gold)}
+
+/* Horario semanal en bloques */
+.adm-sched-scroll{position:relative;max-height:calc(52px + 7 * 70px);overflow:auto;border:1px solid var(--line);margin-top:6px;scrollbar-width:thin;scrollbar-color:var(--navy-3) transparent}
+.adm .adm-sched-grid{display:grid;min-width:760px;border:0}
+.adm-sched-grid .sch-head>div{position:sticky;top:0;z-index:3;background:var(--navy)}
+.adm-sched-grid .sch-hour{display:flex;align-items:flex-start;padding:10px 6px;font-size:17px}
+.adm-sched-cell{min-height:70px;cursor:cell;transition:background .15s}
+.adm-sched-cell:hover,.adm-sched-cell:focus-visible{background:rgba(214,189,140,.1);outline:none}
+.adm-sched-cell:empty::after{content:"+";margin:auto;font:600 22px/1 var(--label);color:var(--steel);opacity:0;transition:opacity .15s}
+.adm-sched-cell:hover:empty::after,.adm-sched-cell:focus-visible:empty::after{opacity:1}
+.adm-sched-foot .sch-hour,.adm-sched-end{min-height:52px;background:rgba(255,255,255,.015)}
+button.sch-class{border:0;font:inherit;text-align:left;cursor:pointer;width:100%}
+.adm .sch-class.is-off{opacity:.45;border:1px dashed var(--steel)}
+.adm-limit{width:100%;background:var(--navy-2);color:var(--gold);border:1px solid var(--gold);font:800 16px/1 var(--display);padding:6px 2px;border-radius:0;cursor:pointer}
+.adm-limit:focus{outline:2px solid var(--cream)}
+.adm-days{display:flex;flex-wrap:wrap;gap:2px 18px;margin:4px 0}
+.adm-slotform .field{margin-top:14px}
+.adm-slotform .adm-actions{margin-top:18px}
+
+/* Acciones como símbolos: ojo (estado), lápiz (editar), tacho (borrar) */
+.adm-icon{display:inline-grid;place-items:center;width:38px;height:38px;padding:0;background:transparent;border:1px solid var(--navy-3);color:var(--cream);cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+.adm-icon:hover,.adm-icon:focus-visible{border-color:var(--gold);color:var(--gold);outline:none}
+.adm-icon-danger:hover,.adm-icon-danger:focus-visible{border-color:var(--danger);color:var(--danger)}
+.adm-state{display:inline-grid;place-items:center;width:38px;height:38px;color:var(--steel)}
+.adm-state.on{color:var(--gold)}
+.adm-row-link{color:inherit;text-decoration:none;cursor:pointer}
+.adm-row-link:hover b,.adm-row-link:focus-visible b{color:var(--gold)}
+.adm-chip-off{display:inline-flex;margin-top:2px}
+.adm-chip-off svg{width:16px;height:16px}
+.adm-slotform .adm-actions .adm-icon{margin-left:auto}
+
+.adm-slotform [data-err]{white-space:pre-line;min-height:0}
+.adm-slotform [data-err]:not(:empty){border-left:3px solid var(--danger);padding:10px 12px;background:rgba(240,163,155,.08);margin-top:14px}
+
+/* Arrastrar clases en el horario semanal */
+.adm-sched-cell{position:relative}
+.adm-sched-cell.is-drop{background:rgba(214,189,140,.14)}
+button.sch-class[data-sched-edit]{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
+button.sch-class[data-sched-edit] *{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
+.adm .sch-class.is-dragging{opacity:.3}
+body.adm-dragging,body.adm-dragging *{cursor:grabbing !important;user-select:none !important}
+.adm-drag-ghost{position:fixed !important;z-index:120;pointer-events:none;box-shadow:0 14px 34px rgba(0,0,0,.55);transform:rotate(-1.5deg);opacity:.96;margin:0}
+.adm-drop-line{position:absolute;left:2px;right:2px;height:0;border-top:3px solid var(--cream);z-index:2;pointer-events:none}
+.adm-drop-line span{position:absolute;left:0;top:3px;background:var(--cream);color:var(--navy);font:700 12px/1 var(--label);letter-spacing:.08em;padding:3px 6px;white-space:nowrap}
+.adm-drop-line.is-bad{border-top-color:var(--danger)}
+.adm-drop-line.is-bad span{background:var(--danger)}
+.adm-sched-msg{white-space:pre-line;border-left:3px solid var(--danger);padding:10px 12px;background:rgba(240,163,155,.08);margin:10px 0}
+
+/* Calendario del horario semanal: una columna por día, una fila por hora (4 intervalos de 15 min) */
+.adm-sched-scroll{max-height:none;overflow-x:auto;overflow-y:visible}
+.adm-cal{--hour-h:64px;min-width:780px;border:1px solid var(--line)}
+.adm-cal-head,.adm-cal-body,.adm-cal-foot{display:grid;grid-template-columns:68px repeat(7,minmax(0,1fr))}
+.adm-cal-head{border-bottom:1px solid var(--line);background:var(--navy)}
+.adm-cal-day{padding:12px 4px;text-align:center;font:700 14px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--cream);border-left:1px solid var(--line)}
+.adm-day-btn{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:6px;width:calc(100% + 8px);margin:-12px -4px;padding:12px 4px;cursor:pointer;color:inherit}
+.adm-day-btn:hover,.adm-day-btn:focus-visible{background:rgba(214,189,140,.08)}
+.adm-day-btn.is-draft{outline:2px dashed var(--cream);outline-offset:-3px}
+.adm-day-tag{background:var(--gold);color:var(--navy);font:800 10px/1 var(--label);letter-spacing:.12em;padding:3px 5px}
+.adm-cal-hours{display:flex;flex-direction:column}
+.adm-cal-hour{height:var(--hour-h);padding:6px 6px 0;font:800 17px/1 var(--display);font-variant-numeric:tabular-nums;color:var(--steel);border-bottom:1px solid var(--line);display:flex;align-items:flex-start}
+.adm-cal-col{position:relative;border-left:1px solid var(--line);overflow:hidden}
+.adm-cal-col .adm-sched-cell{display:block;height:var(--hour-h);min-height:0;cursor:cell;border-bottom:1px solid var(--line);
+  background-image:linear-gradient(to bottom,transparent calc(25% - 1px),rgba(214,189,140,.025) calc(25% - 1px),rgba(214,189,140,.025) 25%,transparent 25%,transparent calc(50% - 1px),rgba(214,189,140,.05) calc(50% - 1px),rgba(214,189,140,.05) 50%,transparent 50%,transparent calc(75% - 1px),rgba(214,189,140,.025) calc(75% - 1px),rgba(214,189,140,.025) 75%,transparent 75%)}
+.adm-cal-col .adm-sched-cell::after{content:none}
+.adm-cal-foot{border-top:0}
+.adm-cal-foot>div{padding:6px;border-top:0}
+.adm .adm-block{position:absolute;display:flex;flex-direction:column;gap:2px;padding:5px 8px;overflow:hidden;z-index:1;flex:none;width:auto;transform:none}
+.adm .adm-block:hover{transform:none;filter:brightness(1.08)}
+.adm .adm-block .sch-name{font-size:15px;line-height:1.05}
+.adm .adm-block .sch-time{font-size:12px;line-height:1.1}
+.adm .adm-block.is-short{flex-direction:row;align-items:center;gap:8px;padding-block:2px}
+.adm .adm-block.is-short .sch-time{white-space:nowrap}
+.adm .adm-block .adm-chip-off{position:absolute;right:4px;top:3px}
+body.adm-dragging .adm-block{pointer-events:none}
+
+/* Modo borrador */
+.adm-draft{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;border:1px dashed var(--gold);background:rgba(214,189,140,.08);padding:12px 14px;margin:10px 0;color:var(--text-soft);font-size:15px}
+.adm-draft-badge{background:var(--gold);color:var(--navy);font:800 13px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;padding:6px 9px}
+.adm-draft-actions{display:flex;gap:8px;margin-left:auto}
+.adm .adm-block.is-draft{outline:2px dashed var(--cream);outline-offset:-3px}
+
+/* Ventana de la clase: frecuencia, cancelar solo esta semana, clase única */
+.adm-slotform [hidden]{display:none !important}
+.adm-slot-summary{margin:0 0 6px}
+.adm-remove{margin-top:18px;padding-top:16px;border-top:1px solid var(--navy-3)}
+.adm-remove-row{display:flex;justify-content:flex-end}
+.adm-removed-note{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;margin:0 0 12px;padding:10px 12px;border-left:3px solid var(--gold);background:rgba(214,189,140,.08);color:var(--text-soft);font-size:15px}
+.adm-removed-ico{display:inline-grid;color:var(--gold)}
+.adm-removed-note .btn{margin-left:auto}
+.adm-remove-ask{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.adm-remove-ask p{margin:0 0 4px;color:var(--cream)}
+.adm-remove-ask small{color:var(--steel);font-size:14px;line-height:1.4;margin:-2px 0 8px}
+.adm .adm-block.is-closed{opacity:.5;border:1px dashed var(--steel)}
+.adm .adm-block.is-once{box-shadow:inset 0 0 0 2px rgba(246,242,231,.55)}
+
+/* Día cerrado en borrador: columna apagada para que se note de un vistazo */
+.adm-cal-day.is-day-closed{background:rgba(180,60,60,.28)}
+.adm-cal-col.is-day-closed,.adm-cal-col.is-day-closed .adm-sched-cell{background-color:rgba(150,45,45,.32)}
+.adm-cal-col.is-day-closed .adm-sched-cell{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.06) 0 6px,transparent 6px 12px)}
+.adm-cal-col.is-day-closed .adm-sched-cell:hover{background-color:rgba(150,45,45,.45)}
+
+/* Ícono "i": muestra u oculta la explicación de cómo funciona una sección */
+.adm-info{margin:6px 0 10px}
+.adm-info-btn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--gold);background:transparent;color:var(--gold);font:italic 700 14px/1 Georgia,serif;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.adm-info-btn:hover,.adm-info-btn[aria-expanded="true"]{background:var(--gold);color:var(--navy)}
+.adm-info-text{margin:8px 0 0;padding:10px 12px;border-left:3px solid var(--gold);background:rgba(214,189,140,.06);max-width:70ch}
+.adm-info-text[hidden]{display:none}
+
+/* El horario semanal se desplaza dentro de su marco; al llegar al borde suma horas */
+.adm-sched-scroll{max-height:min(72vh,760px);overflow-y:auto;overscroll-behavior:contain}
+.adm-cal-head{position:sticky;top:0;z-index:5}

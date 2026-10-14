@@ -4,6 +4,18 @@
   "functions": {
     "api/pagar.js": {
       "includeFiles": "site.config.js"
+    },
+    "api/clases.js": {
+      "includeFiles": "site.config.js"
+    },
+    "api/reservar.js": {
+      "includeFiles": "site.config.js"
+    },
+    "api/reserva.js": {
+      "includeFiles": "site.config.js"
+    },
+    "api/calendario.js": {
+      "includeFiles": "site.config.js"
     }
   },
   "headers": [

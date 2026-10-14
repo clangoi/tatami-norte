@@ -64,7 +64,7 @@
 .disc:has(.disc-link:focus-visible){outline:3px solid var(--gold);outline-offset:-3px}
 .disc:has(.disc-link):hover .disc-link{color:var(--gold)}
 
-/* ---- Reservas: calendario de Cal.com en la página ---- */
+/* ---- Reservas: calendario en la página ---- */
 .cal-grid{display:grid;grid-template-columns:minmax(260px,.7fr) 1.3fr;gap:32px;align-items:start}
 @media (max-width:940px){.cal-grid{grid-template-columns:1fr}.cal-grid .panel{order:2}}
 .first-steps{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:14px;font-size:16px;color:var(--text-soft)}
@@ -193,19 +193,40 @@
 @keyframes ig-shimmer{to{background-position:-200% 0}}
 
 /* ---- Horario semanal (js/schedule.js) ---- */
-/* Tonos por clase: site.config.js → booking.classes → tone (o "tono" en data/horario.json) */
-.t-oro{background:var(--gold);color:var(--navy)}
-.t-bronce{background:var(--bronze);color:var(--navy)}
-.t-cobre{background:transparent;color:var(--cream);border:1px solid var(--bronze);box-shadow:inset 3px 0 0 var(--bronze)}
-.t-marino{background:var(--navy-3);color:var(--cream);box-shadow:inset 3px 0 0 var(--gold)}
-.t-acero{background:var(--steel);color:var(--navy)}
-.t-plata{background:transparent;color:var(--cream);border:1px solid var(--steel);box-shadow:inset 3px 0 0 var(--steel)}
-.t-crema{background:var(--cream);color:var(--navy)}
-.t-linea{background:transparent;color:var(--cream);border:1px dashed var(--gold)}
+/* Bloque de una clase = paleta (disciplina) + diseño (tipo) + franja lateral (club)
+   t-*  color de la disciplina: define --c (color) y --ink (texto sobre ese color)
+   ty-* diseño según el tipo (ty-0 sin tipo: relleno liso)
+   s-*  color de la franja lateral según el club
+   Se guardan en cada clase del panel: tone, design y clubTone. */
+.t-oro{--c:var(--gold);--ink:var(--navy)}
+.t-bronce{--c:var(--bronze);--ink:var(--navy)}
+.t-cobre{--c:#B5764F;--ink:var(--navy)}
+.t-marino{--c:var(--navy-3);--ink:var(--cream)}
+.t-acero{--c:var(--steel);--ink:var(--navy)}
+.t-plata{--c:#C3C7CE;--ink:var(--navy)}
+.t-crema{--c:var(--cream);--ink:var(--navy)}
+.t-linea{--c:var(--gold);--ink:var(--navy)}
+.sch-class,.ty-0{background:var(--c,var(--gold));color:var(--ink,var(--navy))}
+.sch-class.ty-1{background:transparent;color:var(--cream);border:1px solid var(--c)}
+.sch-class.ty-2{background:transparent;color:var(--cream);border:1px dashed var(--c)}
+.sch-class.ty-3{background:color-mix(in srgb,var(--c) 24%,transparent);color:var(--cream);border:1px solid color-mix(in srgb,var(--c) 45%,transparent)}
+.sch-class.ty-4{background:repeating-linear-gradient(135deg,var(--c) 0 10px,color-mix(in srgb,var(--c) 84%,#fff) 10px 20px);color:var(--ink,var(--navy))}
+.sch-class.ty-5{background:transparent;color:var(--cream);border:4px double var(--c)}
+.sch-class.ty-6{background:radial-gradient(circle,color-mix(in srgb,var(--c) 55%,transparent) 1.4px,transparent 2px) 0 0/12px 12px,color-mix(in srgb,var(--c) 12%,var(--navy));color:var(--cream)}
+.sch-class.ty-7{background:repeating-linear-gradient(0deg,color-mix(in srgb,var(--c) 45%,transparent) 0 2px,transparent 2px 10px),color-mix(in srgb,var(--c) 12%,var(--navy));color:var(--cream)}
+.sch-class.ty-8{background:linear-gradient(color-mix(in srgb,var(--c) 40%,transparent) 1px,transparent 1px) 0 0/14px 14px,linear-gradient(90deg,color-mix(in srgb,var(--c) 40%,transparent) 1px,transparent 1px) 0 0/14px 14px,color-mix(in srgb,var(--c) 12%,var(--navy));color:var(--cream)}
+.sch-class.ty-9{background:linear-gradient(180deg,var(--c),color-mix(in srgb,var(--c) 40%,transparent));color:var(--ink,var(--navy))}
+.sch-class.ty-10{background:conic-gradient(color-mix(in srgb,var(--c) 30%,transparent) 25%,transparent 0 50%,color-mix(in srgb,var(--c) 30%,transparent) 0 75%,transparent 0) 0 0/16px 16px,color-mix(in srgb,var(--c) 10%,var(--navy));color:var(--cream)}
+.s-oro{--stripe:var(--gold)}.s-bronce{--stripe:var(--bronze)}.s-cobre{--stripe:#B5764F}.s-marino{--stripe:#4a5a8c}
+.s-acero{--stripe:var(--steel)}.s-plata{--stripe:#C3C7CE}.s-crema{--stripe:var(--cream)}.s-linea{--stripe:var(--gold)}
+.sch-class[class*=" s-"]{padding-left:14px}
+.sch-class[class*=" s-"]::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3.5px;background:var(--stripe);box-shadow:1px 0 0 rgba(27,35,56,.55)}
 
 .sch-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
 .sch-chip{display:inline-flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);color:var(--cream);font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;padding:10px 12px;cursor:pointer}
 .sch-chip[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.sch-legend-group{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}
+.sch-legend-label{font:700 12px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--steel);min-width:84px}
 .sch-chip .sw{width:12px;height:12px;display:inline-block}
 
 .sch-grid{display:grid;grid-template-columns:64px repeat(var(--days,6),minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
@@ -217,9 +238,16 @@
 .sch-cell{padding:6px;min-height:78px;display:flex;flex-direction:column;gap:6px}
 .sch-day.is-today,.sch-cell.is-today{background:rgba(214,189,140,.06)}
 
-.sch-class{display:flex;flex-direction:column;gap:4px;padding:10px 12px;text-decoration:none;flex:1;transition:opacity .2s,transform .15s}
+.sch-class{position:relative;display:flex;flex-direction:column;gap:4px;padding:10px 12px;text-decoration:none;flex:1;transition:opacity .2s,transform .15s}
 .sch-class:hover{transform:translateY(-2px)}
+.sch-class[data-today]{opacity:var(--fade,1)}
 .sch-class.is-dim{opacity:.18}
+.sch-class.is-live{outline:2px solid var(--gold);outline-offset:-2px;box-shadow:0 0 0 4px rgba(214,189,140,.18)}
+.sch-live{align-self:flex-start;background:var(--gold);color:var(--navy);font:800 11px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;padding:4px 6px;display:inline-flex;align-items:center;gap:6px}
+.sch-live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--navy);animation:sch-pulse 1.4s ease-in-out infinite}
+@keyframes sch-pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.sch-live::before{animation:none}}
+.sch-class.is-hi{outline:2px solid var(--gold);outline-offset:-2px}
 .sch-name{font:800 19px/1.05 var(--display);text-transform:uppercase}
 .sch-time{font:600 13px/1 var(--label);letter-spacing:.1em;font-variant-numeric:tabular-nums;opacity:.85}
 .sch-note{font-size:13px;line-height:1.3;opacity:.85}
@@ -245,3 +273,52 @@
 .sch-date{display:block;margin-top:6px;font:500 12px/1 var(--label);letter-spacing:.1em;color:var(--steel)}
 .sch-list-day h3 .sch-date{display:inline;margin:0 0 0 8px;vertical-align:middle}
 .sch-range{margin:-24px 0 18px;color:var(--steel);font:600 14px/1 var(--label);letter-spacing:.14em;text-transform:uppercase}
+
+/* ---- Reservas propias (js/reservas.js, reserva.html) ---- */
+.rv-list{padding:28px clamp(16px,3vw,28px) 24px}
+.rv-empty{padding:40px 24px;color:var(--text-soft)}
+.rv-day+.rv-day{margin-top:26px}
+.rv-day h4{font:700 14px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 6px}
+.rv-day h4::first-letter{text-transform:uppercase}
+.rv-session{padding:14px 0;border-top:1px solid var(--navy-3)}
+.rv-main{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.rv-time{font:800 28px/1 var(--display);letter-spacing:.02em;color:var(--cream)}
+.rv-spots{flex:1;min-width:120px;font:600 13px/1.2 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--steel)}
+.rv-session.is-full .rv-time{color:var(--steel)}
+.rv-people{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:14px;color:var(--steel)}
+.rv-people span{margin-right:2px}
+.rv-people i{font-style:normal;color:var(--cream);background:var(--navy-2);border:1px solid var(--navy-3);padding:3px 9px;border-radius:99px;font-size:13px}
+.rv-form,.rv-done{padding:28px clamp(16px,3vw,32px) 32px;max-width:560px}
+.rv-back{background:none;border:0;color:var(--steel);font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:6px 0;margin-bottom:12px}
+.rv-back:hover{color:var(--gold)}
+.rv-pick{display:flex;flex-direction:column;gap:4px;border-left:3px solid var(--bronze);padding:2px 0 2px 14px;margin:0 0 22px}
+.rv-pick b{font:800 26px/1.05 var(--display);text-transform:uppercase;color:var(--cream)}
+.rv-pick span{color:var(--text-soft);font-size:15px}
+.rv-pick span::first-letter{text-transform:uppercase}
+.rv-help{font-size:13px;color:var(--steel);line-height:1.45}
+.field label small{text-transform:none;letter-spacing:0;font:500 13px/1 var(--body);color:var(--steel)}
+.rv-trap{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.rv-done h3{font:800 clamp(30px,4vw,40px)/1.05 var(--display);text-transform:uppercase;color:var(--cream);margin:12px 0 4px}
+.rv-when{color:var(--gold);font:600 18px/1.3 var(--label);letter-spacing:.06em;text-transform:uppercase;margin:0 0 14px}
+.rv-when::first-letter{text-transform:uppercase}
+.rv-done p{color:var(--text-soft)}
+.rv-done b{color:var(--cream);font-weight:600}
+.rv-actions{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0 14px}
+.rv-manage{min-height:320px}
+.rv-change{margin-top:26px;padding-top:20px;border-top:1px solid var(--navy-3)}
+.rv-change .rv-actions{margin-top:0}
+.rv-change .btn[aria-pressed="true"]{background:var(--gold);color:var(--navy)}
+.rv-subform{margin-top:18px}
+.field textarea{background:var(--navy-2);border:1px solid var(--navy-3);color:var(--cream);font:500 16px/1.4 var(--body);padding:13px 14px;width:100%;border-radius:0;resize:vertical}
+.rv-options{display:flex;flex-direction:column;gap:14px;max-height:340px;overflow:auto;padding-right:4px}
+.rv-opt-day h5{font:700 13px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 6px}
+.field .rv-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--navy-3);margin-bottom:6px;cursor:pointer;color:var(--text-soft);font:500 15px/1.4 var(--body);text-transform:none;letter-spacing:0}
+.rv-opt:has(input:checked){border-color:var(--gold);background:var(--navy-2)}
+.rv-opt.is-full{opacity:.5;cursor:not-allowed}
+.rv-opt input{margin-top:4px;accent-color:var(--gold)}
+.rv-opt b{color:var(--cream)}
+.rv-opt small{display:block;color:var(--steel);font-size:13px;margin-top:2px}
+
+/* Días de la semana en curso que ya pasaron: más claros y sin poder reservarse */
+.sch-day.is-past,.sch-cell.is-past,.sch-list-day.is-past{opacity:.45}
+.is-past .sch-class{pointer-events:none}

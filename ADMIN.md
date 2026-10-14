@@ -1,6 +1,6 @@
 # Panel de administración
 
-`tusitio.cl/admin` sirve para escribir artículos del blog y editar los planes de suscripción sin tocar código. Los datos se guardan en Firebase (proyecto `kizuna-admin-25951`).
+`tusitio.cl/admin` sirve para escribir artículos del blog, editar los planes de suscripción y administrar las clases y sus reservas sin tocar código. Los datos se guardan en Firebase (proyecto `kizuna-admin-25951`).
 
 ## Configuración inicial (una sola vez)
 
@@ -68,3 +68,7 @@ El primer párrafo sale un poco más grande. Deja una línea en blanco entre pá
 - El descuento del pago anual sigue en `site.config.js` → `annualDiscount`.
 
 Si Firebase no responde, el blog queda vacío y el sitio muestra los tres planes por defecto.
+
+### Clases y reservas
+
+La pestaña **Clases** administra el horario semanal, los cupos, las clases únicas, la cancelación de una clase solo en la semana actual y muestra quién está inscrito, quién canceló y quién reprogramó, con su motivo. Su puesta en marcha (cuenta de servicio, correo, calendario) está en `RESERVAS.md`. Para que funcione hay que volver a publicar `firestore.rules`.

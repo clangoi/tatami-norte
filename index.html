@@ -92,7 +92,7 @@
   <div class="wrap">
     <div class="sec-head">
       <div><div class="eyebrow">Horario</div><h2>Tu semana<br>en el tatami</h2></div>
-      <p>Clases de lunes a sábado. Toca una clase para reservarla.</p>
+      <p><span data-schedule-days>Clases de lunes a sábado.</span> Toca una clase para reservarla.</p>
     </div>
     <div data-schedule data-book="#reservas"></div>
   </div>
@@ -102,7 +102,7 @@
   <div class="wrap">
     <div class="sec-head">
       <div><div class="eyebrow">Horario y reservas</div><h2>Agenda tu clase</h2></div>
-      <p>Elige la clase, el día y la hora. Te llega un correo con la confirmación y un enlace para cambiar o cancelar.</p>
+      <p>Elige la clase, el día y la hora, y reserva con tu nombre, número de teléfono y correo. Te enviamos la confirmación por correo.</p>
     </div>
     <div class="cal-grid" id="booking">
       <aside class="panel">
@@ -205,7 +205,7 @@
 
 <script src="site.config.js"></script>
 <script src="js/site.js"></script>
-<script src="js/booking.js"></script>
+<script src="js/reservas.js"></script>
 <script src="js/schedule.js"></script>
 <script src="js/instagram.js"></script>
 <script src="js/blog.js"></script>
@@ -246,7 +246,7 @@
   },1000);
   drawClock();
 
-  /* reservas (Cal.com en la página) */
+  /* reservas */
   const emailOk=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
   window.TNBooking.mount($('#booking'));
   // Enlaces con data-pick (p. ej. la tarjeta Físico) abren esa pestaña del calendario

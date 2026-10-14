@@ -1,0 +1,59 @@
+# Recordatorios por WhatsApp
+
+Script que avisa por WhatsApp a quienes tienen una **reserva confirmada** unas horas antes de su clase. Vive en `scripts/wsp/` y **se ejecuta en un computador** (no en Vercel): controla WhatsApp Web, como un navegador.
+
+> **Riesgo:** automatizar WhatsApp Web va contra los términos de WhatsApp y el número puede ser bloqueado. El script es prudente (solo escribe a quien reservó, pausa de 50 a 80 s entre mensajes, tope por vuelta y horario de silencio), pero el riesgo no desaparece. Para algo estable, la alternativa es la API oficial de WhatsApp Business (Cloud API de Meta).
+
+## Instalación (una vez)
+
+```bash
+cd scripts/wsp
+npm install
+```
+
+Descarga Chromium (unos 170 MB). Además necesita la cuenta de servicio de Firebase: `.claude/service-account.json` (ya ignorada por git) o la variable `FIREBASE_SERVICE_ACCOUNT`.
+
+## Uso
+
+```bash
+node recordatorios.js --dry                 # muestra qué enviaría, sin abrir WhatsApp ni marcar nada
+node recordatorios.js --test 569XXXXXXXX    # mensaje de prueba a tu propio número (pide escanear el QR la primera vez)
+node recordatorios.js --once                # una sola vuelta (para el Programador de tareas)
+node recordatorios.js                       # queda corriendo y revisa cada 5 minutos
+```
+
+La primera vez aparece un **QR** en la terminal: escanéalo con WhatsApp → *Dispositivos vinculados*. La sesión queda guardada en la carpeta del usuario (`~/.kizuna-wsp-sesion`) y no hay que repetirlo. Importante: la ruta no puede tener espacios, por eso no se guarda dentro del proyecto.
+
+## Qué envía y cuándo
+
+- Cada clase es un **lote**: **4 horas antes** de que empiece, se escribe a todos sus inscritos confirmados (`REMIND_HOURS`).
+- Si esas 4 horas caen **antes de las 08:00**, el lote sale **a las 08:00** (`EARLIEST_HOUR`). Una clase que empieza antes de las 08:00 no recibe recordatorio, porque llegaría tarde.
+- Entre un mensaje y el siguiente hay una pausa aleatoria de **50 a 80 segundos**. Un lote de 15 personas tarda unos 16 minutos, y si hay varias clases a la misma hora, los lotes salen uno tras otro.
+- No envía nada desde las 22:00 hasta las 08:00 (`QUIET_FROM`), ni más de 60 mensajes por vuelta (`MAX_PER_RUN`).
+- Texto: nombre, clase, hora (hoy) y el enlace `/reserva?t=…` para cambiar o cancelar, si defines `SITE_URL`.
+- Al enviar marca la reserva con `reminderSentAt`, así que nunca repite. Si el número no tiene WhatsApp, la marca con `reminderError` y no insiste. Un error de red no marca nada: se reintenta en la siguiente vuelta.
+
+Variables: `SITE_URL`, `REMIND_HOURS`, `EARLIEST_HOUR`, `QUIET_FROM`, `MAX_PER_RUN`, `FIREBASE_SERVICE_ACCOUNT`. Ejemplo en PowerShell:
+
+```powershell
+$env:SITE_URL = "https://tu-sitio.cl"; node recordatorios.js
+```
+
+El texto del mensaje se edita en el panel: **Clases → Configuración → Mensaje de WhatsApp** (con vista previa y datos como `{nombre}`, `{clase}`, `{hora}`, `{enlace}`). El script lo lee de Firestore en cada vuelta, así que un cambio se usa en el siguiente envío, sin reiniciar nada. Si no hay texto guardado, usa el original.
+
+## Programarlo en Windows (Programador de tareas)
+
+Para que se ejecute solo, sin dejar una terminal abierta, crea una tarea que lance `node recordatorios.js --once` cada 10 minutos. Desde PowerShell, en `scripts\wsp`:
+
+```powershell
+.\tarea-windows.ps1
+```
+
+- Cambia la frecuencia con `-Cada 5` (minutos). La dirección del enlace de cambiar o cancelar sale de `siteUrl` en `site.config.js` (`https://www.hccombat.com`); con `-SiteUrl` puedes usar otra.
+- La tarea corre con tu usuario mientras tengas la sesión de Windows iniciada, y no se encima: si una vuelta sigue enviando, la siguiente se omite.
+- Lo que hace queda en `scripts\wsp\recordatorios.log`.
+- Probarla ya: `Start-ScheduledTask -TaskName "Kizuna - Recordatorios WhatsApp"`. Ver su estado: `Get-ScheduledTaskInfo -TaskName "Kizuna - Recordatorios WhatsApp"`.
+- Quitarla: `.\tarea-windows.ps1 -Quitar`.
+- `.\ejecutar-recordatorios.ps1 -Dry` muestra qué enviaría sin tocar nada.
+
+La tarea apunta a la carpeta donde está el script. Úsala desde la copia definitiva del proyecto, con `npm install` hecho y `.claude\service-account.json` en su lugar, y vuelve a crearla si mueves la carpeta.

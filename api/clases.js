@@ -1,6 +1,6 @@
 /* ==========================================================
    Kizuna · Clases disponibles
-   GET /api/clases  →  { classes, sessions, today }  (con ?semana=1 también week)
+   GET /api/clases  →  { classes, sessions, today }  (con ?semana=1 también week y days)
    Las próximas sesiones con cupos y los nombres de quienes ya
    se inscribieron (nombre + inicial o apodo; nunca teléfono ni correo).
    ========================================================== */
@@ -26,6 +26,11 @@ module.exports = handler(["GET"], async (req, res) => {
     ? S.occurrences(base, monday, T.addDays(monday, 6), { ignoreNotice: true }).map(s => S.publicView(s, booked.get(s.key)))
     : undefined;
 
+  // Días en que el horario semanal tiene clases recurrentes (las únicas no cuentan)
+  const days = withWeek
+    ? T.DAYS.slice(1).concat(T.DAYS[0]).filter(d => base.slots.some(sl => sl.active !== false && !sl.date && sl.day === d && base.classes.has(sl.classId) && base.classes.get(sl.classId).active !== false))
+    : undefined;
+
   const used = new Set([...sessions, ...(week || [])].map(s => s.classId));
   const classes = [...base.classes.values()]
     .filter(c => c.active !== false && used.has(c.id))
@@ -33,5 +38,5 @@ module.exports = handler(["GET"], async (req, res) => {
     .map(c => ({ id: c.id, label: c.label, tone: c.tone || "oro", page: c.page || "" }));
 
   res.setHeader("Cache-Control", "no-store");
-  res.status(200).json({ classes, sessions, week, today });
+  res.status(200).json({ classes, sessions, week, days, today });
 });

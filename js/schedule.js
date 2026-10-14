@@ -61,7 +61,7 @@
     }
     const clases = [];
     Object.values(fechas).forEach(iso => clases.push(...(byDate[iso] || [])));
-    return { disciplinas, clases, fechas, hoy: todayIso, nota: cfg.note || "" };
+    return { disciplinas, clases, fechas, dias: res.days, hoy: todayIso, nota: cfg.note || "" };
   }
 
   function fromJson(){
@@ -88,8 +88,11 @@
       return;
     }
 
-    // Días a mostrar: lunes a sábado siempre; domingo solo si tiene clases
-    const days = DAYS.filter(([k]) => k !== "domingo" || classes.some(c => c.dia === "domingo"));
+    // Días a mostrar: los del horario recurrente del panel (y los que tengan alguna clase esta semana).
+    // Sin ese dato: lunes a sábado siempre; domingo solo si tiene clases
+    const days = DAYS.filter(([k]) => data.dias
+      ? data.dias.includes(k) || classes.some(c => c.dia === k)
+      : k !== "domingo" || classes.some(c => c.dia === k));
     const times = [...new Set(classes.map(c => c.inicio))].sort();
     const used = Object.keys(disc).filter(k => classes.some(c => c.disciplina === k));
     const tone = k => TONES.includes(disc[k]?.tono) ? disc[k].tono : "oro";
@@ -159,7 +162,19 @@
     if (a && window.TNBooking) window.TNBooking.select(a.getAttribute("href"), a.dataset.pick);
   }));
 
-  /* Hoy: la clase que ya terminó se aclara y la que se está dictando se destaca con «Ahora» */
+  // «Clases de lunes a sábado.» según los días recurrentes del horario: "de martes a jueves" (3 o más seguidos) o "los lunes y viernes"
+  function daysPhrase(dias){
+    const idx = DAYS.map(d => d[0]).filter(k => dias.includes(k)).map(k => DAYS.findIndex(d => d[0] === k));
+    if (!idx.length) return "";
+    const name = i => DAYS[i][1].toLowerCase();
+    if (idx.length >= 3 && idx[idx.length - 1] - idx[0] === idx.length - 1) return `Clases de ${name(idx[0])} a ${name(idx[idx.length - 1])}.`;
+    const plural = i => name(i) + (i >= 5 ? "s" : "");
+    const list = idx.map(plural);
+    return `Clases los ${list.length > 1 ? list.slice(0, -1).join(", ") + " y " + list[list.length - 1] : list[0]}.`;
+  }
+
+  /* Hoy: la clase se va aclarando poco a poco mientras transcurre (de 1 a .65) y queda más clara al terminar (.4);
+     la que se está dictando se destaca con «Ahora» */
   const minutesNow = () => {
     const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: (SITE.booking || {}).timeZone || "America/Santiago", hourCycle: "h23", hour: "2-digit", minute: "2-digit" })
       .formatToParts(new Date()).map(x => [x.type, x.value]));
@@ -171,6 +186,8 @@
     document.querySelectorAll(".sch-class[data-today]").forEach(a => {
       const start = toMin(a.dataset.start), end = toMin(a.dataset.end);
       const live = now >= start && now < end;
+      const done = now >= end ? 1 : Math.min(1, Math.max(0, (now - start) / Math.max(1, end - start)));
+      a.style.setProperty("--fade", now >= end ? "0.4" : (1 - 0.35 * done).toFixed(2));
       a.classList.toggle("is-over", now >= end);
       a.classList.toggle("is-live", live);
       const badge = a.querySelector(".sch-live");
@@ -181,7 +198,9 @@
 
   blocks.forEach(el => { el.innerHTML = '<p class="sch-loading">Cargando horario…</p>'; });
   (cfg.source === "json" ? fromJson() : fromOwn())
-    .then(data => { blocks.forEach(el => render(el, data)); tickNow(); setInterval(tickNow, 30000); })
+    .then(data => { blocks.forEach(el => render(el, data));
+      if (data.dias && data.dias.length) document.querySelectorAll("[data-schedule-days]").forEach(n => { n.textContent = daysPhrase(data.dias); });
+      tickNow(); setInterval(tickNow, 30000); })
     .catch(() => blocks.forEach(el => {
       el.innerHTML = '<p class="sch-empty">No pudimos cargar el horario. Revisa las clases disponibles en el calendario de reservas.</p>';
     }));

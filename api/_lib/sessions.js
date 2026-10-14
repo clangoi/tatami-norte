@@ -55,6 +55,7 @@ function occurrences(base, from, to, opts = {}) {
     const day = T.dayKeyOf(date);
     for (const slot of base.slots) {
       if (slot.active === false || slot.day !== day || !T.isTime(slot.start)) continue;
+      if (slot.date && slot.date !== date) continue;   // clase única: solo esa fecha
       const cls = base.classes.get(slot.classId);
       if (!cls || cls.active === false) continue;
       const s = build(base, slot, date, tz, defaultCapacity);

@@ -71,4 +71,4 @@ Si Firebase no responde, el blog queda vacío y el sitio muestra los tres planes
 
 ### Clases y reservas
 
-La pestaña **Clases** administra el horario semanal, los cupos, los cierres por feriado y muestra quién está inscrito, quién canceló y quién reprogramó, con su motivo. Su puesta en marcha (cuenta de servicio, correo, calendario) está en `RESERVAS.md`. Para que funcione hay que volver a publicar `firestore.rules`.
+La pestaña **Clases** administra el horario semanal, los cupos, las clases únicas, la cancelación de una clase solo en la semana actual y muestra quién está inscrito, quién canceló y quién reprogramó, con su motivo. Su puesta en marcha (cuenta de servicio, correo, calendario) está en `RESERVAS.md`. Para que funcione hay que volver a publicar `firestore.rules`.

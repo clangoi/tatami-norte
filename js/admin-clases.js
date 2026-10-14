@@ -3,7 +3,7 @@
    Se carga desde admin.js. Edita en Firestore:
    classes/{id}     tipos de clase (nombre, color, duración y cupo habituales)
    slots/{id}       horario semanal: qué clase, qué día y a qué hora
-   closures/{id}    días o clases cerradas (feriados, vacaciones)
+   closures/{id}    clases canceladas solo en una fecha (se crean desde el horario semanal)
    y muestra bookings/{id}: quién está inscrito, quién canceló y quién
    reprogramó, con su motivo. Las reservas las crea el sitio (api/reservar).
    ========================================================== */
@@ -13,7 +13,7 @@ const DAYS = [["lunes", "Lunes"], ["martes", "Martes"], ["miercoles", "Miércole
 const DAY_BY_DOW = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
 const TONES = [["oro", "Oro"], ["bronce", "Bronce"], ["cobre", "Cobre"], ["marino", "Marino"], ["acero", "Acero"], ["plata", "Plata"], ["crema", "Crema"], ["linea", "Línea"]];
 const WEEKS_BEFORE = 4, WEEKS_AHEAD = 12;   // bloques de semana creados de antemano
-const SUBS = [["people", "Inscritos"], ["slots", "Horario semanal"], ["classes", "Clases"], ["closures", "Cierres"]];
+const SUBS = [["people", "Inscritos"], ["slots", "Horario semanal"], ["classes", "Clases"]];
 
 export function initClases({ db, fs, esc, toast, saveError }) {
   const root = document.getElementById("classesRoot");
@@ -24,7 +24,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   let classes = [], slots = [], closures = [], bookings = [];
   let loaded = false;
   let sub = "people";
-  let editing = null;       // { kind: "slot"|"class"|"closure", item|null }
+  let editing = null;       // { kind: "class", item|null }
   let classFilter = "";     // Inscritos: id de la clase, "group:judo" / "group:bjj" ("" = todas)
   let weekStart = null;     // lunes de la semana que muestra la vista semanal
   let weeks = [];           // lunes de los bloques de semana (los de WEEKS_*; crecen si se avanza más allá)
@@ -92,7 +92,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   function sessionsInRange(from, to) {
     const map = new Map();
     for (let date = from; date <= to; date = addDays(date, 1)) {
-      slots.filter(s => s.active !== false && s.day === dayKey(date) && classOf(s.classId)).forEach(s => {
+      slots.filter(s => s.active !== false && s.day === dayKey(date) && classOf(s.classId) && (!s.date || s.date === date)).forEach(s => {
         const x = makeSession(s, date);
         map.set(x.key, { ...x, people: [] });
       });
@@ -303,7 +303,11 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   // Se olvida al cambiar de pestaña. Cada entrada: id del horario → { day, start } nuevos.
   const draft = new Map();
   const effective = sl => (draft.has(sl.id) ? { ...sl, ...draft.get(sl.id) } : sl);
-  const liveSlots = () => slots.filter(sl => classOf(sl.classId)).map(effective);
+  // Las clases únicas que ya pasaron no se muestran
+  const liveSlots = () => slots.filter(sl => classOf(sl.classId) && (!sl.date || sl.date >= todayStr())).map(effective);
+  // Fecha de la clase en la semana actual (o su fecha, si es única) y si esa fecha está cancelada
+  const weekDateOf = sl => sl.date || addDays(mondayOf(todayStr()), DAYS.findIndex(d => d[0] === sl.day));
+  const closedOn = (sl, date) => closures.some(c => c.date === date && (!c.slotId || c.slotId === sl.id));
 
   // Tramo que se dibuja de una clase, en minutos del día: su hora y duración exactas
   function spanOfSlot(s) {
@@ -366,11 +370,11 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       const s = it.slot, c = classOf(s.classId);
       const top = (it.a - start * 60) / 60, height = (it.b - it.a) / 60;
       const w = 100 / it.lanes;
-      return `<button type="button" draggable="false" class="sch-class adm-block t-${esc((c && c.tone) || "oro")}${s.active === false ? " is-off" : ""}${draft.has(s.id) ? " is-draft" : ""}${it.b - it.a <= 30 ? " is-short" : ""}"
+      return `<button type="button" draggable="false" class="sch-class adm-block t-${esc((c && c.tone) || "oro")}${s.active === false ? " is-off" : ""}${closedOn(s, weekDateOf(s)) ? " is-closed" : ""}${s.date ? " is-once" : ""}${draft.has(s.id) ? " is-draft" : ""}${it.b - it.a <= 30 ? " is-short" : ""}"
         data-sched-edit="${esc(s.id)}" style="top:calc(var(--hour-h) * ${top} + 1px);height:calc(var(--hour-h) * ${height} - 2px);left:calc(${it.lane * w}% + 2px);width:calc(${w}% - 4px)">
         <span class="sch-name">${esc(c ? c.label : s.classId)}</span>
-        <span class="sch-time">${hm(it.a)}–${hm(it.b)}</span>
-        ${s.active === false ? `<span class="adm-chip-off" role="img" aria-label="Oculta" title="Oculta (no se puede reservar)">${ICONS.eyeOff}</span>` : ""}
+        <span class="sch-time">${hm(it.a)}–${hm(it.b)}${s.date ? ` · única ${dayMonth(s.date)}` : ""}</span>
+        ${s.active === false || closedOn(s, weekDateOf(s)) ? `<span class="adm-chip-off" role="img" aria-label="${s.active === false ? "Oculta" : "Cancelada esta semana"}" title="${s.active === false ? "Oculta (no se puede reservar)" : "Cancelada esta semana (solo esa fecha)"}">${ICONS.eyeOff}</span>` : ""}
       </button>`;
     };
 
@@ -411,26 +415,80 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       ${slotEditorModal()}`;
   }
 
+  // Próxima fecha (desde hoy) que cae en ese día de la semana
+  const nextDateOfDay = day => {
+    let d = todayStr();
+    while (dayKey(d) !== day) d = addDays(d, 1);
+    return d;
+  };
+
+  // ¿La ventana está trabajando con una clase única (una sola fecha)?
+  function isOnce(form) {
+    const radios = form && form.elements.freq;
+    if (radios && radios.value) return radios.value === "once";
+    return !!(slotEditor && slotEditor.slot && slotEditor.slot.date);
+  }
+
+  // Sección "quitar la clase": al tocar el tacho se pregunta cómo (solo esta semana o de la planificación)
+  function removeBoxHtml() {
+    const ed = slotEditor;
+    if (!ed || !ed.slot) return "";
+    const slot = ed.slot, once = !!slot.date;
+    const wd = weekDateOf(slot), closed = closedOn(slot, wd), past = wd < todayStr();
+    const when = esc(cap1(longDate(wd)));
+    const note = closed
+      ? `<p class="adm-removed-note"><span class="adm-removed-ico">${ICONS.eyeOff}</span><span>Cancelada: ${when}. Queda inactiva solo ese día.</span>
+          <button type="button" class="btn small ghost" data-reopen-week>Reactivar</button></p>` : "";
+    if (!ed.ask) return note + `<div class="adm-remove-row">${iconBtn("trash", once ? "Borrar clase única" : "Quitar esta clase", "data-sched-remove")}</div>`;
+    const people = ed.count == null ? "" : (ed.count ? ` Tiene ${ed.count} inscrito${ed.count > 1 ? "s" : ""} en esa fecha: avísales.` : " No tiene inscritos en esa fecha.");
+    return note + `<div class="adm-remove-ask" role="group" aria-label="Cómo quitar la clase">
+        <p><b>¿Cancelar la clase solo en la semana actual o quitarla de la planificación semanal?</b></p>
+        <button type="button" class="btn small" data-remove-week${closed || past ? " disabled" : ""}>Solo esta semana · ${when}</button>
+        <small>${past ? "Esa fecha ya pasó." : closed ? "Ya está cancelada esa fecha." : `Queda inactiva solo ese día; las demás semanas siguen igual.${people}`}</small>
+        <button type="button" class="btn small ghost adm-danger" data-remove-plan>De la planificación semanal</button>
+        <small>Se quita de todas las semanas. Las reservas ya hechas se conservan.</small>
+        <button type="button" class="rv-back" data-remove-back>Volver</button>
+      </div>`;
+  }
+
+  const refreshRemoveBox = () => {
+    const box = root.querySelector("[data-remove-box]");
+    if (box) box.innerHTML = removeBoxHtml();
+  };
+
   // Ventana para agregar o ajustar una clase del horario
   function slotEditorModal() {
     if (!slotEditor) return "";
     const { slot, day, hour, minute = 0 } = slotEditor;
     const x = slot || {};
+    const once = !!x.date;
     const options = classes.filter(c => c.active !== false || c.id === x.classId);
     const cur = classOf(x.classId) || options[0];
+    const today = todayStr();
+    const startVal = slot ? slot.start : `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    const summary = slot
+      ? `<p class="adm-help adm-slot-summary">${esc(cur ? cur.label : slot.classId)} · ${esc(dayName(slot.day))} ${esc(slot.start)}–${esc(addMin(slot.start, minutesOf(slot)))} · ${once ? `clase única del ${esc(longDate(slot.date))}` : "se repite cada semana"}</p>` : "";
     return `<div class="adm-modal">
       <div class="adm-modal-bg" data-close-editor></div>
-      <form class="adm-detail adm-slotform" data-form="sched" role="dialog" aria-modal="true" aria-label="${slot ? "Editar clase del horario" : "Agregar clase al horario"}" novalidate>
+      <form class="adm-detail adm-slotform" data-form="sched" role="dialog" aria-modal="true" aria-label="${slot ? "Detalles de la clase del horario" : "Agregar clase al horario"}" novalidate>
         <div class="adm-detail-head">
-          <h3 class="adm-detail-title">${slot ? "Ajustar clase" : "Agregar al horario"}</h3>
+          <h3 class="adm-detail-title">${slot ? "Detalles de la clase" : "Agregar al horario"}</h3>
           <button class="btn small ghost" type="button" data-close-editor>Cerrar</button>
         </div>
+        ${summary}
         <div class="field"><label for="seClass">Clase</label>
           <select id="seClass" name="classId">${options.map(c => `<option value="${esc(c.id)}" data-min="${esc(c.duration || 60)}"${c.id === cur.id ? " selected" : ""}>${esc(c.label)}</option>`).join("")}</select></div>
+        ${slot ? "" : `<div class="field"><label id="seFreqLabel">¿Es una clase única o se repite cada semana?</label>
+          <div class="adm-days" role="radiogroup" aria-labelledby="seFreqLabel">
+            <label class="check"><input type="radio" name="freq" value="weekly" checked> Recurrente: se repite cada semana</label>
+            <label class="check"><input type="radio" name="freq" value="once"> Única: solo una fecha</label>
+          </div></div>`}
+        <div class="field" data-once-only${once ? "" : " hidden"}><label for="seDate">Fecha de la clase única</label>
+          <input id="seDate" name="date" type="date" min="${esc(today)}" value="${esc(x.date || nextDateOfDay(day || x.day || "lunes"))}"></div>
         <div class="field"><label for="seStart">Hora de inicio</label>
-          <input id="seStart" name="start" type="time" value="${esc(slot ? slot.start : `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`)}" required>
+          <input id="seStart" name="start" type="time" value="${esc(startVal)}" required>
           <small class="adm-help" data-hint></small></div>
-        <div class="field"><label id="seDaysLabel">Días en que se repite</label>
+        <div class="field" data-weekly-only${once ? " hidden" : ""}><label id="seDaysLabel">Días en que se repite</label>
           <div class="adm-days" role="group" aria-labelledby="seDaysLabel">${DAYS.map(([k, n]) => {
             const mine = k === (slot ? slot.day : day);
             return `<label class="check"><input type="checkbox" name="days" value="${k}"${mine ? " checked" : ""}${slot && mine ? " disabled" : ""}> ${n}</label>`;
@@ -439,10 +497,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         ${slot && slot.duration ? `<label class="check"><input type="checkbox" name="useClassDur"> Usar la duración de la clase (${esc((classOf(slot.classId) || {}).duration || 60)} min) en vez de ${esc(slot.duration)} min</label>` : ""}
         <label class="check"><input type="checkbox" name="active"${x.active === false ? "" : " checked"}> Activa (si no, no se puede reservar)</label>
         <div class="err" data-err role="alert"></div>
-        <div class="adm-actions">
-          <button class="btn" type="submit">Guardar</button>
-          ${slot ? iconBtn("trash", "Borrar de este día", `data-sched-del="${esc(slot.id)}"`) : ""}
-        </div>
+        <div class="adm-actions"><button class="btn" type="submit">Guardar</button></div>
+        ${slot ? `<div class="adm-remove" data-remove-box>${removeBoxHtml()}</div>` : ""}
       </form>
     </div>`;
   }
@@ -455,18 +511,23 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   const spanOf = (day, start, min) => { const a = DAYS.findIndex(d => d[0] === day) * 1440 + toMin(start); return [a, a + min]; };
   const minutesOf = sl => sl.duration || (classOf(sl.classId) || {}).duration || 60;
 
-  // Mensajes de cada choque con el resto del horario (solo cuentan las clases activas)
-  function findOverlaps({ days, start, minutes, excludeId }) {
+  // Mensajes de cada choque con el resto del horario (solo cuentan las clases activas).
+  // date: si se pasa, es una clase única de esa fecha; solo choca con las recurrentes de ese día y con
+  // otras únicas de la misma fecha. Una recurrente nueva choca también con las únicas que aún no pasan.
+  function findOverlaps({ days, start, minutes, excludeId, date }) {
     const found = [];
+    const today = todayStr();
     days.forEach(day => {
       const [a, b] = spanOf(day, start, minutes);
-      liveSlots().filter(o => o.active !== false && o.id !== excludeId).forEach(o => {
-        const len = minutesOf(o);
-        const [c, d] = spanOf(o.day, o.start, len);
-        if (![0, WEEK_MIN, -WEEK_MIN].some(k => a < d + k && c + k < b)) return;
-        const name = (classOf(o.classId) || {}).label || o.classId;
-        found.push(`El ${dayName(day).toLowerCase()} ${start}–${addMin(start, minutes)} se solapa con «${name}» (${dayName(o.day).toLowerCase()} ${o.start}–${addMin(o.start, len)}).`);
-      });
+      liveSlots()
+        .filter(o => o.active !== false && o.id !== excludeId && (date ? (!o.date || o.date === date) : (!o.date || o.date >= today)))
+        .forEach(o => {
+          const len = minutesOf(o);
+          const [c, d] = spanOf(o.day, o.start, len);
+          if (![0, WEEK_MIN, -WEEK_MIN].some(k => a < d + k && c + k < b)) return;
+          const name = (classOf(o.classId) || {}).label || o.classId;
+          found.push(`El ${dayName(day).toLowerCase()} ${start}–${addMin(start, minutes)} se solapa con «${name}» (${dayName(o.day).toLowerCase()} ${o.start}–${addMin(o.start, len)}${o.date ? `, única del ${dayMonth(o.date)}` : ""}).`);
+        });
     });
     return [...new Set(found)];
   }
@@ -477,15 +538,30 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const cls = classOf(f.classId.value), start = f.start.value;
     if (!cls || !/^([01]\d|2[0-3]):[0-5]\d$/.test(start) || !f.active.checked) return [];
     const item = slotEditor && slotEditor.slot;
-    const days = [...form.querySelectorAll('input[name="days"]:checked')].map(i => i.value);
-    if (item && !days.includes(item.day)) days.push(item.day);
+    let days, date;
+    if (isOnce(form)) {
+      date = f.date.value;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < todayStr()) return [];
+      days = [dayKey(date)];
+    } else {
+      days = [...form.querySelectorAll('input[name="days"]:checked')].map(i => i.value);
+      if (item && !days.includes(item.day)) days.push(item.day);
+    }
     // Un horario con duración propia la conserva mientras no se cambie de clase ni se pida usar la de la clase
     const keepOwn = item && item.duration && item.classId === cls.id && !(f.useClassDur && f.useClassDur.checked);
-    return findOverlaps({ days, start, minutes: keepOwn ? item.duration : (cls.duration || 60), excludeId: item && item.id });
+    return findOverlaps({ days, start, minutes: keepOwn ? item.duration : (cls.duration || 60), excludeId: item && item.id, date });
+  }
+
+  // Según sea recurrente o única, se muestran los días o la fecha
+  function syncFreq(form) {
+    const once = isOnce(form);
+    form.querySelectorAll("[data-once-only]").forEach(el => { el.hidden = !once; });
+    form.querySelectorAll("[data-weekly-only]").forEach(el => { el.hidden = once; });
   }
 
   // "Termina a las 19:30" según la clase y la hora elegidas; avisa en vivo si se solapa
   function editorHint(form) {
+    syncFreq(form);
     const clash = formOverlaps(form);
     const errBox = form.querySelector("[data-err]");
     if (errBox) errBox.textContent = clash.length ? clash.join("\n") : "";
@@ -516,10 +592,20 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     if (!classOf(classId)) return fail("Elige la clase.");
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(start)) return fail("Escribe la hora de inicio.");
     const item = slotEditor.slot;
-    const days = [...form.querySelectorAll('input[name="days"]:checked')].map(i => i.value);
-    if (item && !days.includes(item.day)) days.push(item.day);
-    if (!days.length) return fail("Elige al menos un día.");
+    const once = isOnce(form);
     const active = f.active.checked;
+
+    // Clase única: una sola fecha; el día de la semana sale de la fecha
+    let onceDate = null;
+    if (once) {
+      onceDate = f.date.value;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(onceDate)) return fail("Elige la fecha de la clase única.");
+      if (onceDate < todayStr()) return fail("La fecha de una clase única no puede ser anterior a hoy.");
+    }
+    const days = once ? [dayKey(onceDate)] : [...form.querySelectorAll('input[name="days"]:checked')].map(i => i.value);
+    if (!once && item && !days.includes(item.day)) days.push(item.day);
+    if (!days.length) return fail("Elige al menos un día.");
+
     const clash = formOverlaps(form);
     if (clash.length) return fail(["No se puede guardar: la clase se solapa con otra del horario.", ...clash].join("\n"));
     const batch = fs.writeBatch(db);
@@ -528,14 +614,18 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     if (item) {
       const { id, ...data } = item;
       Object.assign(data, { classId, start, active });
+      if (once) Object.assign(data, { day: days[0], date: onceDate });
       if (f.useClassDur && f.useClassDur.checked) delete data.duration;
       batch.set(fs.doc(db, "slots", id), data);
       updated = { id, ...data };
     }
-    days.filter(d => !item || d !== item.day).forEach(day => {
-      if (slots.some(s => s.classId === classId && s.day === day && s.start === start)) return;   // ya existe
+    // Copias en otros días (solo recurrentes); una clase única nueva crea una sola
+    const targets = once ? (item ? [] : days) : days.filter(d => !item || d !== item.day);
+    targets.forEach(day => {
+      if (!once && slots.some(s => !s.date && s.classId === classId && s.day === day && s.start === start)) return;   // ya existe
       const ref = fs.doc(fs.collection(db, "slots"));
       const data = { classId, day, start, active };
+      if (once) data.date = onceDate;
       batch.set(ref, data);
       created.push({ id: ref.id, ...data });
     });
@@ -544,14 +634,82 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       slots = slots.map(s => (updated && s.id === updated.id ? updated : s)).concat(created);
       if (updated) draft.delete(updated.id);
       slotEditor = null;
-      toast(item ? "Horario actualizado" : `${created.length} horario${created.length === 1 ? "" : "s"} agregado${created.length === 1 ? "" : "s"}`);
+      toast(item ? "Horario actualizado" : once ? "Clase única agregada" : `${created.length} horario${created.length === 1 ? "" : "s"} agregado${created.length === 1 ? "" : "s"}`);
       render();
     } catch (e) { console.warn(e); fail(saveError(e)); }
   }
 
+  /* ---- Quitar una clase del horario ---- */
+  function openRemove() {
+    const sl = slotEditor && slotEditor.slot;
+    if (!sl) return;
+    if (sl.date) { deleteSched(sl.id); return; }   // una clase única solo tiene una fecha: se borra directo
+    slotEditor.ask = true;
+    slotEditor.count = null;
+    refreshRemoveBox();
+    loadCount(sl);
+  }
+
+  function closeRemove() {
+    if (!slotEditor) return;
+    slotEditor.ask = false;
+    refreshRemoveBox();
+  }
+
+  // Cuántos inscritos tiene la clase en la fecha que se cancelaría
+  async function loadCount(sl) {
+    const ed = slotEditor;
+    try {
+      const snap = await fs.getDocs(fs.query(fs.collection(db, "bookings"), fs.where("sessionKey", "==", `${sl.id}_${weekDateOf(sl)}`)));
+      if (slotEditor !== ed) return;
+      ed.count = snap.docs.filter(d => d.data().status === "confirmed").length;
+      refreshRemoveBox();
+    } catch (e) { console.warn(e); }
+  }
+
+  // Cancelar solo la semana actual: la clase queda inactiva únicamente esa fecha (se guarda como un cierre)
+  async function cancelWeek() {
+    const sl = slotEditor && slotEditor.slot;
+    if (!sl) return;
+    const wd = weekDateOf(sl);
+    const label = (classOf(sl.classId) || {}).label || "la clase";
+    const people = slotEditor.count ? ` Tiene ${slotEditor.count} inscrito${slotEditor.count > 1 ? "s" : ""}: avísales.` : "";
+    if (!confirm(`¿Cancelar «${label}» el ${longDate(wd)}? Solo esa fecha queda inactiva; las demás semanas no cambian.${people}`)) return;
+    const id = `${sl.id}_${wd}`;
+    const data = { date: wd, slotId: sl.id, reason: "Cancelada desde el horario semanal" };
+    slotEditor = null;      // la ventana se cierra sola al confirmar
+    render();
+    try {
+      await fs.setDoc(fs.doc(db, "closures", id), data);
+      closures = [...closures.filter(c => c.id !== id), { id, ...data }];
+      toast(`Cancelada solo el ${longDate(wd)}`);
+    } catch (e) { console.warn(e); alert(saveError(e)); }
+    render();
+  }
+
+  async function reopenWeek() {
+    const sl = slotEditor && slotEditor.slot;
+    if (!sl) return;
+    const wd = weekDateOf(sl);
+    if (!confirm(`¿Reactivar la clase el ${longDate(wd)}? Volverá a poder reservarse.`)) return;
+    const ids = closures.filter(c => c.date === wd && c.slotId === sl.id).map(c => c.id);
+    slotEditor = null;
+    render();
+    try {
+      await Promise.all(ids.map(id => fs.deleteDoc(fs.doc(db, "closures", id))));
+      closures = closures.filter(c => !ids.includes(c.id));
+      toast("Clase reactivada");
+    } catch (e) { console.warn(e); alert(saveError(e)); }
+    render();
+  }
+
   async function deleteSched(id) {
     const s = slots.find(x => x.id === id);
-    if (!s || !confirm("¿Borrar esta clase de este día del horario? Las reservas ya hechas se conservan.")) return;
+    if (!s) return;
+    const msg = s.date
+      ? "¿Borrar esta clase única? Las reservas ya hechas se conservan."
+      : "¿Quitar esta clase de la planificación semanal? Se borra de todas las semanas. Las reservas ya hechas se conservan.";
+    if (!confirm(msg)) return;
     slotEditor = null;   // la ventana se cierra sola al confirmar
     render();
     try {
@@ -620,8 +778,14 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     return { cell, quarter, day: cell.dataset.day, minutes: Number(cell.dataset.hour) * 60 + quarter * STEP };
   }
 
+  // Nueva fecha de una clase única al moverla a otro día (se queda en su misma semana)
+  const shiftedDate = (slot, day) => {
+    const cur = effective(slot);
+    return cur.date ? addDays(cur.date, DAYS.findIndex(d => d[0] === day) - DAYS.findIndex(d => d[0] === cur.day)) : undefined;
+  };
+
   const clashOf = (slot, t) => slot.active === false ? [] :
-    findOverlaps({ days: [t.day], start: clock(t.minutes), minutes: minutesOf(slot), excludeId: slot.id });
+    findOverlaps({ days: [t.day], start: clock(t.minutes), minutes: minutesOf(slot), excludeId: slot.id, date: shiftedDate(slot, t.day) });
 
   function paintDrop(t) {
     root.querySelectorAll(".adm-drop-line").forEach(n => n.remove());
@@ -700,14 +864,19 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   function moveSlot(slot, t) {
     const start = clock(t.minutes);
     const cur = effective(slot);
+    const date = shiftedDate(slot, t.day);
     if (t.day === cur.day && start === cur.start) return;
+    if (date && date < todayStr()) {
+      showSchedMsg("No se puede mover: una clase única no puede quedar en una fecha que ya pasó.");
+      return;
+    }
     const clash = clashOf(slot, t);
     if (clash.length) {
       showSchedMsg(["No se puede mover: la clase se solapa con otra del horario.", ...clash].join("\n"));
       return;
     }
     if (t.day === slot.day && start === slot.start) draft.delete(slot.id);   // volvió a su lugar original
-    else draft.set(slot.id, { day: t.day, start });
+    else draft.set(slot.id, date ? { day: t.day, start, date } : { day: t.day, start });
     render();
   }
 
@@ -793,39 +962,6 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     </form>`;
   }
 
-  /* ---------- Cierres ---------- */
-  function renderClosures() {
-    if (editing && editing.kind === "closure") return closureForm();
-    const today = todayStr();
-    const list = closures.filter(c => c.date >= today).sort((a, b) => a.date.localeCompare(b.date));
-    return `<div class="adm-bar"><h2>Cierres y feriados</h2><button class="btn" type="button" data-new="closure">Nuevo cierre</button></div>
-      <p class="adm-help adm-note">Un día o una clase cerrada no se puede reservar. Si ya había inscritos, aparecerán en <b>Inscritos</b> marcados para que les avises.</p>
-      ${list.length ? list.map(c => {
-        const slot = c.slotId && slots.find(s => s.id === c.slotId);
-        const cls = slot && classOf(slot.classId);
-        return `<div class="adm-row"><div class="adm-row-main"><b>${esc(cap1(longDate(c.date)))}</b>
-          <span>${c.slotId ? esc(`${cls ? cls.label : "Clase"} ${slot ? slot.start : ""}`) : "Todo el día"}${c.reason ? ` · ${esc(c.reason)}` : ""}</span></div>
-          <span></span><div class="adm-row-actions">${iconBtn("trash", "Borrar cierre", `data-del-closure="${esc(c.id)}"`)}</div></div>`;
-      }).join("") : '<p class="adm-empty">No hay cierres próximos.</p>'}`;
-  }
-
-  function closureForm() {
-    return `<form class="adm-editor adm-form" data-form="closure" novalidate>
-      <div class="adm-bar"><h2>Nuevo cierre</h2>
-        <div class="adm-actions"><button class="btn ghost" type="button" data-back>Cancelar</button><button class="btn" type="submit">Guardar</button></div></div>
-      <div class="adm-formgrid">
-        <div class="field"><label for="xDate">Fecha</label><input id="xDate" name="date" type="date" min="${esc(todayStr())}" required></div>
-        <div class="field"><label for="xWhat">Qué se cierra</label><select id="xWhat" name="slotId"><option value="">Todo el día</option>
-          ${slots.slice().sort((a, b) => DAYS.findIndex(d => d[0] === a.day) - DAYS.findIndex(d => d[0] === b.day) || a.start.localeCompare(b.start)).map(s => {
-            const c = classOf(s.classId);
-            return `<option value="${esc(s.id)}">${esc(dayName(s.day))} ${esc(s.start)} · ${esc(c ? c.label : s.classId)} (solo si cae ese día)</option>`;
-          }).join("")}</select></div>
-        <div class="field"><label for="xReason">Motivo (opcional)</label><input id="xReason" name="reason" maxlength="80" placeholder="Feriado, vacaciones…"></div>
-      </div>
-      <div class="err" data-err role="alert"></div>
-    </form>`;
-  }
-
   /* ---------- Dibujo ---------- */
   function render() {
     const before = root.querySelector("[data-weeks-scroll]");
@@ -834,7 +970,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     root.innerHTML = `<div class="filters adm-subnav" role="tablist" aria-label="Clases">
         ${SUBS.map(([k, n]) => `<button type="button" role="tab" aria-pressed="${k === sub}" data-csub="${k}">${n}</button>`).join("")}
       </div>
-      <div>${{ people: renderPeople, slots: renderSlots, classes: renderClasses, closures: renderClosures }[sub]()}</div>`;
+      <div>${{ people: renderPeople, slots: renderSlots, classes: renderClasses }[sub]()}</div>`;
     document.body.classList.toggle("adm-modal-open", !!root.querySelector(".adm-modal"));
     const strip = root.querySelector("[data-weeks-scroll]");
     const on = strip && strip.querySelector('[aria-pressed="true"]');
@@ -870,22 +1006,6 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         await fs.setDoc(fs.doc(db, "classes", id), data);
         const saved = { id, ...data };
         classes = (classOf(id) ? classes.map(c => (c.id === id ? saved : c)) : [...classes, saved]).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      } else {
-        const date = f.date.value, slotId = f.slotId.value;
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return fail("Elige la fecha.");
-        if (slotId) {
-          const s = slots.find(x => x.id === slotId);
-          if (s && s.day !== dayKey(date)) return fail(`Ese horario es de los ${dayName(s.day).toLowerCase()}, y el ${longDate(date)} no cae ese día.`);
-        }
-        const id = slotId ? `${slotId}_${date}` : `all_${date}`;
-        const data = { date, reason: f.reason.value.trim() };
-        if (slotId) data.slotId = slotId;
-        await fs.setDoc(fs.doc(db, "closures", id), data);
-        closures = [...closures.filter(c => c.id !== id), { id, ...data }];
-        // ¿Había gente inscrita?
-        const snap = await fs.getDocs(fs.query(fs.collection(db, "bookings"), fs.where("date", "==", date)));
-        const hit = snap.docs.map(d => d.data()).filter(b => b.status === "confirmed" && (!slotId || b.slotId === slotId));
-        if (hit.length) alert(`Ojo: ${hit.length} persona${hit.length > 1 ? "s" : ""} ya estaba${hit.length > 1 ? "n" : ""} inscrita${hit.length > 1 ? "s" : ""} ese día. Avísales desde la pestaña Inscritos.`);
       }
       editing = null;
       toast("Guardado");
@@ -980,8 +1100,11 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const nw = t.closest("[data-new]");
     if (nw) { editing = { kind: nw.dataset.new, item: null }; render(); window.scrollTo({ top: 0 }); return; }
     if (t.closest("[data-close-editor]")) { slotEditor = null; render(); return; }
-    const sd = t.closest("[data-sched-del]");
-    if (sd) return deleteSched(sd.dataset.schedDel);
+    if (t.closest("[data-sched-remove]")) return openRemove();
+    if (t.closest("[data-remove-back]")) return closeRemove();
+    if (t.closest("[data-remove-week]")) return cancelWeek();
+    if (t.closest("[data-remove-plan]")) return deleteSched(slotEditor.slot.id);
+    if (t.closest("[data-reopen-week]")) return reopenWeek();
     const se = t.closest("[data-sched-edit]");
     if (se) { const slot = slots.find(x => x.id === se.dataset.schedEdit); if (slot) { const cur = effective(slot); openSchedEditor({ slot: cur, day: cur.day, hour: parseInt(cur.start, 10) }); } return; }
     const sa = t.closest("[data-sched-add]");
@@ -1008,15 +1131,6 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       loadBookings().then(render).catch(err => { root.innerHTML = `<p class="err">${esc(saveError(err))}</p>`; });
       return;
     }
-    const del = (attr, coll, what, after) => {
-      const b = t.closest(`[${attr}]`);
-      if (!b) return false;
-      const id = b.getAttribute(attr);
-      if (!confirm(what(id))) return true;
-      fs.deleteDoc(fs.doc(db, coll, id)).then(() => { after(id); toast("Borrado"); render(); }).catch(err => alert(saveError(err)));
-      return true;
-    };
-    if (del("data-del-closure", "closures", () => "¿Borrar este cierre? Esa clase volverá a poder reservarse.", id => { closures = closures.filter(c => c.id !== id); })) return;
     const dc = t.closest("[data-del-class]");
     if (dc) return deleteClass(dc.dataset.delClass);
 

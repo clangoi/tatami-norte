@@ -209,3 +209,17 @@ body.adm-dragging .adm-block{pointer-events:none}
 .adm-draft-badge{background:var(--gold);color:var(--navy);font:800 13px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;padding:6px 9px}
 .adm-draft-actions{display:flex;gap:8px;margin-left:auto}
 .adm .adm-block.is-draft{outline:2px dashed var(--cream);outline-offset:-3px}
+
+/* Ventana de la clase: frecuencia, cancelar solo esta semana, clase única */
+.adm-slotform [hidden]{display:none !important}
+.adm-slot-summary{margin:0 0 6px}
+.adm-remove{margin-top:18px;padding-top:16px;border-top:1px solid var(--navy-3)}
+.adm-remove-row{display:flex;justify-content:flex-end}
+.adm-removed-note{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;margin:0 0 12px;padding:10px 12px;border-left:3px solid var(--gold);background:rgba(214,189,140,.08);color:var(--text-soft);font-size:15px}
+.adm-removed-ico{display:inline-grid;color:var(--gold)}
+.adm-removed-note .btn{margin-left:auto}
+.adm-remove-ask{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.adm-remove-ask p{margin:0 0 4px;color:var(--cream)}
+.adm-remove-ask small{color:var(--steel);font-size:14px;line-height:1.4;margin:-2px 0 8px}
+.adm .adm-block.is-closed{opacity:.5;border:1px dashed var(--steel)}
+.adm .adm-block.is-once{box-shadow:inset 0 0 0 2px rgba(246,242,231,.55)}

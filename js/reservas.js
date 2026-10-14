@@ -5,7 +5,7 @@
 
    Uso en las páginas:
      TNBooking.mount(seccion)                       todas las clases
-     TNBooking.mount(seccion, {slugs:["judo"]})     solo algunas (ids de clase)
+     TNBooking.mount(seccion, {slugs:["judo"]})     solo algunas (ids de clase, o "page:judo.html" para las de una página)
      TNBooking.select(seccion, "judo")              abre esa clase
    Expone window.TNBooking.
    ========================================================== */
@@ -72,7 +72,7 @@
     let chosen = null;          // sesión elegida en el formulario
     let sending = false;
 
-    const visibleClasses = () => (data ? data.classes : []).filter(c => !opts.slugs || opts.slugs.includes(c.id));
+    const visibleClasses = () => (data ? data.classes : []).filter(c => !opts.slugs || opts.slugs.some(t => t.startsWith("page:") ? String(c.page || "").split("#")[0] === t.slice(5) : t === c.id));
     const sessionsOf = cid => data.sessions.filter(s => s.classId === cid);
 
     /* --- pestañas --- */

@@ -31,6 +31,14 @@
 /* Filas de listado */
 .adm-row{display:grid;grid-template-columns:1fr auto auto;gap:16px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}
 .adm-row:has(.adm-order){grid-template-columns:auto 1fr auto auto}
+.adm-cfg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;align-items:start;margin-top:14px}
+.adm-cfg{border:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:10px}
+.adm-cfg h3{font:800 22px/1 var(--display);text-transform:uppercase;margin:0}
+.adm-cfg-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.adm-cfg-row input,.adm-cfg-row select{min-width:0;flex:1 1 110px}
+.adm-cfg-sw{width:56px;height:34px;flex:none;padding:0 !important;min-height:0}
+.adm-cfg-empty{margin:0}
+.adm-classcode{display:block;font:600 15px/1.2 var(--label);letter-spacing:.06em;color:var(--steel);padding:8px 0}
 .adm-classname{display:block;font:800 22px/1.1 var(--display);text-transform:uppercase;padding:8px 0}
 .adm-classpreview{max-width:240px}
 .adm-classpreview .sch-class{min-height:64px}

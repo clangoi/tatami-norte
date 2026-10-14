@@ -14,7 +14,7 @@ const DAYS = [["lunes", "Lunes"], ["martes", "Martes"], ["miercoles", "Miércole
 const DAY_BY_DOW = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
 const TONES = [["oro", "Oro"], ["bronce", "Bronce"], ["cobre", "Cobre"], ["marino", "Marino"], ["acero", "Acero"], ["plata", "Plata"], ["crema", "Crema"], ["linea", "Línea"]];
 const DESIGNS = 5;   // diseños de bloque: 0 liso (clase sin tipo) y 1 a 4 según el tipo
-const SUBS = [["people", "Inscritos"], ["slots", "Horario semanal"], ["classes", "Clases"]];
+const SUBS = [["people", "Inscritos"], ["slots", "Horario semanal"], ["classes", "Clases"], ["config", "Configuración"]];
 
 export function initClases({ db, fs, esc, toast, saveError }) {
   const root = document.getElementById("classesRoot");
@@ -54,19 +54,37 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   };
   const composeLabel = ({ discipline, type, club }) => `${discipline}${type ? " " + type : ""} · ${club}`;
   const lookCls = c => `t-${c.tone || "oro"} ty-${c.design || 0}${c.clubTone ? " s-" + c.clubTone : ""}`;
-  // Valor ya usado por otra clase con la misma disciplina / tipo / club (para que todas compartan color y diseño)
-  const sharedValue = (name, field, key, exceptId) => {
-    const c = classes.find(k => k.id !== exceptId && k[key] !== undefined && norm(partsOf(k)[field]) === norm(name));
-    return c ? c[key] : null;
-  };
-  const designFor = (type, exceptId) => {
-    if (!norm(type)) return 0;
-    const known = sharedValue(type, "type", "design", exceptId);
-    if (known) return known;
-    const used = new Set(classes.filter(k => k.id !== exceptId && k.design).map(k => k.design));
-    for (let d = 1; d < DESIGNS; d++) if (!used.has(d)) return d;
-    return 1 + (used.size % (DESIGNS - 1));
-  };
+  // Configuración: parámetros del horario de cada club (franja), disciplina (color y página) y tipo (diseño del bloque).
+  // Se guardan en settings/catalog; cada clase copia los suyos (tone, page, clubTone, design) para que el sitio los lea directo.
+  let catalog = { clubs: [], disciplines: [], types: [] };
+  let cfgDraft = null;      // copia editable de la configuración mientras se está en esa pestaña
+  const DESIGN_NAMES = ["Liso", "Contorno", "Punteado", "Tinte", "Rayado"];
+  const uid = () => Math.random().toString(36).slice(2, 8);
+  const byName = (list, name) => list.find(i => norm(i.name) === norm(name));
+  const cloneCatalog = () => JSON.parse(JSON.stringify(catalog));
+  // Lo que le toca a una clase según su disciplina, tipo y club
+  function derive(parts) {
+    const d = byName(catalog.disciplines, parts.discipline), c = byName(catalog.clubs, parts.club);
+    const t = parts.type ? byName(catalog.types, parts.type) : null;
+    return { tone: d ? d.tone : "oro", page: d ? d.page || "" : "", clubTone: c ? c.tone : "", design: t ? t.design : 0 };
+  }
+  // Agrega a la configuración lo que usan unas clases y aún no está (primera vez o clases cargadas)
+  function mergeIntoCatalog(cat, items) {
+    items.forEach(it => {
+      const p = partsOf(it);
+      if (p.discipline && !byName(cat.disciplines, p.discipline)) cat.disciplines.push({ id: uid(), name: p.discipline, tone: it.tone || "oro", page: it.page || "" });
+      if (p.club && !byName(cat.clubs, p.club)) cat.clubs.push({ id: uid(), name: p.club, tone: it.clubTone || "bronce" });
+      if (p.type && !byName(cat.types, p.type)) {
+        const used = new Set(cat.types.map(t => t.design));
+        let d = it.design || 0;
+        if (!d) for (d = 1; d < DESIGNS && used.has(d); d++);
+        cat.types.push({ id: uid(), name: p.type, design: Math.min(d, DESIGNS - 1) });
+      }
+    });
+    return cat;
+  }
+  // Código de la clase: sale solo de su disciplina, tipo y club (judo-no-gi-kizuna)
+  const autoCode = parts => slugify(composeLabel(parts));
   const slugify = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
 
   /* ---------- Carga ---------- */
@@ -75,6 +93,11 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     classes = c.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     slots = s.docs.map(d => ({ id: d.id, ...d.data() }));
     closures = x.docs.map(d => ({ id: d.id, ...d.data() }));
+    // Configuración de clubes, disciplinas y tipos; la primera vez se arma con lo que ya tienen las clases
+    let saved = null;
+    try { const snap = await fs.getDoc(fs.doc(db, "settings", "catalog")); if (snap.exists()) saved = snap.data(); } catch (e) { console.warn(e); }
+    catalog = mergeIntoCatalog({ clubs: [], disciplines: [], types: [], ...(saved || {}) }, classes);
+    cfgDraft = null;
   }
   async function loadBookings() {
     // Las reservas de la semana que muestra el horario
@@ -1030,34 +1053,141 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   function classForm(c) {
     const x = c || {};
     const p = c ? partsOf(c) : { discipline: "", type: "", club: "" };
-    const preview = { label: p.discipline || p.club ? composeLabel(p) : "Disciplina · Club", look: lookCls({ tone: x.tone || "oro", design: x.design || 0, clubTone: x.clubTone || "bronce" }) };
-    const palette = sel => TONES.filter(([k]) => k !== "linea").map(([k, n]) => `<option value="${k}"${k === sel ? " selected" : ""}>${n}</option>`).join("");
-    const list = (id, field) => `<datalist id="${id}">${[...new Set(classes.map(k => partsOf(k)[field]).filter(Boolean))].sort().map(v => `<option value="${esc(v)}">`).join("")}</datalist>`;
-    return `<form class="adm-editor adm-form" data-form="class" novalidate>${list("dlDisc", "discipline")}${list("dlType", "type")}${list("dlClub", "club")}
+    const ready = catalog.disciplines.length && catalog.clubs.length;
+    if (!ready) return `<div class="adm-editor"><div class="adm-bar"><h2>Nueva clase</h2><div class="adm-actions"><button class="btn ghost" type="button" data-back>Volver</button></div></div>
+      <div class="notice adm-seed"><p>Antes de crear una clase agrega al menos un <b>club</b> y una <b>disciplina</b> en <b>Configuración</b>: ahí se define el color, el diseño y la franja de cada una.</p>
+      <button class="btn small" type="button" data-csub="config">Ir a Configuración</button></div></div>`;
+    const opts = (list, sel) => list.map(i => `<option value="${esc(i.name)}"${norm(i.name) === norm(sel) ? " selected" : ""}>${esc(i.name)}</option>`).join("");
+    const known = (list, v) => !v || byName(list, v) ? "" : `<option value="${esc(v)}" selected>${esc(v)} (ya no está en Configuración)</option>`;
+    const look = derive(p);
+    const label = p.discipline && p.club ? composeLabel(p) : "Disciplina · Club";
+    return `<form class="adm-editor adm-form" data-form="class" novalidate>
       <div class="adm-bar"><h2>${c ? "Editar clase" : "Nueva clase"}</h2>
         <div class="adm-actions"><button class="btn ghost" type="button" data-back>Cancelar</button><button class="btn" type="submit">Guardar</button></div></div>
       <div class="adm-formgrid">
-        <div class="field"><label for="cDisc">Disciplina</label><input id="cDisc" name="discipline" maxlength="30" list="dlDisc" value="${esc(p.discipline)}" placeholder="Judo, BJJ, Físico…" required></div>
-        <div class="field"><label for="cType">Tipo <small>(opcional)</small></label><input id="cType" name="type" maxlength="20" list="dlType" value="${esc(p.type)}" placeholder="Gi, No-Gi, Kids…">
-          <small class="adm-help">Define el diseño del bloque en el horario. Si la clase no tiene tipo, déjalo vacío.</small></div>
-        <div class="field"><label for="cClub">Club</label><input id="cClub" name="club" maxlength="30" list="dlClub" value="${esc(p.club)}" placeholder="Kizuna, Núcleo…" required></div>
-        <div class="field"><label>Nombre de la clase</label><output class="adm-classname" data-classname>${esc(preview.label)}</output>
+        <div class="field"><label for="cDisc">Disciplina</label><select id="cDisc" name="discipline" required><option value="">Elige…</option>${known(catalog.disciplines, p.discipline)}${opts(catalog.disciplines, p.discipline)}</select></div>
+        <div class="field"><label for="cType">Tipo <small>(opcional)</small></label><select id="cType" name="type"><option value="">Sin tipo</option>${known(catalog.types, p.type)}${opts(catalog.types, p.type)}</select></div>
+        <div class="field"><label for="cClub">Club</label><select id="cClub" name="club" required><option value="">Elige…</option>${known(catalog.clubs, p.club)}${opts(catalog.clubs, p.club)}</select>
+          <small class="adm-help">Las opciones se administran en <a href="#" data-csub="config">Configuración</a>.</small></div>
+        <div class="field"><label>Nombre de la clase</label><output class="adm-classname" data-classname>${esc(label)}</output>
           <small class="adm-help">Se arma solo: disciplina, tipo y club.</small></div>
-        <div class="field"><label for="cTone">Color de la disciplina</label><select id="cTone" name="tone">${palette(x.tone || "oro")}</select></div>
-        <div class="field"><label for="cClubTone">Color de la franja del club</label><select id="cClubTone" name="clubTone">${palette(x.clubTone || "bronce")}</select></div>
-        <div class="field"><label>Así se ve en el horario</label><div class="adm-classpreview"><div class="sch-class ${esc(preview.look)}" data-classpreview><span class="sch-name">${esc(preview.label)}</span><span class="sch-time">19:00–20:00</span></div></div></div>
-        <div class="field"><label for="cId">Código</label><input id="cId" name="id" maxlength="40" pattern="[a-z0-9\\-]+" value="${esc(x.id || "")}"${c ? " readonly" : ""} required>
-          <small class="adm-help">Solo minúsculas, números y guiones. No se puede cambiar después. Las páginas de Judo y BJJ lo usan para mostrar sus clases.</small></div>
+        <div class="field"><label>Código</label><output class="adm-classcode" data-classcode>${esc(c ? x.id : (p.discipline && p.club ? autoCode(p) : "—"))}</output>
+          <small class="adm-help">Se genera solo con la disciplina, el tipo y el club, y no cambia después.</small></div>
+        <div class="field"><label>Así se ve en el horario</label><div class="adm-classpreview"><div class="sch-class ${esc(lookCls({ ...look, tone: look.tone }))}" data-classpreview><span class="sch-name">${esc(label)}</span><span class="sch-time">19:00–20:00</span></div></div></div>
         <div class="field"><label for="cDur">Duración de la clase (minutos)</label><input id="cDur" name="duration" type="number" min="10" max="300" value="${esc(x.duration || 60)}">
           <small class="adm-help">Es lo que dura en el horario semanal: al ubicarla ahí solo eliges la hora de inicio.</small></div>
         <div class="field"><label for="cCap">Cupos habituales</label><input id="cCap" name="capacity" type="number" min="1" max="200" value="${esc(x.capacity || DEFAULT_CAP)}"></div>
-        <div class="field"><label for="cPage">Página de la disciplina</label><input id="cPage" name="page" maxlength="60" value="${esc(x.page || "")}" placeholder="judo.html (opcional)"></div>
         <div class="field"><label for="cOrder">Orden</label><input id="cOrder" name="order" type="number" value="${esc(x.order ?? classes.length + 1)}"></div>
       </div>
       <label class="check"><input type="checkbox" name="active"${x.active === false ? "" : " checked"}> Activa (si no, desaparece de las reservas)</label>
       <div class="err" data-err role="alert"></div>
     </form>`;
   }
+
+  /* ---------- Configuración ---------- */
+  const toneOptions = sel => TONES.filter(([k]) => k !== "linea").map(([k, n]) => `<option value="${k}"${k === sel ? " selected" : ""}>${n}</option>`).join("");
+  const designOptions = sel => DESIGN_NAMES.slice(1).map((n, i) => `<option value="${i + 1}"${i + 1 === sel ? " selected" : ""}>${n}</option>`).join("");
+
+  function renderConfig() {
+    if (!cfgDraft) cfgDraft = cloneCatalog();
+    const dirty = JSON.stringify(cfgDraft) !== JSON.stringify(catalog);
+    const sw = (cls) => `<span class="sch-class adm-cfg-sw ${cls}" aria-hidden="true"></span>`;
+    const section = (key, title, help, rows, add) => `<section class="adm-cfg" data-sec="${key}">
+        <h3>${title}</h3><p class="adm-help">${help}</p>
+        ${rows.length ? rows.join("") : '<p class="adm-help adm-cfg-empty">Todavía no hay ninguno.</p>'}
+        <button class="btn small ghost" type="button" data-cfg-add="${key}">${add}</button>
+      </section>`;
+    const row = (id, swatch, fields) => `<div class="adm-cfg-row" data-id="${esc(id)}">${swatch}${fields}
+        ${iconBtn("trash", "Quitar", `data-cfg-del="${esc(id)}"`)}</div>`;
+    const nameField = (v, ph) => `<input data-f="name" maxlength="30" value="${esc(v)}" placeholder="${ph}" aria-label="Nombre">`;
+    const clubs = cfgDraft.clubs.map(c => row(c.id, sw(`t-marino ty-0 s-${c.tone}`),
+      `${nameField(c.name, "Kizuna, Núcleo…")}<select data-f="tone" aria-label="Color de la franja">${toneOptions(c.tone)}</select>`));
+    const discs = cfgDraft.disciplines.map(d => row(d.id, sw(`t-${d.tone} ty-0`),
+      `${nameField(d.name, "Judo, BJJ, Físico…")}<select data-f="tone" aria-label="Color">${toneOptions(d.tone)}</select>
+       <input data-f="page" maxlength="60" value="${esc(d.page || "")}" placeholder="judo.html (opcional)" aria-label="Página de la disciplina" list="dlPages">`));
+    const types = cfgDraft.types.map(t => row(t.id, sw(`t-oro ty-${t.design}`),
+      `${nameField(t.name, "Gi, No-Gi, Kids…")}<select data-f="design" aria-label="Diseño del bloque">${designOptions(t.design)}</select>`));
+    return `<form data-form="config" novalidate>
+      <div class="adm-bar"><h2>Configuración</h2>
+        <div class="adm-actions"><button class="btn ghost" type="button" data-cfg-discard${dirty ? "" : " disabled"}>Descartar</button><button class="btn" type="submit">Guardar</button></div></div>
+      ${infoTip(`Aquí defines lo que usa el horario de cada clase. Al crear una clase solo eliges su <b>disciplina</b>, su <b>tipo</b> (opcional) y su <b>club</b>: el color sale de la disciplina, el diseño del bloque del tipo y la franja lateral del club. La <b>página</b> de la disciplina es donde se muestran sus clases (por ejemplo <code>judo.html</code>). Si cambias algo aquí, se actualizan todas las clases que lo usan. El código de cada clase se arma solo con estos tres datos.`)}
+      <datalist id="dlPages"><option value="judo.html"><option value="bjj.html"><option value="bjj.html#no-gi"></datalist>
+      <div class="adm-cfg-grid">
+        ${section("clubs", "Clubes", "Quién imparte la clase. Su color es la franja lateral del bloque.", clubs, "Agregar club")}
+        ${section("disciplines", "Disciplinas", "Su color pinta el bloque y su página es donde se listan sus clases.", discs, "Agregar disciplina")}
+        ${section("types", "Tipos", "Cada tipo tiene su propio diseño de bloque. Una clase puede no tener tipo.", types, "Agregar tipo")}
+      </div>
+      <div class="err" data-err role="alert"></div>
+    </form>`;
+  }
+
+  // Pasa lo escrito en el formulario a la copia editable
+  function readConfig() {
+    const form = root.querySelector('[data-form="config"]');
+    if (!form || !cfgDraft) return;
+    form.querySelectorAll(".adm-cfg-row").forEach(rw => {
+      const sec = rw.closest("[data-sec]").dataset.sec;
+      const item = cfgDraft[sec].find(i => i.id === rw.dataset.id);
+      if (!item) return;
+      rw.querySelectorAll("[data-f]").forEach(el => { item[el.dataset.f] = el.dataset.f === "design" ? Number(el.value) : el.value; });
+    });
+  }
+
+  const usesOf = (sec, name) => classes.filter(c => {
+    const p = partsOf(c);
+    return norm({ clubs: p.club, disciplines: p.discipline, types: p.type }[sec]) === norm(name);
+  });
+
+  async function saveConfig(form) {
+    const err = form.querySelector("[data-err]");
+    const fail = m => { err.textContent = m; };
+    err.textContent = "";
+    readConfig();
+    const next = cloneCatalogOf(cfgDraft);
+    const labels = { clubs: "club", disciplines: "disciplina", types: "tipo" };
+    for (const sec of Object.keys(labels)) {
+      const seen = new Set();
+      for (const it of next[sec]) {
+        if (!it.name) return fail(`Hay un ${labels[sec]} sin nombre.`);
+        if (seen.has(norm(it.name))) return fail(`El ${labels[sec]} «${it.name}» está repetido.`);
+        seen.add(norm(it.name));
+        if (sec === "disciplines" && it.page && !/^[A-Za-z0-9_\-\/.]+(#[A-Za-z0-9_-]+)?$/.test(it.page)) return fail(`La página de «${it.name}» no es válida (por ejemplo judo.html).`);
+      }
+    }
+    // Cada clase toma los valores nuevos de su disciplina, tipo y club (también si cambió el nombre de alguno)
+    const patches = new Map();
+    classes.forEach(k => {
+      const p = partsOf(k);
+      const od = byName(catalog.disciplines, p.discipline), oc = byName(catalog.clubs, p.club), ot = p.type ? byName(catalog.types, p.type) : null;
+      const nd = od && next.disciplines.find(i => i.id === od.id), nc = oc && next.clubs.find(i => i.id === oc.id), nt = ot && next.types.find(i => i.id === ot.id);
+      if (!nd || !nc || (p.type && !nt)) return;       // clases con datos que no están en la configuración: se dejan como están
+      const parts = { discipline: nd.name, type: nt ? nt.name : "", club: nc.name };
+      const want = { label: composeLabel(parts), discipline: parts.discipline, club: parts.club, tone: nd.tone, page: nd.page || "", clubTone: nc.tone, design: nt ? nt.design : 0 };
+      if (nt) want.type = nt.name;
+      const patch = {};
+      Object.entries(want).forEach(([key, v]) => { if (k[key] !== v) patch[key] = v; });
+      if (Object.keys(patch).length) patches.set(k.id, patch);
+    });
+    const tooLong = [...patches.values()].find(pt => pt.label && pt.label.length > 60);
+    if (tooLong) return fail(`Un nombre de clase quedaría de más de 60 caracteres («${tooLong.label}»). Acorta algún nombre.`);
+    try {
+      const ids = [...patches.keys()], chunks = [];
+      for (let i = 0; i < ids.length; i += 400) chunks.push(ids.slice(i, i + 400));
+      if (!chunks.length) chunks.push([]);
+      for (const [n, chunk] of chunks.entries()) {
+        const b = fs.writeBatch(db);
+        if (n === 0) b.set(fs.doc(db, "settings", "catalog"), next);
+        chunk.forEach(id => b.update(fs.doc(db, "classes", id), patches.get(id)));
+        await b.commit();
+      }
+      catalog = next;
+      classes = classes.map(c => (patches.has(c.id) ? { ...c, ...patches.get(c.id) } : c));
+      cfgDraft = null;
+      toast(patches.size ? `Configuración guardada · ${patches.size} clase${patches.size === 1 ? "" : "s"} actualizada${patches.size === 1 ? "" : "s"}` : "Configuración guardada");
+      render();
+    } catch (e) { console.warn(e); fail(saveError(e)); }
+  }
+  const cloneCatalogOf = c => JSON.parse(JSON.stringify(c, (k, v) => (typeof v === "string" && ["name", "page"].includes(k) ? v.trim() : v)));
 
   /* ---------- Dibujo ---------- */
   function render() {
@@ -1067,7 +1197,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     root.innerHTML = `<div class="filters adm-subnav" role="tablist" aria-label="Clases">
         ${SUBS.map(([k, n]) => `<button type="button" role="tab" aria-pressed="${k === sub}" data-csub="${k}">${n}</button>`).join("")}
       </div>
-      <div>${{ people: renderPeople, slots: renderSlots, classes: renderClasses }[sub]()}</div>`;
+      <div>${{ people: renderPeople, slots: renderSlots, classes: renderClasses, config: renderConfig }[sub]()}</div>`;
     document.body.classList.toggle("adm-modal-open", !!root.querySelector(".adm-modal"));
     const strip = root.querySelector("[data-weeks-scroll]");
     const on = strip && strip.querySelector('[aria-pressed="true"]');
@@ -1093,35 +1223,20 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     try {
       if (kind === "class") {
         const parts = { discipline: f.discipline.value.trim(), type: f.type.value.trim(), club: f.club.value.trim() };
-        if (!parts.discipline) return fail("Escribe la disciplina.");
-        if (!parts.club) return fail("Escribe el club.");
+        if (!parts.discipline) return fail("Elige la disciplina.");
+        if (!parts.club) return fail("Elige el club.");
         const label = composeLabel(parts);
         if (label.length > 60) return fail("El nombre (disciplina, tipo y club) no puede pasar de 60 caracteres.");
-        const id = editing.item ? editing.item.id : (f.id.value.trim() || slugify(label));
-        if (!/^[a-z0-9-]{1,40}$/.test(id)) return fail("El código solo puede tener minúsculas, números y guiones.");
-        if (!editing.item && classOf(id)) return fail("Ya existe una clase con ese código.");
-        const data = { label, discipline: parts.discipline, club: parts.club, tone: f.tone.value, clubTone: f.clubTone.value, design: designFor(parts.type, id),
-          page: f.page.value.trim(), order: Number(f.order.value) || 0, active: f.active.checked };
+        const id = editing.item ? editing.item.id : autoCode(parts);
+        if (!/^[a-z0-9-]{1,40}$/.test(id)) return fail("El nombre de la clase es demasiado largo para generar su código. Acorta la disciplina, el tipo o el club.");
+        if (!editing.item && classOf(id)) return fail("Ya existe una clase con esa disciplina, tipo y club.");
+        const data = { label, discipline: parts.discipline, club: parts.club, ...derive(parts), order: Number(f.order.value) || 0, active: f.active.checked };
         if (parts.type) data.type = parts.type;
         if (num(f.duration.value)) data.duration = num(f.duration.value);
         if (num(f.capacity.value)) data.capacity = num(f.capacity.value);
         await fs.setDoc(fs.doc(db, "classes", id), data);
-        // Las demás clases de la misma disciplina, tipo o club comparten color, diseño y franja
-        const patches = new Map();
-        classes.filter(k => k.id !== id).forEach(k => {
-          const q = partsOf(k), patch = {};
-          if (norm(q.discipline) === norm(parts.discipline) && k.tone !== data.tone) patch.tone = data.tone;
-          if (norm(q.club) === norm(parts.club) && k.clubTone !== data.clubTone) patch.clubTone = data.clubTone;
-          if (parts.type && norm(q.type) === norm(parts.type) && k.design !== data.design) patch.design = data.design;
-          if (Object.keys(patch).length) patches.set(k.id, patch);
-        });
-        if (patches.size) {
-          const b = fs.writeBatch(db);
-          patches.forEach((patch, kid) => b.update(fs.doc(db, "classes", kid), patch));
-          await b.commit();
-        }
         const saved = { id, ...data };
-        classes = (classOf(id) ? classes.map(c => (c.id === id ? saved : c)) : [...classes, saved]).map(c => (patches.has(c.id) ? { ...c, ...patches.get(c.id) } : c)).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        classes = (classOf(id) ? classes.map(c => (c.id === id ? saved : c)) : [...classes, saved]).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       }
       editing = null;
       toast("Guardado");
@@ -1147,10 +1262,34 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     } catch (e) { alert(saveError(e)); }
   }
 
+  root.addEventListener("submit", e => { if (e.target.dataset.form === "config") { e.preventDefault(); saveConfig(e.target); } });
+
   root.addEventListener("click", async e => {
     const t = e.target;
     const csub = t.closest("[data-csub]");
-    if (csub) { sub = csub.dataset.csub; editing = null; draft.clear(); slotEditor = null; render(); return; }
+    if (csub) { e.preventDefault(); sub = csub.dataset.csub; editing = null; draft.clear(); slotEditor = null; render(); return; }
+    const cfgAdd = t.closest("[data-cfg-add]");
+    if (cfgAdd) {
+      readConfig();
+      const sec = cfgAdd.dataset.cfgAdd;
+      cfgDraft[sec].push({ clubs: { id: uid(), name: "", tone: "bronce" }, disciplines: { id: uid(), name: "", tone: "oro", page: "" }, types: { id: uid(), name: "", design: 1 } }[sec]);
+      render();
+      const rows = root.querySelectorAll('[data-sec="' + sec + '"] .adm-cfg-row [data-f="name"]');
+      if (rows.length) rows[rows.length - 1].focus();
+      return;
+    }
+    const cfgDel = t.closest("[data-cfg-del]");
+    if (cfgDel) {
+      readConfig();
+      const sec = cfgDel.closest("[data-sec]").dataset.sec, id = cfgDel.dataset.cfgDel;
+      const orig = catalog[sec].find(i => i.id === id);
+      const n = orig ? usesOf(sec, orig.name).length : 0;
+      if (n) { alert(`No se puede quitar «${orig.name}»: la usan ${n} clase${n === 1 ? "" : "s"}. Cámbialas o bórralas primero.`); return; }
+      cfgDraft[sec] = cfgDraft[sec].filter(i => i.id !== id);
+      render();
+      return;
+    }
+    if (t.closest("[data-cfg-discard]")) { cfgDraft = null; render(); return; }
     const dt = t.closest("[data-day-toggle]");
     if (dt) return toggleDay(dt.dataset.dayToggle);
     if (t.closest("[data-draft-save]")) return saveDraft();
@@ -1197,11 +1336,15 @@ export function initClases({ db, fs, esc, toast, saveError }) {
 
     if (t.closest("#seedClasses")) {
       const b = fs.writeBatch(db);
-      const seedTypes = [];
-      const seedDesign = type => { if (!norm(type)) return 0; let i = seedTypes.indexOf(norm(type)); if (i < 0) i = seedTypes.push(norm(type)) - 1; return 1 + (i % (DESIGNS - 1)); };
+      const cat = cloneCatalog();
+      const seedItems = (cfg.classes || []).map(c => ({ ...c, label: composeLabel({ discipline: c.discipline || c.label, type: c.type || "", club: c.club || "" }) }));
+      mergeIntoCatalog(cat, seedItems);
+      catalog = cat;
+      b.set(fs.doc(db, "settings", "catalog"), cat);
       (cfg.classes || []).forEach((c, i) => {
         const parts = { discipline: c.discipline || c.label, type: c.type || "", club: c.club || "" };
-        const data = { label: composeLabel(parts), discipline: parts.discipline, club: parts.club, tone: c.tone || "oro", clubTone: c.clubTone || "bronce", design: seedDesign(parts.type), page: c.page || "", order: i + 1, active: true, duration: 60, capacity: DEFAULT_CAP };
+        const data = { label: composeLabel(parts), discipline: parts.discipline, club: parts.club, ...derive(parts), order: i + 1, active: true, duration: 60, capacity: DEFAULT_CAP };
+        if (parts.type) data.type = parts.type;
         b.set(fs.doc(db, "classes", c.slug), data);
       });
       try { await b.commit(); await loadBase(); toast("Clases cargadas"); render(); } catch (err) { alert(saveError(err)); }
@@ -1218,25 +1361,28 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   });
 
   // Formulario de clase: el nombre y la vista previa se arman mientras se escribe, y una disciplina o club ya usado trae su color
-  function syncClassForm(form, from) {
+  function syncClassForm(form) {
     const f = form.elements;
     const parts = { discipline: f.discipline.value.trim(), type: f.type.value.trim(), club: f.club.value.trim() };
-    const id = editing && editing.item ? editing.item.id : null;
-    if (from === "discipline") { const t = sharedValue(parts.discipline, "discipline", "tone", id); if (t) f.tone.value = t; }
-    if (from === "club") { const t = sharedValue(parts.club, "club", "clubTone", id); if (t) f.clubTone.value = t; }
-    const label = parts.discipline || parts.club ? composeLabel(parts) : "Disciplina · Club";
+    const label = parts.discipline && parts.club ? composeLabel(parts) : "Disciplina · Club";
     form.querySelector("[data-classname]").textContent = label;
+    if (!(editing && editing.item)) form.querySelector("[data-classcode]").textContent = parts.discipline && parts.club ? autoCode(parts) : "—";
     const box = form.querySelector("[data-classpreview]");
-    box.className = "sch-class " + lookCls({ tone: f.tone.value, design: designFor(parts.type, id), clubTone: f.clubTone.value });
+    box.className = "sch-class " + lookCls(derive(parts));
     box.querySelector(".sch-name").textContent = label;
   }
   root.addEventListener("input", e => {
     const form = e.target.form;
     if (!form) return;
     if (form.dataset.form === "sched") editorHint(form);
-    if (form.dataset.form === "class") syncClassForm(form, e.target.name);
+    if (form.dataset.form === "class") syncClassForm(form);
   });
-  root.addEventListener("change", e => { if (e.target.form && e.target.form.dataset.form === "class") syncClassForm(e.target.form, ""); });
+  root.addEventListener("change", e => {
+    const form = e.target.form;
+    if (!form) return;
+    if (form.dataset.form === "class") syncClassForm(form);
+    if (form.dataset.form === "config") { readConfig(); render(); }   // al cambiar un color o diseño se actualiza la muestra
+  });
 
   root.addEventListener("change", e => {
     if (e.target.form && e.target.form.dataset.form === "sched") editorHint(e.target.form);

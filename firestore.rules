@@ -122,6 +122,11 @@ service cloud.firestore {
         && shortText(d, 'slotId', 40);
     }
 
+    // Configuración del horario: parámetros de cada club, disciplina y tipo
+    match /settings/{id} {
+      allow read, write: if isAdmin() && id == 'catalog';
+    }
+
     match /classes/{id} {
       allow read: if isAdmin();
       allow create, update: if isAdmin() && id.matches('^[a-z0-9-]{1,40}$') && validClass(request.resource.data);

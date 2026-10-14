@@ -7,6 +7,8 @@
 
    <div data-schedule></div>                          todas las clases
    <div data-schedule data-filter="judo"></div>       solo algunas (claves separadas por coma)
+   data-filter acepta ids de clase y «page:judo.html» (todas las clases de la disciplina que apunta a esa página,
+              según Configuración en el panel).
    data-book: sección de reservas a la que lleva cada clase
               (por defecto "#reservas"); se abre la pestaña de esa clase.
    ========================================================== */
@@ -74,7 +76,7 @@
     const disc = data.disciplinas || {};
     const filter = (el.dataset.filter || "").split(",").map(s => s.trim()).filter(Boolean);
     const classes = (data.clases || [])
-      .filter(c => disc[c.disciplina] && (!filter.length || filter.includes(c.disciplina)))
+      .filter(c => disc[c.disciplina] && (!filter.length || filter.some(t => t.startsWith("page:") ? String(disc[c.disciplina].pagina || "").split("#")[0] === t.slice(5) : t === c.disciplina)))
       .sort((a, b) => a.inicio.localeCompare(b.inicio));
     const book = el.dataset.book || "#reservas";
     const fechas = data.fechas || {};

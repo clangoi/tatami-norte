@@ -233,3 +233,14 @@ body.adm-dragging .adm-block{pointer-events:none}
 .adm-cal-col.is-day-closed,.adm-cal-col.is-day-closed .adm-sched-cell{background-color:rgba(150,45,45,.32)}
 .adm-cal-col.is-day-closed .adm-sched-cell{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.06) 0 6px,transparent 6px 12px)}
 .adm-cal-col.is-day-closed .adm-sched-cell:hover{background-color:rgba(150,45,45,.45)}
+
+/* Ícono "i": muestra u oculta la explicación de cómo funciona una sección */
+.adm-info{margin:6px 0 10px}
+.adm-info-btn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--gold);background:transparent;color:var(--gold);font:italic 700 14px/1 Georgia,serif;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.adm-info-btn:hover,.adm-info-btn[aria-expanded="true"]{background:var(--gold);color:var(--navy)}
+.adm-info-text{margin:8px 0 0;padding:10px 12px;border-left:3px solid var(--gold);background:rgba(214,189,140,.06);max-width:70ch}
+.adm-info-text[hidden]{display:none}
+
+/* El horario semanal se desplaza dentro de su marco; al llegar al borde suma horas */
+.adm-sched-scroll{max-height:min(72vh,760px);overflow-y:auto;overscroll-behavior:contain}
+.adm-cal-head{position:sticky;top:0;z-index:5}

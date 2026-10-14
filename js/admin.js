@@ -10,6 +10,7 @@ import { SDK, app, db, fs, cacheImage, hydrateImages } from "./firebase.js";
 import { toHtml, readingMinutes } from "./markdown.js";
 import { SEED_POSTS } from "./seed-posts.js";
 import { initClases } from "./admin-clases.js";
+import "./admin-info.js";
 import { stateIcon, iconBtn } from "./admin-icons.js";
 
 const {

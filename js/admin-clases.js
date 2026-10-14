@@ -8,6 +8,7 @@
    reprogramó, con su motivo. Las reservas las crea el sitio (api/reservar).
    ========================================================== */
 import { ICONS, stateIcon, iconBtn } from "./admin-icons.js";
+import { infoTip } from "./admin-info.js";
 
 const DAYS = [["lunes", "Lunes"], ["martes", "Martes"], ["miercoles", "Miércoles"], ["jueves", "Jueves"], ["viernes", "Viernes"], ["sabado", "Sábado"], ["domingo", "Domingo"]];
 const DAY_BY_DOW = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
@@ -171,7 +172,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   };
 
   const emptyNotice = '<div class="notice adm-seed"><p><strong>Todavía no hay horario.</strong> Crea las clases en la pestaña <b>Clases</b> y sus horarios en <b>Horario semanal</b>; después aparecerán aquí con sus inscritos.</p></div>';
-  const feedNote = '<p class="adm-help adm-note">Para ver las clases y sus inscritos en tu calendario (Google, Apple, Outlook), suscríbete a <code>/api/calendario?feed=TU_SECRETO</code>. Ver RESERVAS.md.</p>';
+  const feedNote = infoTip(`Para ver las clases y sus inscritos en tu calendario (Google, Apple, Outlook), suscríbete a <code>/api/calendario?feed=TU_SECRETO</code>. Ver RESERVAS.md.`);
 
   // Al tocar una clase del horario se muestran los inscritos de esa fecha exacta (pasada o futura)
   async function selectClass(key) {
@@ -273,7 +274,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         ${classSelect()}
       </div>
       <p class="sch-range adm-weeklabel">Del ${esc(dayMonth(from))} al ${esc(dayMonth(to))} · ${list.length} clase${list.length === 1 ? "" : "s"} · ${total} inscrito${total === 1 ? "" : "s"}${filterLabel() ? ` · ${esc(filterLabel())}` : ""}</p>
-      <p class="adm-help adm-note">Toca una clase para ver quiénes están inscritos, quiénes cancelaron y quiénes reprogramaron en esa fecha, aunque ya haya pasado.</p>
+      ${infoTip(`Toca una clase para ver quiénes están inscritos, quiénes cancelaron y quiénes reprogramaron en esa fecha, aunque ya haya pasado.`)}
       ${list.length ? grid + mobile : '<p class="adm-empty">No hay clases esa semana.</p>'}
       ${detail}`;
   }
@@ -291,6 +292,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
      al tocar una clase se ajusta. */
   const LIMITS_KEY = "tn_sched_limits_v2";
   const hourLabel = h => `${String(h).padStart(2, "0")}:00`;
+  const MIN_HOUR = 6, MAX_HOUR = 24;              // al desplazarse, el horario no baja de las 06:00 ni pasa de las 24:00
   const DEFAULT_LIMITS = { start: 6, end: 22 };   // sin clases ni límites elegidos, el horario se ve de 06:00 a 22:00
   let limits = null;                              // horas de los extremos si se cambiaron tocándolas; si no, salen de las clases
   try {
@@ -360,7 +362,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       ? `<div class="notice adm-seed"><p><strong>¿Vienes de Cal.com?</strong> Puedo leer los horarios que tienes allá (próximas 3 semanas) y crearlos aquí, junto con las clases que falten. Antes de guardar te muestro lo que encontré. Cal.com no entrega los cupos: quedan los habituales de cada clase.</p>
         <button class="btn small" type="button" id="importCal">Importar horario desde Cal.com</button></div>` : "";
     if (!classes.length && !importBox) return '<div class="notice adm-seed"><p>Primero crea las clases en la pestaña <b>Clases</b>: ahí defines cuánto dura cada una. Después las ubicas aquí en el horario.</p></div>';
-    if (!classes.length) return importBox + '<p class="adm-help adm-note">También puedes crear las clases a mano en la pestaña <b>Clases</b>.</p>';
+    if (!classes.length) return importBox + infoTip(`También puedes crear las clases a mano en la pestaña <b>Clases</b>.`);
 
     const { start, end } = schedRange();
     const hours = Array.from({ length: end - start }, (_, i) => start + i);
@@ -402,7 +404,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         }).join("")}</div>
         <div class="adm-cal-body">
           <div class="adm-cal-hours">${hours.map((h, i) => `<div class="adm-cal-hour">${i === 0
-            ? `<select class="adm-limit" id="limStart" aria-label="Hora inicial del horario">${hourOptions(0, end - 1, start)}</select>`
+            ? `<select class="adm-limit" id="limStart" aria-label="Hora inicial del horario">${hourOptions(Math.min(MIN_HOUR, start), end - 1, start)}</select>`
             : hourLabel(h)}</div>`).join("")}</div>
           ${DAYS.map(column).join("")}
         </div>
@@ -411,7 +413,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     </div>`;
 
     return `<div class="adm-bar"><h2>Horario semanal</h2></div>
-      <p class="adm-help adm-note">Toca el lugar del horario donde empieza la clase (cada hora tiene cuatro intervalos de 15 minutos) o toca una clase para ajustarla. También puedes arrastrarla a otro lugar: se acomoda de 15 en 15 minutos y queda en <b>borrador</b> hasta que presiones Guardar. Las horas de los extremos (${hourLabel(start)} y ${hourLabel(end)}) se pueden cambiar tocándolas. Cada clase dura lo que defines en <b>Clases</b>. Para un feriado o una semana sin clase usa <b>Cierres</b>; los cambios valen para las fechas futuras y las reservas ya hechas no se mueven.</p>
+      ${infoTip(`Toca el lugar del horario donde empieza la clase (cada hora tiene cuatro intervalos de 15 minutos) o toca una clase para ajustarla; ahí también puedes cancelarla solo una semana. Arrástrala a otro lugar para moverla de 15 en 15 minutos: queda en <b>borrador</b> hasta que presiones Guardar. Toca el nombre de un día para cerrarlo completo (también en borrador); tócalo otra vez para reabrirlo. Desplaza el horario hacia arriba o hacia abajo para ver horas más temprano o más tarde (de las 06:00 a las 24:00), o cambia las horas de los extremos (${hourLabel(start)} y ${hourLabel(end)}) tocándolas. Cada clase dura lo que defines en <b>Clases</b>. Los cambios valen para las fechas futuras y las reservas ya hechas no se mueven.`)}
       ${importBox}
       <p class="err adm-sched-msg" data-sched-msg role="alert" hidden></p>
       ${draft.size ? `<div class="adm-draft" role="status">
@@ -960,6 +962,25 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   // El navegador no debe iniciar su propio arrastre (que cancela los eventos de puntero)
   root.addEventListener("dragstart", e => { if (e.target.closest && e.target.closest("[data-sched-edit]")) e.preventDefault(); });
 
+  // Al desplazar el horario más allá de su borde se suma una hora (de las 06:00 a las 24:00)
+  let wheelLock = 0;
+  root.addEventListener("wheel", e => {
+    const sc = e.target.closest && e.target.closest("[data-sched-scroll]");
+    if (!sc || drag || slotEditor || !e.deltaY) return;
+    const up = e.deltaY < 0;
+    const edge = up ? sc.scrollTop <= 0 : sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+    const { start, end } = schedRange();
+    if (!edge || (up ? start <= MIN_HOUR : end >= MAX_HOUR)) return;
+    e.preventDefault();
+    if (Date.now() - wheelLock < 90) return;
+    wheelLock = Date.now();
+    const top = sc.scrollTop, hourH = sc.querySelector(".adm-cal-hour").offsetHeight;
+    limits = { start: up ? start - 1 : start, end: up ? end : end + 1 };
+    render();
+    const now = root.querySelector("[data-sched-scroll]");
+    if (now) now.scrollTop = up ? top + hourH : top;
+  }, { passive: false });
+
   root.addEventListener("pointerdown", e => {
     if (e.target.closest("[data-draft-save], [data-draft-discard]")) return;
     if (e.button !== 0 || !e.isPrimary || slotEditor) return;
@@ -982,7 +1003,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const seed = !classes.length && (cfg.classes || []).length
       ? `<div class="notice adm-seed"><p><strong>Aún no hay clases en el panel.</strong> Puedes cargar las ${cfg.classes.length} que ya tenías en el sitio (con sus colores y páginas) para ajustarlas.</p><button class="btn small" type="button" id="seedClasses">Cargar las clases de siempre</button></div>` : "";
     return `<div class="adm-bar"><h2>Clases</h2><button class="btn" type="button" data-new="class">Nueva clase</button></div>
-      <p class="adm-help adm-note">Una clase es una disciplina o formato (Judo, BJJ Gi, Judo Kids…). Su duración y cupo sirven por defecto para todos sus horarios.</p>
+      ${infoTip(`Una clase es una disciplina o formato (Judo, BJJ Gi, Judo Kids…). Su duración y cupo sirven por defecto para todos sus horarios.`)}
       ${seed}
       ${classes.map(c => `<div class="adm-row">
         <div class="adm-row-main"><b>${esc(c.label)}</b><span>${esc(c.duration || 60)} min · ${esc(c.capacity || DEFAULT_CAP)} cupos · ${slots.filter(s => s.classId === c.id).length} horarios</span></div>

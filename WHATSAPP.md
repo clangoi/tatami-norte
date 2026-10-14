@@ -22,7 +22,7 @@ node recordatorios.js --once                # una sola vuelta (para el Programad
 node recordatorios.js                       # queda corriendo y revisa cada 5 minutos
 ```
 
-La primera vez aparece un **QR** en la terminal: escanéalo con WhatsApp → *Dispositivos vinculados*. La sesión queda guardada en `scripts/wsp/.wwebjs_auth` y no hay que repetirlo.
+La primera vez aparece un **QR** en la terminal: escanéalo con WhatsApp → *Dispositivos vinculados*. La sesión queda guardada en la carpeta del usuario (`~/.kizuna-wsp-sesion`) y no hay que repetirlo. Importante: la ruta no puede tener espacios, por eso no se guarda dentro del proyecto.
 
 ## Qué envía y cuándo
 

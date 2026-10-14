@@ -22,6 +22,7 @@
      EARLIEST_HOUR       hora más temprana a la que sale un lote (8; hora de la escuela)
      QUIET_FROM          desde esta hora no se envía nada (22)
      MAX_PER_RUN         tope de mensajes por vuelta (60)
+     WSP_SESSION_DIR     dónde se guarda la sesión de WhatsApp (por defecto ~/.kizuna-wsp-sesion; sin espacios en la ruta)
      FIREBASE_SERVICE_ACCOUNT  JSON de la cuenta de servicio; si no, se usa .claude/service-account.json
    ========================================================== */
 const fs = require("fs");
@@ -49,6 +50,8 @@ const school = (siteConfig().shortName || siteConfig().name || "la escuela");
 
 // FAKE_NOW=2026-10-14T17:00:00Z sirve para probar el reloj sin esperar (solo para pruebas)
 const nowMs = () => (process.env.FAKE_NOW ? Date.parse(process.env.FAKE_NOW) : Date.now());
+// La sesión de WhatsApp se guarda en la carpeta del usuario: con una ruta con espacios (como esta carpeta del proyecto) el navegador falla
+const SESSION_DIR = process.env.WSP_SESSION_DIR || path.join(require("os").homedir(), ".kizuna-wsp-sesion");
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const log = (...a) => console.log(new Date().toLocaleString("es-CL", { timeZone }), "·", ...a);
 const hourNow = () => Number(new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", hourCycle: "h23" }).format(new Date(nowMs())));
@@ -108,20 +111,32 @@ function messageFor(b, template) {
 async function startWhatsApp() {
   const { Client, LocalAuth } = require("whatsapp-web.js");
   const qrcode = require("qrcode-terminal");
-  const client = new Client({
-    authStrategy: new LocalAuth({ dataPath: path.join(__dirname, ".wwebjs_auth") }),   // la sesión queda guardada: el QR se escanea una vez
-    puppeteer: { headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] }
-  });
-  client.on("qr", qr => { log("Escanea este QR con WhatsApp → Dispositivos vinculados:"); qrcode.generate(qr, { small: true }); });
-  client.on("authenticated", () => log("Sesión de WhatsApp autenticada"));
-  client.on("auth_failure", m => log("Falló la autenticación:", m));
-  client.on("disconnected", r => log("WhatsApp se desconectó:", r));
-  await new Promise((resolve, reject) => {
-    client.once("ready", resolve);
-    client.initialize().catch(reject);
-  });
-  log("WhatsApp listo");
-  return client;
+  // WhatsApp Web a veces se recarga mientras el script se engancha («Execution context was destroyed»): se reintenta
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    const client = new Client({
+      // WhatsApp Web rechaza a «HeadlessChrome» («actualiza Chrome»): se presenta como un Chrome normal
+      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+      authStrategy: new LocalAuth({ dataPath: SESSION_DIR }),   // la sesión queda guardada: el QR se escanea una vez
+      puppeteer: { headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] }
+    });
+    client.on("qr", qr => { log("Escanea este QR con WhatsApp → Dispositivos vinculados:"); qrcode.generate(qr, { small: true }); });
+    client.on("authenticated", () => log("Sesión de WhatsApp autenticada"));
+    client.on("auth_failure", m => log("Falló la autenticación:", m));
+    client.on("disconnected", r => log("WhatsApp se desconectó:", r));
+    try {
+      await new Promise((resolve, reject) => {
+        client.once("ready", resolve);
+        client.initialize().catch(reject);
+      });
+      log("WhatsApp listo");
+      return client;
+    } catch (e) {
+      log(`No se pudo iniciar WhatsApp (intento ${attempt}/4): ${e.message}`);
+      try { await client.destroy(); } catch (_) {}
+      if (attempt === 4) throw e;
+      await sleep(4000);
+    }
+  }
 }
 
 async function sendTo(client, waPhone, text) {

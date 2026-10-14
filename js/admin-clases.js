@@ -388,7 +388,11 @@ export function initClases({ db, fs, esc, toast, saveError }) {
 
     const grid = `<div class="adm-sched-scroll" data-sched-scroll>
       <div class="adm-cal" style="--hour-h:64px">
-        <div class="adm-cal-head"><div></div>${DAYS.map(([, n]) => `<div class="adm-cal-day">${n}</div>`).join("")}</div>
+        <div class="adm-cal-head"><div></div>${DAYS.map(([k, n]) => {
+          const day = liveSlots().filter(s => s.day === k);
+          const closed = day.length > 0 && day.every(s => s.active === false) && day.some(s => (draft.get(s.id) || {}).active === false);
+          return `<div class="adm-cal-day"><button type="button" class="adm-day-btn${closed ? " is-draft" : ""}" data-day-toggle="${k}" aria-pressed="${closed}" title="${closed ? "Quitar el cierre de este día" : "Cerrar todo el día (deja sus clases ocultas en borrador)"}">${n}${closed ? '<span class="adm-day-tag">Borrador</span>' : ""}</button></div>`;
+        }).join("")}</div>
         <div class="adm-cal-body">
           <div class="adm-cal-hours">${hours.map((h, i) => `<div class="adm-cal-hour">${i === 0
             ? `<select class="adm-limit" id="limStart" aria-label="Hora inicial del horario">${hourOptions(0, end - 1, start)}</select>`
@@ -405,7 +409,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       <p class="err adm-sched-msg" data-sched-msg role="alert" hidden></p>
       ${draft.size ? `<div class="adm-draft" role="status">
         <span class="adm-draft-badge">Modo borrador</span>
-        <span>${draft.size === 1 ? "1 clase movida" : `${draft.size} clases movidas`}: los cambios <b>no están guardados</b> hasta que presiones Guardar. Si cambias de pestaña se descartan.</span>
+        <span>${draft.size === 1 ? "1 clase modificada" : `${draft.size} clases modificadas`}: los cambios <b>no están guardados</b> hasta que presiones Guardar. Si cambias de pestaña se descartan.</span>
         <span class="adm-draft-actions">
           <button class="btn small" type="button" data-draft-save>Guardar</button>
           <button class="btn small ghost" type="button" data-draft-discard>Descartar</button>
@@ -784,7 +788,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     return cur.date ? addDays(cur.date, DAYS.findIndex(d => d[0] === day) - DAYS.findIndex(d => d[0] === cur.day)) : undefined;
   };
 
-  const clashOf = (slot, t) => slot.active === false ? [] :
+  const clashOf = (slot, t) => effective(slot).active === false ? [] :
     findOverlaps({ days: [t.day], start: clock(t.minutes), minutes: minutesOf(slot), excludeId: slot.id, date: shiftedDate(slot, t.day) });
 
   function paintDrop(t) {
@@ -870,14 +874,55 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       showSchedMsg("No se puede mover: una clase única no puede quedar en una fecha que ya pasó.");
       return;
     }
-    const clash = clashOf(slot, t);
+    // Una clase oculta por el cierre de un día se reactiva si se mueve a un día que no está cerrado
+    const wasClosed = (draft.get(slot.id) || {}).active === false;
+    const others = liveSlots().filter(s => s.day === t.day && s.id !== slot.id);
+    const reactivate = wasClosed && t.day !== cur.day && !(others.length && others.every(s => s.active === false));
+    const clash = cur.active === false && !reactivate ? [] :
+      findOverlaps({ days: [t.day], start, minutes: minutesOf(slot), excludeId: slot.id, date });
     if (clash.length) {
       showSchedMsg(["No se puede mover: la clase se solapa con otra del horario.", ...clash].join("\n"));
       return;
     }
-    if (t.day === slot.day && start === slot.start) draft.delete(slot.id);   // volvió a su lugar original
-    else draft.set(slot.id, date ? { day: t.day, start, date } : { day: t.day, start });
+    const hidden = wasClosed && !reactivate ? { active: false } : {};   // conserva el cierre del día
+    if (t.day === slot.day && start === slot.start) setDraft(slot.id, hidden);   // volvió a su lugar original
+    else setDraft(slot.id, { ...(date ? { day: t.day, start, date } : { day: t.day, start }), ...hidden });
     render();
+  }
+
+  const setDraft = (id, change) => { if (Object.keys(change).length) draft.set(id, change); else draft.delete(id); };
+
+  // Deja la clase activa u oculta en el borrador (sin entrada si coincide con lo guardado)
+  function setActive(slot, on) {
+    const rest = { ...(draft.get(slot.id) || {}) };
+    delete rest.active;
+    if ((slot.active !== false) !== on) rest.active = on;
+    setDraft(slot.id, rest);
+  }
+
+  // Tocar el nombre del día: si todas están activas, las oculta (cierre del día, en borrador);
+  // si alguna está oculta, intenta reactivarlas, salvo las que se solapen con una activa.
+  function toggleDay(key) {
+    const day = liveSlots().filter(s => s.day === key);
+    if (!day.length) { showSchedMsg(`El ${dayName(key).toLowerCase()} no tiene clases para cerrar.`); return; }
+    const hiddenOnes = day.filter(s => s.active === false);
+    if (!hiddenOnes.length) {
+      day.forEach(s => setActive(slots.find(x => x.id === s.id), false));
+      render();
+      return;
+    }
+    const kept = [];
+    hiddenOnes.sort((x, y) => x.start.localeCompare(y.start)).forEach(s => {
+      const clash = findOverlaps({ days: [s.day], start: s.start, minutes: minutesOf(s), excludeId: s.id, date: s.date });
+      if (clash.length) kept.push({ s, clash });
+      else setActive(slots.find(x => x.id === s.id), true);
+    });
+    render();
+    if (kept.length) {
+      const name = s => (classOf(s.classId) || {}).label || s.classId;
+      showSchedMsg([`Se reactivó el ${dayName(key).toLowerCase()}, pero ${kept.length === 1 ? "esta clase sigue desactivada" : "estas clases siguen desactivadas"} porque se solapan con otra activa:`,
+        ...kept.map(k => `«${name(k.s)}» ${k.s.start}–${addMin(k.s.start, minutesOf(k.s))}: ${k.clash[0].replace(/^El [^ ]+ [\d:–]+ se solapa con /, "se solapa con ")}`)].join("\n"));
+    }
   }
 
   function discardDraft() {
@@ -1094,6 +1139,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const t = e.target;
     const csub = t.closest("[data-csub]");
     if (csub) { sub = csub.dataset.csub; editing = null; draft.clear(); slotEditor = null; render(); return; }
+    const dt = t.closest("[data-day-toggle]");
+    if (dt) return toggleDay(dt.dataset.dayToggle);
     if (t.closest("[data-draft-save]")) return saveDraft();
     if (t.closest("[data-draft-discard]")) return discardDraft();
     if (t.closest("[data-back]")) { editing = null; render(); return; }

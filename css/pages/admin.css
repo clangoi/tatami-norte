@@ -187,6 +187,10 @@ body.adm-dragging,body.adm-dragging *{cursor:grabbing !important;user-select:non
 .adm-cal-head,.adm-cal-body,.adm-cal-foot{display:grid;grid-template-columns:68px repeat(7,minmax(0,1fr))}
 .adm-cal-head{border-bottom:1px solid var(--line);background:var(--navy)}
 .adm-cal-day{padding:12px 4px;text-align:center;font:700 14px/1 var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--cream);border-left:1px solid var(--line)}
+.adm-day-btn{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:6px;width:calc(100% + 8px);margin:-12px -4px;padding:12px 4px;cursor:pointer;color:inherit}
+.adm-day-btn:hover,.adm-day-btn:focus-visible{background:rgba(214,189,140,.08)}
+.adm-day-btn.is-draft{outline:2px dashed var(--cream);outline-offset:-3px}
+.adm-day-tag{background:var(--gold);color:var(--navy);font:800 10px/1 var(--label);letter-spacing:.12em;padding:3px 5px}
 .adm-cal-hours{display:flex;flex-direction:column}
 .adm-cal-hour{height:var(--hour-h);padding:6px 6px 0;font:800 17px/1 var(--display);font-variant-numeric:tabular-nums;color:var(--steel);border-bottom:1px solid var(--line);display:flex;align-items:flex-start}
 .adm-cal-col{position:relative;border-left:1px solid var(--line);overflow:hidden}

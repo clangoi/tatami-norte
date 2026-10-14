@@ -227,3 +227,9 @@ body.adm-dragging .adm-block{pointer-events:none}
 .adm-remove-ask small{color:var(--steel);font-size:14px;line-height:1.4;margin:-2px 0 8px}
 .adm .adm-block.is-closed{opacity:.5;border:1px dashed var(--steel)}
 .adm .adm-block.is-once{box-shadow:inset 0 0 0 2px rgba(246,242,231,.55)}
+
+/* Día cerrado en borrador: columna apagada para que se note de un vistazo */
+.adm-cal-day.is-day-closed{background:rgba(180,60,60,.28)}
+.adm-cal-col.is-day-closed,.adm-cal-col.is-day-closed .adm-sched-cell{background-color:rgba(150,45,45,.32)}
+.adm-cal-col.is-day-closed .adm-sched-cell{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.06) 0 6px,transparent 6px 12px)}
+.adm-cal-col.is-day-closed .adm-sched-cell:hover{background-color:rgba(150,45,45,.45)}

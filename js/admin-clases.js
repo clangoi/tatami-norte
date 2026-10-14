@@ -378,9 +378,15 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       </button>`;
     };
 
+    // Día cerrado en borrador: todas sus clases ocultas por el cierre
+    const dayClosed = k => {
+      const day = liveSlots().filter(s => s.day === k);
+      return day.length > 0 && day.every(s => s.active === false) && day.some(s => (draft.get(s.id) || {}).active === false);
+    };
+
     const column = ([k, n]) => {
       const items = layoutDay(liveSlots().filter(s => s.day === k).map(s => { const [a, b] = spanOfSlot(s); return { slot: s, a, b }; }));
-      return `<div class="adm-cal-col" role="group" aria-label="${n}">
+      return `<div class="adm-cal-col${dayClosed(k) ? " is-day-closed" : ""}" role="group" aria-label="${n}">
         ${hours.map(h => `<div class="adm-sched-cell" role="button" tabindex="0" data-sched-add data-day="${k}" data-hour="${h}" aria-label="Agregar una clase el ${n} desde las ${hourLabel(h)}"></div>`).join("")}
         ${items.map(block).join("")}
       </div>`;
@@ -389,9 +395,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const grid = `<div class="adm-sched-scroll" data-sched-scroll>
       <div class="adm-cal" style="--hour-h:64px">
         <div class="adm-cal-head"><div></div>${DAYS.map(([k, n]) => {
-          const day = liveSlots().filter(s => s.day === k);
-          const closed = day.length > 0 && day.every(s => s.active === false) && day.some(s => (draft.get(s.id) || {}).active === false);
-          return `<div class="adm-cal-day"><button type="button" class="adm-day-btn${closed ? " is-draft" : ""}" data-day-toggle="${k}" aria-pressed="${closed}" title="${closed ? "Quitar el cierre de este día" : "Cerrar todo el día (deja sus clases ocultas en borrador)"}">${n}${closed ? '<span class="adm-day-tag">Borrador</span>' : ""}</button></div>`;
+          const closed = dayClosed(k);
+          return `<div class="adm-cal-day${closed ? " is-day-closed" : ""}"><button type="button" class="adm-day-btn${closed ? " is-draft" : ""}" data-day-toggle="${k}" aria-pressed="${closed}" title="${closed ? "Quitar el cierre de este día" : "Cerrar todo el día (deja sus clases ocultas en borrador)"}">${n}${closed ? '<span class="adm-day-tag">Borrador</span>' : ""}</button></div>`;
         }).join("")}</div>
         <div class="adm-cal-body">
           <div class="adm-cal-hours">${hours.map((h, i) => `<div class="adm-cal-hour">${i === 0

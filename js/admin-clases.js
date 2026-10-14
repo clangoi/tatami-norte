@@ -14,6 +14,7 @@ const DAYS = [["lunes", "Lunes"], ["martes", "Martes"], ["miercoles", "Miércole
 const DAY_BY_DOW = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
 const TONES = [["oro", "Oro"], ["bronce", "Bronce"], ["cobre", "Cobre"], ["marino", "Marino"], ["acero", "Acero"], ["plata", "Plata"], ["crema", "Crema"], ["linea", "Línea"]];
 const WEEKS_BEFORE = 4, WEEKS_AHEAD = 12;   // bloques de semana creados de antemano
+const DESIGNS = 5;   // diseños de bloque: 0 liso (clase sin tipo) y 1 a 4 según el tipo
 const SUBS = [["people", "Inscritos"], ["slots", "Horario semanal"], ["classes", "Clases"]];
 
 export function initClases({ db, fs, esc, toast, saveError }) {
@@ -44,6 +45,29 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
 
   const classOf = id => classes.find(c => c.id === id);
+  /* Una clase se define por disciplina + tipo (opcional) + club; su nombre es «[disciplina] [tipo] · [Club]».
+     El color sale de la disciplina (tone), el diseño del bloque del tipo (design) y la franja lateral del club (clubTone). */
+  const norm = s => String(s || "").trim().toLowerCase();
+  const partsOf = c => {   // las clases antiguas sacan estos datos de su nombre («BJJ Gi · Kizuna»)
+    if (c.discipline || c.club) return { discipline: c.discipline || "", type: c.type || "", club: c.club || "" };
+    const [left, ...rest] = String(c.label || "").split(" · ");
+    return { discipline: left.trim(), type: "", club: rest.join(" · ").trim() };
+  };
+  const composeLabel = ({ discipline, type, club }) => `${discipline}${type ? " " + type : ""} · ${club}`;
+  const lookCls = c => `t-${c.tone || "oro"} ty-${c.design || 0}${c.clubTone ? " s-" + c.clubTone : ""}`;
+  // Valor ya usado por otra clase con la misma disciplina / tipo / club (para que todas compartan color y diseño)
+  const sharedValue = (name, field, key, exceptId) => {
+    const c = classes.find(k => k.id !== exceptId && k[key] !== undefined && norm(partsOf(k)[field]) === norm(name));
+    return c ? c[key] : null;
+  };
+  const designFor = (type, exceptId) => {
+    if (!norm(type)) return 0;
+    const known = sharedValue(type, "type", "design", exceptId);
+    if (known) return known;
+    const used = new Set(classes.filter(k => k.id !== exceptId && k.design).map(k => k.design));
+    for (let d = 1; d < DESIGNS; d++) if (!used.has(d)) return d;
+    return 1 + (used.size % (DESIGNS - 1));
+  };
   const slugify = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
 
   /* ---------- Carga ---------- */
@@ -85,7 +109,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const duration = s.duration || cls.duration || 60;
     const closed = closures.some(c => c.date === date && (!c.slotId || c.slotId === s.id));
     return {
-      key, date, slotId: s.id, start: s.start, end: addMin(s.start, duration), label: cls.label, classId: s.classId, tone: cls.tone || "oro",
+      key, date, slotId: s.id, start: s.start, end: addMin(s.start, duration), label: cls.label, classId: s.classId, look: lookCls(cls),
       capacity: s.capacity || cls.capacity || DEFAULT_CAP, closed, people: bookings.filter(b => b.sessionKey === key)
     };
   }
@@ -226,7 +250,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
 
     // La clase tocada puede ser de otra fecha (su próxima ocurrencia): se marca la celda de su horario
     const pickedSlot = selectedKey && selectedKey.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-    const cell = s => `<a class="sch-class t-${esc(s.tone)}${s.date < today ? " is-past" : ""}${pickedSlot === s.slotId ? " is-selected" : ""}" href="#" data-pick="${esc(s.key)}">
+    const cell = s => `<a class="sch-class ${esc(s.look)}${s.date < today ? " is-past" : ""}${pickedSlot === s.slotId ? " is-selected" : ""}" href="#" data-pick="${esc(s.key)}">
         <span class="sch-name">${esc(s.label)}</span>
         <span class="sch-time">${esc(s.start)}–${esc(s.end)}</span>
         <span class="sch-note">${s.closed ? "Cerrada" : `${ok(s)} / ${s.capacity} inscritos`}</span>
@@ -369,7 +393,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       const s = it.slot, c = classOf(s.classId);
       const top = (it.a - start * 60) / 60, height = (it.b - it.a) / 60;
       const w = 100 / it.lanes;
-      return `<button type="button" draggable="false" class="sch-class adm-block t-${esc((c && c.tone) || "oro")}${s.active === false ? " is-off" : ""}${closedOn(s, weekDateOf(s)) ? " is-closed" : ""}${s.date ? " is-once" : ""}${draft.has(s.id) ? " is-draft" : ""}${it.b - it.a <= 30 ? " is-short" : ""}"
+      return `<button type="button" draggable="false" class="sch-class adm-block ${esc(lookCls(c || {}))}${s.active === false ? " is-off" : ""}${closedOn(s, weekDateOf(s)) ? " is-closed" : ""}${s.date ? " is-once" : ""}${draft.has(s.id) ? " is-draft" : ""}${it.b - it.a <= 30 ? " is-short" : ""}"
         data-sched-edit="${esc(s.id)}" style="top:calc(var(--hour-h) * ${top} + 1px);height:calc(var(--hour-h) * ${height} - 2px);left:calc(${it.lane * w}% + 2px);width:calc(${w}% - 4px)">
         <span class="sch-name">${esc(c ? c.label : s.classId)}</span>
         <span class="sch-time">${hm(it.a)}–${hm(it.b)}${s.date ? ` · única ${dayMonth(s.date)}` : ""}</span>
@@ -1010,17 +1034,28 @@ export function initClases({ db, fs, esc, toast, saveError }) {
 
   function classForm(c) {
     const x = c || {};
-    return `<form class="adm-editor adm-form" data-form="class" novalidate>
+    const p = c ? partsOf(c) : { discipline: "", type: "", club: "" };
+    const preview = { label: p.discipline || p.club ? composeLabel(p) : "Disciplina · Club", look: lookCls({ tone: x.tone || "oro", design: x.design || 0, clubTone: x.clubTone || "bronce" }) };
+    const palette = sel => TONES.filter(([k]) => k !== "linea").map(([k, n]) => `<option value="${k}"${k === sel ? " selected" : ""}>${n}</option>`).join("");
+    const list = (id, field) => `<datalist id="${id}">${[...new Set(classes.map(k => partsOf(k)[field]).filter(Boolean))].sort().map(v => `<option value="${esc(v)}">`).join("")}</datalist>`;
+    return `<form class="adm-editor adm-form" data-form="class" novalidate>${list("dlDisc", "discipline")}${list("dlType", "type")}${list("dlClub", "club")}
       <div class="adm-bar"><h2>${c ? "Editar clase" : "Nueva clase"}</h2>
         <div class="adm-actions"><button class="btn ghost" type="button" data-back>Cancelar</button><button class="btn" type="submit">Guardar</button></div></div>
       <div class="adm-formgrid">
-        <div class="field"><label for="cLabel">Nombre</label><input id="cLabel" name="label" maxlength="60" value="${esc(x.label || "")}" required></div>
+        <div class="field"><label for="cDisc">Disciplina</label><input id="cDisc" name="discipline" maxlength="30" list="dlDisc" value="${esc(p.discipline)}" placeholder="Judo, BJJ, Físico…" required></div>
+        <div class="field"><label for="cType">Tipo <small>(opcional)</small></label><input id="cType" name="type" maxlength="20" list="dlType" value="${esc(p.type)}" placeholder="Gi, No-Gi, Kids…">
+          <small class="adm-help">Define el diseño del bloque en el horario. Si la clase no tiene tipo, déjalo vacío.</small></div>
+        <div class="field"><label for="cClub">Club</label><input id="cClub" name="club" maxlength="30" list="dlClub" value="${esc(p.club)}" placeholder="Kizuna, Núcleo…" required></div>
+        <div class="field"><label>Nombre de la clase</label><output class="adm-classname" data-classname>${esc(preview.label)}</output>
+          <small class="adm-help">Se arma solo: disciplina, tipo y club.</small></div>
+        <div class="field"><label for="cTone">Color de la disciplina</label><select id="cTone" name="tone">${palette(x.tone || "oro")}</select></div>
+        <div class="field"><label for="cClubTone">Color de la franja del club</label><select id="cClubTone" name="clubTone">${palette(x.clubTone || "bronce")}</select></div>
+        <div class="field"><label>Así se ve en el horario</label><div class="adm-classpreview"><div class="sch-class ${esc(preview.look)}" data-classpreview><span class="sch-name">${esc(preview.label)}</span><span class="sch-time">19:00–20:00</span></div></div></div>
         <div class="field"><label for="cId">Código</label><input id="cId" name="id" maxlength="40" pattern="[a-z0-9\\-]+" value="${esc(x.id || "")}"${c ? " readonly" : ""} required>
           <small class="adm-help">Solo minúsculas, números y guiones. No se puede cambiar después. Las páginas de Judo y BJJ lo usan para mostrar sus clases.</small></div>
         <div class="field"><label for="cDur">Duración de la clase (minutos)</label><input id="cDur" name="duration" type="number" min="10" max="300" value="${esc(x.duration || 60)}">
           <small class="adm-help">Es lo que dura en el horario semanal: al ubicarla ahí solo eliges la hora de inicio.</small></div>
         <div class="field"><label for="cCap">Cupos habituales</label><input id="cCap" name="capacity" type="number" min="1" max="200" value="${esc(x.capacity || DEFAULT_CAP)}"></div>
-        <div class="field"><label for="cTone">Color en el horario</label><select id="cTone" name="tone">${TONES.map(([k, n]) => `<option value="${k}"${k === (x.tone || "oro") ? " selected" : ""}>${n}</option>`).join("")}</select></div>
         <div class="field"><label for="cPage">Página de la disciplina</label><input id="cPage" name="page" maxlength="60" value="${esc(x.page || "")}" placeholder="judo.html (opcional)"></div>
         <div class="field"><label for="cOrder">Orden</label><input id="cOrder" name="order" type="number" value="${esc(x.order ?? classes.length + 1)}"></div>
       </div>
@@ -1062,17 +1097,36 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     err.textContent = "";
     try {
       if (kind === "class") {
-        const label = f.label.value.trim();
+        const parts = { discipline: f.discipline.value.trim(), type: f.type.value.trim(), club: f.club.value.trim() };
+        if (!parts.discipline) return fail("Escribe la disciplina.");
+        if (!parts.club) return fail("Escribe el club.");
+        const label = composeLabel(parts);
+        if (label.length > 60) return fail("El nombre (disciplina, tipo y club) no puede pasar de 60 caracteres.");
         const id = editing.item ? editing.item.id : (f.id.value.trim() || slugify(label));
-        if (!label) return fail("Escribe el nombre de la clase.");
         if (!/^[a-z0-9-]{1,40}$/.test(id)) return fail("El código solo puede tener minúsculas, números y guiones.");
         if (!editing.item && classOf(id)) return fail("Ya existe una clase con ese código.");
-        const data = { label, tone: f.tone.value, page: f.page.value.trim(), order: Number(f.order.value) || 0, active: f.active.checked };
+        const data = { label, discipline: parts.discipline, club: parts.club, tone: f.tone.value, clubTone: f.clubTone.value, design: designFor(parts.type, id),
+          page: f.page.value.trim(), order: Number(f.order.value) || 0, active: f.active.checked };
+        if (parts.type) data.type = parts.type;
         if (num(f.duration.value)) data.duration = num(f.duration.value);
         if (num(f.capacity.value)) data.capacity = num(f.capacity.value);
         await fs.setDoc(fs.doc(db, "classes", id), data);
+        // Las demás clases de la misma disciplina, tipo o club comparten color, diseño y franja
+        const patches = new Map();
+        classes.filter(k => k.id !== id).forEach(k => {
+          const q = partsOf(k), patch = {};
+          if (norm(q.discipline) === norm(parts.discipline) && k.tone !== data.tone) patch.tone = data.tone;
+          if (norm(q.club) === norm(parts.club) && k.clubTone !== data.clubTone) patch.clubTone = data.clubTone;
+          if (parts.type && norm(q.type) === norm(parts.type) && k.design !== data.design) patch.design = data.design;
+          if (Object.keys(patch).length) patches.set(k.id, patch);
+        });
+        if (patches.size) {
+          const b = fs.writeBatch(db);
+          patches.forEach((patch, kid) => b.update(fs.doc(db, "classes", kid), patch));
+          await b.commit();
+        }
         const saved = { id, ...data };
-        classes = (classOf(id) ? classes.map(c => (c.id === id ? saved : c)) : [...classes, saved]).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        classes = (classOf(id) ? classes.map(c => (c.id === id ? saved : c)) : [...classes, saved]).map(c => (patches.has(c.id) ? { ...c, ...patches.get(c.id) } : c)).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       }
       editing = null;
       toast("Guardado");
@@ -1147,8 +1201,11 @@ export function initClases({ db, fs, esc, toast, saveError }) {
 
     if (t.closest("#seedClasses")) {
       const b = fs.writeBatch(db);
+      const seedTypes = [];
+      const seedDesign = type => { if (!norm(type)) return 0; let i = seedTypes.indexOf(norm(type)); if (i < 0) i = seedTypes.push(norm(type)) - 1; return 1 + (i % (DESIGNS - 1)); };
       (cfg.classes || []).forEach((c, i) => {
-        const data = { label: c.label, tone: c.tone || "oro", page: c.page || "", order: i + 1, active: true, duration: 60, capacity: DEFAULT_CAP };
+        const parts = { discipline: c.discipline || c.label, type: c.type || "", club: c.club || "" };
+        const data = { label: composeLabel(parts), discipline: parts.discipline, club: parts.club, tone: c.tone || "oro", clubTone: c.clubTone || "bronce", design: seedDesign(parts.type), page: c.page || "", order: i + 1, active: true, duration: 60, capacity: DEFAULT_CAP };
         b.set(fs.doc(db, "classes", c.slug), data);
       });
       try { await b.commit(); await loadBase(); toast("Clases cargadas"); render(); } catch (err) { alert(saveError(err)); }
@@ -1164,7 +1221,26 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     if (cell && e.target === cell && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); cell.click(); }
   });
 
-  root.addEventListener("input", e => { if (e.target.form && e.target.form.dataset.form === "sched") editorHint(e.target.form); });
+  // Formulario de clase: el nombre y la vista previa se arman mientras se escribe, y una disciplina o club ya usado trae su color
+  function syncClassForm(form, from) {
+    const f = form.elements;
+    const parts = { discipline: f.discipline.value.trim(), type: f.type.value.trim(), club: f.club.value.trim() };
+    const id = editing && editing.item ? editing.item.id : null;
+    if (from === "discipline") { const t = sharedValue(parts.discipline, "discipline", "tone", id); if (t) f.tone.value = t; }
+    if (from === "club") { const t = sharedValue(parts.club, "club", "clubTone", id); if (t) f.clubTone.value = t; }
+    const label = parts.discipline || parts.club ? composeLabel(parts) : "Disciplina · Club";
+    form.querySelector("[data-classname]").textContent = label;
+    const box = form.querySelector("[data-classpreview]");
+    box.className = "sch-class " + lookCls({ tone: f.tone.value, design: designFor(parts.type, id), clubTone: f.clubTone.value });
+    box.querySelector(".sch-name").textContent = label;
+  }
+  root.addEventListener("input", e => {
+    const form = e.target.form;
+    if (!form) return;
+    if (form.dataset.form === "sched") editorHint(form);
+    if (form.dataset.form === "class") syncClassForm(form, e.target.name);
+  });
+  root.addEventListener("change", e => { if (e.target.form && e.target.form.dataset.form === "class") syncClassForm(e.target.form, ""); });
 
   root.addEventListener("change", e => {
     if (e.target.form && e.target.form.dataset.form === "sched") editorHint(e.target.form);

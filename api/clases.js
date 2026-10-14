@@ -35,7 +35,7 @@ module.exports = handler(["GET"], async (req, res) => {
   const classes = [...base.classes.values()]
     .filter(c => c.active !== false && used.has(c.id))
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-    .map(c => ({ id: c.id, label: c.label, tone: c.tone || "oro", page: c.page || "" }));
+    .map(c => ({ id: c.id, label: c.label, tone: c.tone || "oro", page: c.page || "", discipline: c.discipline || "", type: c.type || "", club: c.club || "", clubTone: c.clubTone || "", design: c.design || 0 }));
 
   res.setHeader("Cache-Control", "no-store");
   res.status(200).json({ classes, sessions, week, days, today });

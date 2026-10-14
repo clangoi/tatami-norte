@@ -40,7 +40,7 @@
   async function fromOwn(){
     const res = await fetch("/api/clases?semana=1").then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
     const disciplinas = {};
-    res.classes.forEach(c => { disciplinas[c.id] = { nombre: c.label, tono: c.tone || "oro", pagina: c.page || "" }; });
+    res.classes.forEach(c => { disciplinas[c.id] = { nombre: c.label, tono: c.tone || "oro", pagina: c.page || "", disciplina: c.discipline, tipo: c.type, club: c.club, franja: c.clubTone, diseno: c.design }; });
 
     const todayIso = res.today;
     const addDay = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return isoDate(d); };
@@ -96,17 +96,38 @@
     const times = [...new Set(classes.map(c => c.inicio))].sort();
     const used = Object.keys(disc).filter(k => classes.some(c => c.disciplina === k));
     const tone = k => TONES.includes(disc[k]?.tono) ? disc[k].tono : "oro";
+    // Disciplina, tipo y club de cada clase (las antiguas los sacan de su nombre: «BJJ Gi · Kizuna»)
+    const facet = k => {
+      const d = disc[k] || {};
+      if (d.disciplina || d.club) return { disciplina: d.disciplina || "", tipo: d.tipo || "", club: d.club || "" };
+      const [left, ...rest] = String(d.nombre || k).split(" · ");
+      return { disciplina: left.trim(), tipo: "", club: rest.join(" · ").trim() };
+    };
+    const design = k => Number.isInteger(disc[k]?.diseno) && disc[k].diseno >= 0 && disc[k].diseno <= 4 ? disc[k].diseno : 0;
+    const stripe = k => TONES.includes(disc[k]?.franja) ? ` s-${disc[k].franja}` : "";
 
-    const cell = c => `<a class="sch-class t-${tone(c.disciplina)}" href="${esc(book)}" data-pick="${esc(c.pick || c.disciplina)}" data-disc="${esc(c.disciplina)}"${isToday(c.dia) ? ` data-today data-start="${esc(c.inicio)}" data-end="${esc(c.fin)}"` : ""}>
+    const cell = c => `<a class="sch-class t-${tone(c.disciplina)} ty-${design(c.disciplina)}${stripe(c.disciplina)}" href="${esc(book)}" data-pick="${esc(c.pick || c.disciplina)}" data-disc="${esc(c.disciplina)}" data-f-club="${esc(facet(c.disciplina).club)}" data-f-disciplina="${esc(facet(c.disciplina).disciplina)}" data-f-tipo="${esc(facet(c.disciplina).tipo)}"${isToday(c.dia) ? ` data-today data-start="${esc(c.inicio)}" data-end="${esc(c.fin)}"` : ""}>
         <span class="sch-name">${esc(disc[c.disciplina].nombre)}</span>
         <span class="sch-time">${esc(c.inicio)}–${esc(c.fin)}</span>
         ${c.nota ? `<span class="sch-note">${esc(c.nota)}</span>` : ""}
       </a>`;
 
-    // Leyenda / filtro (solo si hay más de una disciplina)
-    const legend = used.length > 1 ? `<div class="sch-legend" role="group" aria-label="Filtrar por disciplina">
-        <button type="button" class="sch-chip" aria-pressed="true" data-show="">Todas</button>
-        ${used.map(k => `<button type="button" class="sch-chip" aria-pressed="false" data-show="${esc(k)}"><i class="sw t-${tone(k)}"></i>${esc(disc[k].nombre)}</button>`).join("")}
+    // Filtros por club, disciplina y tipo (se pueden combinar y elegir varios en cada uno)
+    const GROUPS = [["club", "Club"], ["disciplina", "Disciplina"], ["tipo", "Tipo"]];
+    const groupHtml = ([g, name]) => {
+      const vals = [...new Set(used.map(k => facet(k)[g]).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
+      const untyped = g === "tipo" && used.some(k => !facet(k).tipo);
+      if (vals.length < 2 && !(untyped && vals.length)) return "";
+      const swatch = v => g === "disciplina" ? `<i class="sw t-${tone(used.find(k => facet(k).disciplina === v))} ty-0"></i>` : "";
+      return `<div class="sch-legend-group" role="group" aria-label="Filtrar por ${name.toLowerCase()}">
+          <span class="sch-legend-label">${name}</span>
+          ${vals.map(v => `<button type="button" class="sch-chip" aria-pressed="false" data-group="${g}" data-val="${esc(v)}">${swatch(v)}${esc(v)}</button>`).join("")}
+        </div>`;
+    };
+    const groups = GROUPS.map(groupHtml).join("");
+    const legend = groups ? `<div class="sch-legend" role="group" aria-label="Filtrar el horario">
+        <div class="sch-legend-group"><span class="sch-legend-label">Ver</span><button type="button" class="sch-chip" aria-pressed="true" data-all>Todas</button></div>
+        ${groups}
       </div>` : "";
 
     // Vista de grilla (computador): filas por hora, columnas por día
@@ -143,17 +164,18 @@
 
   // Un solo manejador por bloque: filtros y clic en una clase
   blocks.forEach(el => el.addEventListener("click", e => {
-    const chip = e.target.closest("[data-show]");
+    const chip = e.target.closest("[data-all], [data-group]");
     if (chip) {
-      // Se pueden elegir varias disciplinas a la vez; "Todas" (o quitar la última) vuelve a mostrar todo
-      const k = chip.dataset.show;
-      if (!k) el.querySelectorAll("[data-show]").forEach(b => b.setAttribute("aria-pressed", !b.dataset.show));
+      // Dentro de un grupo se suman las opciones (o); entre grupos se combinan (y). «Todas» limpia todo.
+      if (chip.hasAttribute("data-all")) el.querySelectorAll("[data-group]").forEach(b => b.setAttribute("aria-pressed", "false"));
       else chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed") !== "true");
-      const picked = [...el.querySelectorAll('[data-show]:not([data-show=""])[aria-pressed="true"]')].map(b => b.dataset.show);
-      el.querySelector('[data-show=""]').setAttribute("aria-pressed", !picked.length);
+      const picked = {};
+      el.querySelectorAll('[data-group][aria-pressed="true"]').forEach(b => { (picked[b.dataset.group] = picked[b.dataset.group] || []).push(b.dataset.val); });
+      const any = Object.keys(picked).length > 0;
+      el.querySelector("[data-all]").setAttribute("aria-pressed", !any);
       el.querySelectorAll(".sch-class").forEach(a => {
-        const on = picked.includes(a.dataset.disc);
-        a.classList.toggle("is-dim", !!picked.length && !on);
+        const on = any && Object.entries(picked).every(([g, vals]) => vals.includes(a.dataset["f" + g[0].toUpperCase() + g.slice(1)]));
+        a.classList.toggle("is-dim", any && !on);
         a.classList.toggle("is-hi", on);
       });
       return;

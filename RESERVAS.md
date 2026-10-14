@@ -63,6 +63,7 @@ Cada clase aparece como «Judo (3/15)» y en la descripción lista a los inscrit
 ### 5. Cargar las clases
 
 1. `/admin` → **Clases → Clases** → **Cargar las clases de siempre** (trae las de `site.config.js`) y ajusta duración, cupos y colores.
+   Cada clase tiene **disciplina** (obligatoria), **tipo** (opcional) y **club** (obligatorio); su nombre se arma solo: «[disciplina] [tipo] · [Club]». El **color** lo da la disciplina, el **diseño del bloque** el tipo y la **franja lateral** el club. Las clases que comparten disciplina, tipo o club comparten también ese color, diseño o franja. En la portada el horario se puede filtrar por club, disciplina y tipo.
 2. **Horario semanal**: ubica cada clase en el día y la hora donde empieza.
 3. **Cancelar una clase solo una semana**: toca la clase en el horario semanal, el tacho y elige «Solo esta semana». Queda inactiva únicamente ese día (se guarda como un cierre) y se puede reactivar desde la misma ventana. «De la planificación semanal» la quita de todas las semanas.
 4. **Clase única**: al agregar una clase al horario se pregunta si es recurrente (se repite cada semana) o única (una sola fecha). Las únicas aparecen en el horario hasta que pasa su fecha.

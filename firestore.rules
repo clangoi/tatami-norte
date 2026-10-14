@@ -93,6 +93,11 @@ service cloud.firestore {
         && d.active is bool
         && d.order is number
         && shortText(d, 'tone', 12)
+        && shortText(d, 'clubTone', 12)
+        && shortText(d, 'discipline', 30)
+        && shortText(d, 'type', 20)
+        && shortText(d, 'club', 30)
+        && (!('design' in d) || (d.design is number && d.design >= 0 && d.design <= 4))
         && shortText(d, 'page', 60)
         && (!('duration' in d) || (d.duration is number && d.duration >= 10 && d.duration <= 300))
         && (!('capacity' in d) || (d.capacity is number && d.capacity >= 1 && d.capacity <= 200));

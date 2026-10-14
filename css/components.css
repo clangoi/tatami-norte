@@ -193,19 +193,34 @@
 @keyframes ig-shimmer{to{background-position:-200% 0}}
 
 /* ---- Horario semanal (js/schedule.js) ---- */
-/* Tonos por clase: site.config.js → booking.classes → tone (o "tono" en data/horario.json) */
-.t-oro{background:var(--gold);color:var(--navy)}
-.t-bronce{background:var(--bronze);color:var(--navy)}
-.t-cobre{background:transparent;color:var(--cream);border:1px solid var(--bronze);box-shadow:inset 3px 0 0 var(--bronze)}
-.t-marino{background:var(--navy-3);color:var(--cream);box-shadow:inset 3px 0 0 var(--gold)}
-.t-acero{background:var(--steel);color:var(--navy)}
-.t-plata{background:transparent;color:var(--cream);border:1px solid var(--steel);box-shadow:inset 3px 0 0 var(--steel)}
-.t-crema{background:var(--cream);color:var(--navy)}
-.t-linea{background:transparent;color:var(--cream);border:1px dashed var(--gold)}
+/* Bloque de una clase = paleta (disciplina) + diseño (tipo) + franja lateral (club)
+   t-*  color de la disciplina: define --c (color) y --ink (texto sobre ese color)
+   ty-* diseño según el tipo (ty-0 sin tipo: relleno liso)
+   s-*  color de la franja lateral según el club
+   Se guardan en cada clase del panel: tone, design y clubTone. */
+.t-oro{--c:var(--gold);--ink:var(--navy)}
+.t-bronce{--c:var(--bronze);--ink:var(--navy)}
+.t-cobre{--c:#B5764F;--ink:var(--navy)}
+.t-marino{--c:var(--navy-3);--ink:var(--cream)}
+.t-acero{--c:var(--steel);--ink:var(--navy)}
+.t-plata{--c:#C3C7CE;--ink:var(--navy)}
+.t-crema{--c:var(--cream);--ink:var(--navy)}
+.t-linea{--c:var(--gold);--ink:var(--navy)}
+.sch-class,.ty-0{background:var(--c,var(--gold));color:var(--ink,var(--navy))}
+.sch-class.ty-1{background:transparent;color:var(--cream);border:1px solid var(--c)}
+.sch-class.ty-2{background:transparent;color:var(--cream);border:1px dashed var(--c)}
+.sch-class.ty-3{background:color-mix(in srgb,var(--c) 24%,transparent);color:var(--cream);border:1px solid color-mix(in srgb,var(--c) 45%,transparent)}
+.sch-class.ty-4{background:repeating-linear-gradient(135deg,var(--c) 0 9px,color-mix(in srgb,var(--c) 72%,#000) 9px 18px);color:var(--ink,var(--navy))}
+.s-oro{--stripe:var(--gold)}.s-bronce{--stripe:var(--bronze)}.s-cobre{--stripe:#B5764F}.s-marino{--stripe:#4a5a8c}
+.s-acero{--stripe:var(--steel)}.s-plata{--stripe:#C3C7CE}.s-crema{--stripe:var(--cream)}.s-linea{--stripe:var(--gold)}
+.sch-class[class*=" s-"]{padding-left:18px}
+.sch-class[class*=" s-"]::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--stripe);box-shadow:1px 0 0 rgba(27,35,56,.55)}
 
 .sch-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
 .sch-chip{display:inline-flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);color:var(--cream);font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;padding:10px 12px;cursor:pointer}
 .sch-chip[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.sch-legend-group{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}
+.sch-legend-label{font:700 12px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--steel);min-width:84px}
 .sch-chip .sw{width:12px;height:12px;display:inline-block}
 
 .sch-grid{display:grid;grid-template-columns:64px repeat(var(--days,6),minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
@@ -217,7 +232,7 @@
 .sch-cell{padding:6px;min-height:78px;display:flex;flex-direction:column;gap:6px}
 .sch-day.is-today,.sch-cell.is-today{background:rgba(214,189,140,.06)}
 
-.sch-class{display:flex;flex-direction:column;gap:4px;padding:10px 12px;text-decoration:none;flex:1;transition:opacity .2s,transform .15s}
+.sch-class{position:relative;display:flex;flex-direction:column;gap:4px;padding:10px 12px;text-decoration:none;flex:1;transition:opacity .2s,transform .15s}
 .sch-class:hover{transform:translateY(-2px)}
 .sch-class[data-today]{opacity:var(--fade,1)}
 .sch-class.is-dim{opacity:.18}

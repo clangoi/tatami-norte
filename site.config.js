@@ -86,21 +86,23 @@ window.SITE_CONFIG = {
      Las clases, los horarios y los cupos se administran en admin.html → Clases
      (ver RESERVAS.md). Aquí solo van los ajustes generales y las clases de siempre,
      que el panel puede cargar con un botón.
-     slug: código de la clase. tone: color en el horario (oro, bronce, cobre, marino,
-     acero, plata, crema, linea). page: página de la disciplina ("" si no tiene). */
+     Cada clase es disciplina + tipo (opcional) + club; su nombre sale solo: «[disciplina] [tipo] · [Club]».
+     tone: color de la disciplina (oro, bronce, cobre, marino, acero, plata, crema).
+     clubTone: color de la franja lateral del club. El diseño del bloque lo da el tipo.
+     page: página de la disciplina ("" si no tiene). */
   booking: {
     timeZone: "America/Santiago",                // hora de las clases
     minNoticeMinutes: 120,                       // no se reserva con menos aviso que este
     defaultCapacity: 15,                         // cupos si la clase o el horario no definen otro
     classes: [
-      { label: "BJJ Gi · Kizuna",    slug: "jiu-jitsu-gi",   tone: "bronce", page: "bjj.html" },
-      { label: "BJJ Gi · Núcleo",    slug: "bjj-gi-nucleo",  tone: "cobre",  page: "bjj.html" },
-      { label: "BJJ No-Gi · Núcleo", slug: "jiujitsu-no-gi", tone: "marino", page: "bjj.html#no-gi" },
-      { label: "Judo",      slug: "judo",           tone: "oro",    page: "judo.html" },
-      { label: "Judo No-Gi", slug: "judo-no-gi",    tone: "crema",  page: "judo.html" },
-      { label: "Judo Kids",  slug: "judo-kids",     tone: "plata",  page: "judo.html" },
-      { label: "Físico",    slug: "fisico",         tone: "acero",  page: "" },
-      { label: "Judo Randoris",         slug: "sala-libre-randoris", tone: "linea", page: "" }
+      { discipline: "BJJ",   type: "Gi",       club: "Kizuna", slug: "jiu-jitsu-gi",        tone: "bronce", clubTone: "marino", page: "bjj.html" },
+      { discipline: "BJJ",   type: "Gi",       club: "Núcleo", slug: "bjj-gi-nucleo",       tone: "bronce", clubTone: "cobre",  page: "bjj.html" },
+      { discipline: "BJJ",   type: "No-Gi",    club: "Núcleo", slug: "jiujitsu-no-gi",      tone: "bronce", clubTone: "cobre",  page: "bjj.html#no-gi" },
+      { discipline: "Judo",                    club: "Kizuna", slug: "judo",                tone: "oro",    clubTone: "marino", page: "judo.html" },
+      { discipline: "Judo",  type: "No-Gi",    club: "Kizuna", slug: "judo-no-gi",          tone: "oro",    clubTone: "marino", page: "judo.html" },
+      { discipline: "Judo",  type: "Kids",     club: "Kizuna", slug: "judo-kids",           tone: "oro",    clubTone: "marino", page: "judo.html" },
+      { discipline: "Físico",                  club: "Kizuna", slug: "fisico",              tone: "acero",  clubTone: "marino", page: "" },
+      { discipline: "Judo",  type: "Randoris", club: "Kizuna", slug: "sala-libre-randoris", tone: "oro",    clubTone: "marino", page: "" }
     ]
   },
 

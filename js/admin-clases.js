@@ -13,7 +13,7 @@ import { infoTip } from "./admin-info.js";
 const DAYS = [["lunes", "Lunes"], ["martes", "Martes"], ["miercoles", "Miércoles"], ["jueves", "Jueves"], ["viernes", "Viernes"], ["sabado", "Sábado"], ["domingo", "Domingo"]];
 const DAY_BY_DOW = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
 const TONES = [["oro", "Oro"], ["bronce", "Bronce"], ["cobre", "Cobre"], ["marino", "Marino"], ["acero", "Acero"], ["plata", "Plata"], ["crema", "Crema"], ["linea", "Línea"]];
-const DESIGNS = 5;   // diseños de bloque: 0 liso (clase sin tipo) y 1 a 4 según el tipo
+const DESIGNS = 11;   // diseños de bloque: 0 liso (clase sin tipo) y 1 a 10 según el tipo
 const SUBS = [["people", "Inscritos"], ["slots", "Horario semanal"], ["classes", "Clases"], ["config", "Configuración"]];
 
 export function initClases({ db, fs, esc, toast, saveError }) {
@@ -58,7 +58,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   // Se guardan en settings/catalog; cada clase copia los suyos (tone, page, clubTone, design) para que el sitio los lea directo.
   let catalog = { clubs: [], disciplines: [], types: [] };
   let cfgDraft = null;      // copia editable de la configuración mientras se está en esa pestaña
-  const DESIGN_NAMES = ["Liso", "Contorno", "Punteado", "Tinte", "Rayado"];
+  const DESIGN_NAMES = ["Liso", "Contorno", "Punteado", "Tinte", "Rayado", "Doble borde", "Puntos", "Líneas", "Cuadrícula", "Degradado", "Ajedrez"];
   const uid = () => Math.random().toString(36).slice(2, 8);
   const byName = (list, name) => list.find(i => norm(i.name) === norm(name));
   const cloneCatalog = () => JSON.parse(JSON.stringify(catalog));

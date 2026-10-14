@@ -105,7 +105,7 @@
       const [left, ...rest] = String(d.nombre || k).split(" · ");
       return { disciplina: left.trim(), tipo: "", club: rest.join(" · ").trim() };
     };
-    const design = k => Number.isInteger(disc[k]?.diseno) && disc[k].diseno >= 0 && disc[k].diseno <= 4 ? disc[k].diseno : 0;
+    const design = k => Number.isInteger(disc[k]?.diseno) && disc[k].diseno >= 0 && disc[k].diseno <= 10 ? disc[k].diseno : 0;
     const stripe = k => TONES.includes(disc[k]?.franja) ? ` s-${disc[k].franja}` : "";
 
     const cell = c => `<a class="sch-class t-${tone(c.disciplina)} ty-${design(c.disciplina)}${stripe(c.disciplina)}" href="${esc(book)}" data-pick="${esc(c.pick || c.disciplina)}" data-disc="${esc(c.disciplina)}" data-f-club="${esc(facet(c.disciplina).club)}" data-f-disciplina="${esc(facet(c.disciplina).disciplina)}" data-f-tipo="${esc(facet(c.disciplina).tipo)}"${isToday(c.dia) ? ` data-today data-start="${esc(c.inicio)}" data-end="${esc(c.fin)}"` : ""}>

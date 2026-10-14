@@ -210,7 +210,13 @@
 .sch-class.ty-1{background:transparent;color:var(--cream);border:1px solid var(--c)}
 .sch-class.ty-2{background:transparent;color:var(--cream);border:1px dashed var(--c)}
 .sch-class.ty-3{background:color-mix(in srgb,var(--c) 24%,transparent);color:var(--cream);border:1px solid color-mix(in srgb,var(--c) 45%,transparent)}
-.sch-class.ty-4{background:repeating-linear-gradient(135deg,var(--c) 0 9px,color-mix(in srgb,var(--c) 72%,#000) 9px 18px);color:var(--ink,var(--navy))}
+.sch-class.ty-4{background:repeating-linear-gradient(135deg,var(--c) 0 10px,color-mix(in srgb,var(--c) 84%,#fff) 10px 20px);color:var(--ink,var(--navy))}
+.sch-class.ty-5{background:transparent;color:var(--cream);border:4px double var(--c)}
+.sch-class.ty-6{background:radial-gradient(circle,color-mix(in srgb,var(--c) 55%,transparent) 1.4px,transparent 2px) 0 0/12px 12px,color-mix(in srgb,var(--c) 12%,var(--navy));color:var(--cream)}
+.sch-class.ty-7{background:repeating-linear-gradient(0deg,color-mix(in srgb,var(--c) 45%,transparent) 0 2px,transparent 2px 10px),color-mix(in srgb,var(--c) 12%,var(--navy));color:var(--cream)}
+.sch-class.ty-8{background:linear-gradient(color-mix(in srgb,var(--c) 40%,transparent) 1px,transparent 1px) 0 0/14px 14px,linear-gradient(90deg,color-mix(in srgb,var(--c) 40%,transparent) 1px,transparent 1px) 0 0/14px 14px,color-mix(in srgb,var(--c) 12%,var(--navy));color:var(--cream)}
+.sch-class.ty-9{background:linear-gradient(180deg,var(--c),color-mix(in srgb,var(--c) 40%,transparent));color:var(--ink,var(--navy))}
+.sch-class.ty-10{background:conic-gradient(color-mix(in srgb,var(--c) 30%,transparent) 25%,transparent 0 50%,color-mix(in srgb,var(--c) 30%,transparent) 0 75%,transparent 0) 0 0/16px 16px,color-mix(in srgb,var(--c) 10%,var(--navy));color:var(--cream)}
 .s-oro{--stripe:var(--gold)}.s-bronce{--stripe:var(--bronze)}.s-cobre{--stripe:#B5764F}.s-marino{--stripe:#4a5a8c}
 .s-acero{--stripe:var(--steel)}.s-plata{--stripe:#C3C7CE}.s-crema{--stripe:var(--cream)}.s-linea{--stripe:var(--gold)}
 .sch-class[class*=" s-"]{padding-left:14px}

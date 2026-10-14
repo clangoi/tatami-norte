@@ -13,7 +13,6 @@ import { infoTip } from "./admin-info.js";
 const DAYS = [["lunes", "Lunes"], ["martes", "Martes"], ["miercoles", "Miércoles"], ["jueves", "Jueves"], ["viernes", "Viernes"], ["sabado", "Sábado"], ["domingo", "Domingo"]];
 const DAY_BY_DOW = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
 const TONES = [["oro", "Oro"], ["bronce", "Bronce"], ["cobre", "Cobre"], ["marino", "Marino"], ["acero", "Acero"], ["plata", "Plata"], ["crema", "Crema"], ["linea", "Línea"]];
-const WEEKS_BEFORE = 4, WEEKS_AHEAD = 12;   // bloques de semana creados de antemano
 const DESIGNS = 5;   // diseños de bloque: 0 liso (clase sin tipo) y 1 a 4 según el tipo
 const SUBS = [["people", "Inscritos"], ["slots", "Horario semanal"], ["classes", "Clases"]];
 
@@ -27,9 +26,9 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   let loaded = false;
   let sub = "people";
   let editing = null;       // { kind: "class", item|null }
-  let classFilter = "";     // Inscritos: id de la clase, "group:judo" / "group:bjj" ("" = todas)
+  let filters = { club: "", discipline: "", type: "" };   // Inscritos: filtros por club, disciplina y tipo ("" = todos)
   let weekStart = null;     // lunes de la semana que muestra la vista semanal
-  let weeks = [];           // lunes de los bloques de semana (los de WEEKS_*; crecen si se avanza más allá)
+  let weeks = [];           // lunes de las semanas que se pueden ver: desde la primera con inscritos hasta la siguiente a la actual
   let selectedKey = null;   // clase elegida en la vista semanal
 
   /* ---------- Fechas ---------- */
@@ -89,7 +88,13 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       root.innerHTML = '<p class="adm-loading">Cargando clases…</p>';
       try {
         weekStart = mondayOf(todayStr());
-        weeks = Array.from({ length: WEEKS_BEFORE + WEEKS_AHEAD + 1 }, (_, i) => addDays(weekStart, (i - WEEKS_BEFORE) * 7));
+        // Hacia adelante, lo mismo que se puede reservar en la portada (esta semana y la siguiente);
+        // hacia atrás, hasta la semana de la inscripción más antigua
+        const oldest = await fs.getDocs(fs.query(fs.collection(db, "bookings"), fs.orderBy("date"), fs.limit(1)));
+        const oldestWeek = oldest.docs.length ? mondayOf(oldest.docs[0].data().date) : weekStart;
+        const first = oldestWeek < weekStart ? oldestWeek : weekStart;
+        const count = Math.round((new Date(addDays(weekStart, 7) + "T12:00:00") - new Date(first + "T12:00:00")) / 604800000) + 1;
+        weeks = Array.from({ length: count }, (_, i) => addDays(first, i * 7));
         await Promise.all([loadBase(), loadBookings()]);
         loaded = true;
       } catch (e) {
@@ -184,16 +189,18 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     </article>`;
   }
 
-  const classSelect = () => {
-    const groups = [["judo", "Todo Judo (todas sus clases)"], ["bjj", "Todo BJJ (todas sus clases)"]]
-      .filter(([g]) => classes.some(c => groupOf(c) === g));
-    return `<label>Tipo de clase
-          <select id="rgClass"><option value="">Todas</option>
-            ${groups.length ? `<optgroup label="Vista global">${groups.map(([g, n]) => `<option value="group:${g}"${classFilter === "group:" + g ? " selected" : ""}>${n}</option>`).join("")}</optgroup>` : ""}
-            <optgroup label="Una clase">${classes.map(c => `<option value="${esc(c.id)}"${c.id === classFilter ? " selected" : ""}>${esc(c.label)}</option>`).join("")}</optgroup>
+  // Filtros por club, disciplina y tipo (se combinan)
+  const FILTERS = [["club", "Club"], ["discipline", "Disciplina"], ["type", "Tipo"]];
+  const filterValues = f => [...new Set(classes.map(c => partsOf(c)[f]).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
+  const classSelect = () => FILTERS.map(([f, name]) => {
+    const vals = filterValues(f);
+    if (vals.length < (f === "type" ? 1 : 2)) return "";
+    return `<label>${name}
+          <select data-filter="${f}"><option value="">Todos</option>
+            ${vals.map(v => `<option value="${esc(v)}"${norm(v) === norm(filters[f]) ? " selected" : ""}>${esc(v)}</option>`).join("")}
           </select>
         </label>`;
-  };
+  }).join("");
 
   const emptyNotice = '<div class="notice adm-seed"><p><strong>Todavía no hay horario.</strong> Crea las clases en la pestaña <b>Clases</b> y sus horarios en <b>Horario semanal</b>; después aparecerán aquí con sus inscritos.</p></div>';
   const feedNote = infoTip(`Para ver las clases y sus inscritos en tu calendario (Google, Apple, Outlook), suscríbete a <code>/api/calendario?feed=TU_SECRETO</code>. Ver RESERVAS.md.`);
@@ -220,22 +227,11 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   };
   const dayMonth = date => shortDate(date).replace(/^[^,]*,?\s*/, "");
 
-  // Vista global por disciplina: todas las clases de Judo o de BJJ, sea cual sea su tipo
-  const groupOf = c => {
-    const t = `${c.id} ${c.label}`.toLowerCase();
-    return /judo/.test(t) ? "judo" : /bjj|jiu/.test(t) ? "bjj" : "";
-  };
   const matchesFilter = s => {
-    if (!classFilter) return true;
-    if (classFilter.startsWith("group:")) return groupOf(classOf(s.classId) || {}) === classFilter.slice(6);
-    return s.classId === classFilter;
+    const q = partsOf(classOf(s.classId) || {});
+    return FILTERS.every(([f]) => !filters[f] || norm(q[f]) === norm(filters[f]));
   };
-  const filterLabel = () => {
-    if (!classFilter) return "";
-    if (classFilter === "group:judo") return "Todo Judo";
-    if (classFilter === "group:bjj") return "Todo BJJ";
-    return (classOf(classFilter) || {}).label || "";
-  };
+  const filterLabel = () => FILTERS.map(([f]) => filters[f]).filter(Boolean).join(" · ");
 
   // Horario de la semana, con el mismo formato que el de la portada
   function renderWeek() {
@@ -291,9 +287,9 @@ export function initClases({ db, fs, esc, toast, saveError }) {
 
     return `<div class="adm-toolbar">
         <div class="adm-daynav adm-weeks" role="group" aria-label="Semana">
-          <button class="btn small ghost" type="button" data-week="prev" aria-label="Semana anterior">‹</button>
+          <button class="btn small ghost" type="button" data-week="prev"${weekStart <= [...weeks].sort()[0] ? " disabled" : ""} aria-label="Semana anterior">‹</button>
           <div class="adm-weeks-scroll" data-weeks-scroll>${[...weeks].sort().map(w => `<button class="btn small ghost" type="button" data-week-go="${w}" aria-pressed="${w === weekStart}">${esc(weekRange(w))}${w === mondayOf(today) ? "<small>Actual</small>" : ""}</button>`).join("")}</div>
-          <button class="btn small ghost" type="button" data-week="after" aria-label="Semana siguiente">›</button>
+          <button class="btn small ghost" type="button" data-week="after"${weekStart >= [...weeks].sort().slice(-1)[0] ? " disabled" : ""} aria-label="Semana siguiente">›</button>
         </div>
         ${classSelect()}
       </div>
@@ -771,7 +767,6 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       await batch.commit();
       slots = slots.filter(x => x.classId !== id);
       classes = classes.filter(x => x.id !== id);
-      if (classFilter === id) classFilter = "";
       toast("Clase borrada");
       render();
     } catch (e) { console.warn(e); alert(saveError(e)); }
@@ -1188,8 +1183,9 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const wk = t.closest("[data-week], [data-week-go]");
     if (wk) {
       // Cada semana a la que se llega queda como un bloque con sus fechas
-      weekStart = wk.dataset.weekGo || addDays(weekStart, wk.dataset.week === "prev" ? -7 : 7);
-      if (!weeks.includes(weekStart)) weeks.push(weekStart);
+      const target = wk.dataset.weekGo || addDays(weekStart, wk.dataset.week === "prev" ? -7 : 7);
+      if (!weeks.includes(target)) return;   // solo hay semanas con inscritos y hasta la siguiente a la actual
+      weekStart = target;
       selectedKey = null;
       root.querySelector(".adm-toolbar").insertAdjacentHTML("afterend", '<p class="adm-loading">Cargando…</p>');
       loadBookings().then(render).catch(err => { root.innerHTML = `<p class="err">${esc(saveError(err))}</p>`; });
@@ -1250,7 +1246,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       render();
       return;
     }
-    if (e.target.id === "rgClass") { classFilter = e.target.value; render(); return; }
+    if (e.target.dataset.filter) { filters[e.target.dataset.filter] = e.target.value; render(); return; }
   });
   root.addEventListener("submit", e => {
     e.preventDefault();

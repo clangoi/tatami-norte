@@ -113,7 +113,7 @@
       </a>`;
 
     // Filtros por club, disciplina y tipo (se pueden combinar y elegir varios en cada uno)
-    const GROUPS = [["club", "Club"], ["disciplina", "Disciplina"], ["tipo", "Tipo"]];
+    const GROUPS = [["club", "Impartido por"], ["disciplina", "Disciplina"], ["tipo", "Tipo"]];
     const groupHtml = ([g, name]) => {
       const vals = [...new Set(used.map(k => facet(k)[g]).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
       const untyped = g === "tipo" && used.some(k => !facet(k).tipo);

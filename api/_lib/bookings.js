@@ -128,7 +128,7 @@ function manageView(b) {
   return {
     id: b.id, status: b.status, classId: b.classId, classLabel: b.classLabel,
     date: b.date, start: b.start, end: b.end, startAt: b.startAt, sessionKey: b.sessionKey,
-    name: b.name, display: b.display, phone: b.phone, email: b.email,
+    name: b.name, display: S.displayName(b.name, b.nickname), phone: b.phone, email: b.email,
     cancelReason: b.cancelReason || "", rescheduleReason: b.rescheduleReason || "", movedTo: b.movedTo || "",
     canChange: b.status === "confirmed" && isFuture(b)
   };

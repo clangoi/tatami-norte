@@ -94,7 +94,7 @@ function publicView(session, bookings) {
     key: session.key, classId: session.classId, classLabel: session.classLabel,
     date: session.date, start: session.start, end: session.end,
     capacity: session.capacity, taken: list.length, full: list.length >= session.capacity,
-    attendees: list.map(b => b.display), note: session.note
+    attendees: list.map(b => displayName(b.name, b.nickname)), note: session.note
   };
 }
 
@@ -115,10 +115,11 @@ async function bookableSession(db, key) {
 function displayName(name, nickname) {
   const nick = String(nickname || "").trim();
   if (nick) return nick;
+  // Inicial del primer apellido: «Camila Rojas Pérez» → «Camila R.»; con dos nombres («Juan Pablo Soto Rojas») → «Juan S.»
   const parts = String(name).trim().split(/\s+/);
   if (parts.length < 2) return parts[0];
-  const last = parts[parts.length - 1];
-  return `${parts[0]} ${last[0].toUpperCase()}.`;
+  const surname = parts[parts.length >= 4 ? 2 : 1];
+  return `${parts[0]} ${surname[0].toUpperCase()}.`;
 }
 
 module.exports = { horizonEnd, keyOf, parseKey, loadBase, occurrences, confirmedBySession, publicView, bookableSession, displayName };

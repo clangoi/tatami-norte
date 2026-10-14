@@ -2,6 +2,9 @@
 // Sirve el sitio y las funciones de api/ contra una base de datos en memoria
 // con unas clases de ejemplo. Uso: node .claude/dev.js   (puerto 5174)
 // Los datos se pierden al detener el servidor. Los correos no se envían.
+// Para ver el horario REAL del panel: guarda la cuenta de servicio de Firebase en .claude/service-account.json
+// (o defínela en FIREBASE_SERVICE_ACCOUNT) y ejecuta `npm install` una vez. Entonces se usa tu Firestore real
+// (las reservas que hagas en local también se guardan ahí).
 const http = require("http"), fs = require("fs"), path = require("path");
 const root = path.resolve(__dirname, "..");
 process.chdir(root);
@@ -40,10 +43,17 @@ const db = {
     return out;
   }
 };
-require.cache[require.resolve("../api/_lib/firebase.js")] = { exports: { getDb: () => db }, loaded: true, id: "fake" };
+const saFile = path.join(__dirname, "service-account.json");
+const REAL = !!(process.env.FIREBASE_SERVICE_ACCOUNT || fs.existsSync(saFile));
+if (REAL) {
+  if (!process.env.FIREBASE_SERVICE_ACCOUNT) process.env.FIREBASE_SERVICE_ACCOUNT = fs.readFileSync(saFile, "utf8");
+  console.log("Usando el Firestore real (horario del panel). Las reservas de prueba también se guardan ahí.");
+} else {
+  require.cache[require.resolve("../api/_lib/firebase.js")] = { exports: { getDb: () => db }, loaded: true, id: "fake" };
+}
 
 /* ---------- Datos de ejemplo ---------- */
-const put = (name, id, d) => col(name).set(id, d);
+const put = (name, id, d) => { if (!REAL) col(name).set(id, d); };
 put("classes", "judo", { label: "Judo", tone: "oro", page: "judo.html", capacity: 3, duration: 60, order: 1, active: true });
 put("classes", "jiu-jitsu-gi", { label: "BJJ Gi · Kizuna", tone: "bronce", page: "bjj.html", capacity: 15, duration: 90, order: 2, active: true });
 put("classes", "judo-kids", { label: "Judo Kids", tone: "plata", page: "judo.html", capacity: 12, duration: 45, order: 3, active: true });

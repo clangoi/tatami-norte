@@ -94,7 +94,7 @@
     const used = Object.keys(disc).filter(k => classes.some(c => c.disciplina === k));
     const tone = k => TONES.includes(disc[k]?.tono) ? disc[k].tono : "oro";
 
-    const cell = c => `<a class="sch-class t-${tone(c.disciplina)}" href="${esc(book)}" data-pick="${esc(c.pick || c.disciplina)}" data-disc="${esc(c.disciplina)}">
+    const cell = c => `<a class="sch-class t-${tone(c.disciplina)}" href="${esc(book)}" data-pick="${esc(c.pick || c.disciplina)}" data-disc="${esc(c.disciplina)}"${isToday(c.dia) ? ` data-today data-start="${esc(c.inicio)}" data-end="${esc(c.fin)}"` : ""}>
         <span class="sch-name">${esc(disc[c.disciplina].nombre)}</span>
         <span class="sch-time">${esc(c.inicio)}–${esc(c.fin)}</span>
         ${c.nota ? `<span class="sch-note">${esc(c.nota)}</span>` : ""}
@@ -159,9 +159,29 @@
     if (a && window.TNBooking) window.TNBooking.select(a.getAttribute("href"), a.dataset.pick);
   }));
 
+  /* Hoy: la clase que ya terminó se aclara y la que se está dictando se destaca con «Ahora» */
+  const minutesNow = () => {
+    const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: (SITE.booking || {}).timeZone || "America/Santiago", hourCycle: "h23", hour: "2-digit", minute: "2-digit" })
+      .formatToParts(new Date()).map(x => [x.type, x.value]));
+    return +p.hour * 60 + +p.minute;
+  };
+  const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+  function tickNow(){
+    const now = minutesNow();
+    document.querySelectorAll(".sch-class[data-today]").forEach(a => {
+      const start = toMin(a.dataset.start), end = toMin(a.dataset.end);
+      const live = now >= start && now < end;
+      a.classList.toggle("is-over", now >= end);
+      a.classList.toggle("is-live", live);
+      const badge = a.querySelector(".sch-live");
+      if (live && !badge) a.insertAdjacentHTML("afterbegin", '<span class="sch-live">Ahora</span>');
+      if (!live && badge) badge.remove();
+    });
+  }
+
   blocks.forEach(el => { el.innerHTML = '<p class="sch-loading">Cargando horario…</p>'; });
   (cfg.source === "json" ? fromJson() : fromOwn())
-    .then(data => blocks.forEach(el => render(el, data)))
+    .then(data => { blocks.forEach(el => render(el, data)); tickNow(); setInterval(tickNow, 30000); })
     .catch(() => blocks.forEach(el => {
       el.innerHTML = '<p class="sch-empty">No pudimos cargar el horario. Revisa las clases disponibles en el calendario de reservas.</p>';
     }));

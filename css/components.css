@@ -219,7 +219,13 @@
 
 .sch-class{display:flex;flex-direction:column;gap:4px;padding:10px 12px;text-decoration:none;flex:1;transition:opacity .2s,transform .15s}
 .sch-class:hover{transform:translateY(-2px)}
+.sch-class.is-over{opacity:.4}
 .sch-class.is-dim{opacity:.18}
+.sch-class.is-live{outline:2px solid var(--gold);outline-offset:-2px;box-shadow:0 0 0 4px rgba(214,189,140,.18)}
+.sch-live{align-self:flex-start;background:var(--gold);color:var(--navy);font:800 11px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;padding:4px 6px;display:inline-flex;align-items:center;gap:6px}
+.sch-live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--navy);animation:sch-pulse 1.4s ease-in-out infinite}
+@keyframes sch-pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.sch-live::before{animation:none}}
 .sch-class.is-hi{outline:2px solid var(--gold);outline-offset:-2px}
 .sch-name{font:800 19px/1.05 var(--display);text-transform:uppercase}
 .sch-time{font:600 13px/1 var(--label);letter-spacing:.1em;font-variant-numeric:tabular-nums;opacity:.85}

@@ -139,10 +139,20 @@ async function startWhatsApp() {
   }
 }
 
+// Envía y espera la confirmación de WhatsApp (ack ≥ 1: el mensaje salió del teléfono hacia sus servidores).
+// Sin esa espera, cerrar el navegador justo después de enviar pierde el mensaje.
+// OJO: sendMessage a veces devuelve undefined aunque el envío funcione; por eso se sigue el ack por destino y texto.
 async function sendTo(client, waPhone, text) {
-  const id = await client.getNumberId(waPhone);        // null si el número no tiene WhatsApp
+  const id = await client.getNumberId(waPhone);        // null si el número no tiene WhatsApp (puede venir como @lid)
   if (!id) return { ok: false, error: "el número no tiene WhatsApp" };
+  const acked = new Promise(resolve => {
+    const done = v => { clearTimeout(timer); client.removeListener("message_ack", onAck); resolve(v); };
+    const onAck = (m, ack) => { if (m.fromMe && m.to === id._serialized && m.body === text && ack >= 1) done(true); };
+    const timer = setTimeout(() => done(false), 45000);
+    client.on("message_ack", onAck);
+  });
   await client.sendMessage(id._serialized, text);
+  if (!(await acked)) return { ok: false, retry: true, error: "WhatsApp no confirmó el envío" };
   return { ok: true };
 }
 
@@ -159,6 +169,7 @@ async function pass(db, client) {
     try {
       const r = await sendTo(client, b.waPhone, text);
       if (r.ok) { await b.ref.update({ reminderSentAt: new Date().toISOString(), reminderChannel: "whatsapp" }); sent++; log("Enviado a", b.name); }
+      else if (r.retry) log("Sin confirmar, se reintenta en la próxima vuelta:", b.name);
       else { await b.ref.update({ reminderError: r.error }); log("Omitido", b.name, "—", r.error); }
     } catch (e) { log("Error con", b.name, "—", e.message); }   // sin marca: se reintenta en la próxima vuelta
     await sleep((PAUSE_MIN_S + Math.random() * (PAUSE_MAX_S - PAUSE_MIN_S)) * 1000);   // pausa de 50 a 80 s entre mensajes

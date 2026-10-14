@@ -220,6 +220,7 @@
 .sch-class{display:flex;flex-direction:column;gap:4px;padding:10px 12px;text-decoration:none;flex:1;transition:opacity .2s,transform .15s}
 .sch-class:hover{transform:translateY(-2px)}
 .sch-class.is-dim{opacity:.18}
+.sch-class.is-hi{outline:2px solid var(--gold);outline-offset:-2px}
 .sch-name{font:800 19px/1.05 var(--display);text-transform:uppercase}
 .sch-time{font:600 13px/1 var(--label);letter-spacing:.1em;font-variant-numeric:tabular-nums;opacity:.85}
 .sch-note{font-size:13px;line-height:1.3;opacity:.85}

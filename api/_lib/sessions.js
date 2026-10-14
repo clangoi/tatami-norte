@@ -44,6 +44,12 @@ function build(base, slot, date, tz, defaultCapacity) {
   };
 }
 
+// Última fecha reservable: el domingo de la semana siguiente (se reserva la semana en curso y la próxima)
+function horizonEnd(today) {
+  const dow = new Date(today + "T12:00:00Z").getUTCDay();
+  return T.addDays(today, (7 - dow) % 7 + 7);
+}
+
 // Sesiones reservables entre dos fechas (inclusive). Respeta cierres y aviso mínimo.
 function occurrences(base, from, to, opts = {}) {
   const { timeZone: tz, minNoticeMinutes, defaultCapacity } = bookingSettings();
@@ -96,9 +102,9 @@ function publicView(session, bookings) {
 async function bookableSession(db, key) {
   const parsed = parseKey(key);
   if (!parsed) throw new HttpError(400, "Esa clase no existe.");
-  const { horizonDays, timeZone } = bookingSettings();
+  const { timeZone } = bookingSettings();
   const today = T.todayIn(timeZone);
-  if (parsed.date > T.addDays(today, horizonDays)) throw new HttpError(400, "Todavía no se puede reservar esa fecha.");
+  if (parsed.date > horizonEnd(today)) throw new HttpError(400, "Solo se puede reservar la semana en curso y la siguiente.");
   const base = await loadBase(db, parsed.date);
   const found = occurrences(base, parsed.date, parsed.date).find(s => s.key === key);
   if (!found) throw new HttpError(409, "Esa clase ya no está disponible. Elige otra.");
@@ -115,4 +121,4 @@ function displayName(name, nickname) {
   return `${parts[0]} ${last[0].toUpperCase()}.`;
 }
 
-module.exports = { keyOf, parseKey, loadBase, occurrences, confirmedBySession, publicView, bookableSession, displayName };
+module.exports = { horizonEnd, keyOf, parseKey, loadBase, occurrences, confirmedBySession, publicView, bookableSession, displayName };

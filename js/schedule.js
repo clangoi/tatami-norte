@@ -142,9 +142,17 @@
   blocks.forEach(el => el.addEventListener("click", e => {
     const chip = e.target.closest("[data-show]");
     if (chip) {
-      el.querySelectorAll("[data-show]").forEach(b => b.setAttribute("aria-pressed", b === chip));
+      // Se pueden elegir varias disciplinas a la vez; "Todas" (o quitar la última) vuelve a mostrar todo
       const k = chip.dataset.show;
-      el.querySelectorAll(".sch-class").forEach(a => a.classList.toggle("is-dim", !!k && a.dataset.disc !== k));
+      if (!k) el.querySelectorAll("[data-show]").forEach(b => b.setAttribute("aria-pressed", !b.dataset.show));
+      else chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed") !== "true");
+      const picked = [...el.querySelectorAll('[data-show]:not([data-show=""])[aria-pressed="true"]')].map(b => b.dataset.show);
+      el.querySelector('[data-show=""]').setAttribute("aria-pressed", !picked.length);
+      el.querySelectorAll(".sch-class").forEach(a => {
+        const on = picked.includes(a.dataset.disc);
+        a.classList.toggle("is-dim", !!picked.length && !on);
+        a.classList.toggle("is-hi", on);
+      });
       return;
     }
     const a = e.target.closest(".sch-class");

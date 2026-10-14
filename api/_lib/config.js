@@ -19,7 +19,6 @@ function bookingSettings() {
   return {
     timeZone: c.timeZone || "America/Santiago",
     minNoticeMinutes: Number.isFinite(c.minNoticeMinutes) ? c.minNoticeMinutes : 120,
-    horizonDays: c.horizonDays || 21,
     defaultCapacity: c.defaultCapacity || 15
   };
 }

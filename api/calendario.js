@@ -29,12 +29,12 @@ module.exports = handler(["GET"], async (req, res) => {
     const secret = process.env.CALENDAR_FEED_SECRET;
     if (!secret || !same(req.query.feed, secret)) throw new HttpError(404, "No encontrado.");
     const cfg = siteConfig();
-    const { timeZone, horizonDays } = bookingSettings();
+    const { timeZone } = bookingSettings();
     const today = T.todayIn(timeZone);
     const base = await S.loadBase(db, today);
     const booked = await S.confirmedBySession(db, today);
     const where = [cfg.address && cfg.address.line, cfg.address && cfg.address.city].filter(Boolean).join(", ");
-    const events = S.occurrences(base, today, T.addDays(today, horizonDays * 2), { ignoreNotice: true }).map(s => {
+    const events = S.occurrences(base, today, T.addDays(today, 42), { ignoreNotice: true }).map(s => {
       const list = booked.get(s.key) || [];
       const people = list.length ? list.map(b => `• ${b.name} (${b.phone})`).join("\n") : "Sin inscritos todavía";
       return {

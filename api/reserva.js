@@ -21,11 +21,11 @@ const links = (b, site) => ({
 
 // Otras horas de la misma clase a las que se puede pasar
 async function options(db, b) {
-  const { timeZone, horizonDays } = bookingSettings();
+  const { timeZone } = bookingSettings();
   const today = T.todayIn(timeZone);
   const base = await S.loadBase(db, today);
   const booked = await S.confirmedBySession(db, today);
-  return S.occurrences(base, today, T.addDays(today, horizonDays))
+  return S.occurrences(base, today, S.horizonEnd(today))
     .filter(s => s.classId === b.classId && s.key !== b.sessionKey)
     .map(s => S.publicView(s, booked.get(s.key)));
 }

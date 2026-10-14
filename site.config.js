@@ -91,7 +91,6 @@ window.SITE_CONFIG = {
   booking: {
     timeZone: "America/Santiago",                // hora de las clases
     minNoticeMinutes: 120,                       // no se reserva con menos aviso que este
-    horizonDays: 21,                             // cuántos días hacia adelante se puede reservar
     defaultCapacity: 15,                         // cupos si la clase o el horario no definen otro
     classes: [
       { label: "BJJ Gi · Kizuna",    slug: "jiu-jitsu-gi",   tone: "bronce", page: "bjj.html" },

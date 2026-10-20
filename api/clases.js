@@ -14,7 +14,7 @@ module.exports = handler(["GET"], async (req, res) => {
   const db = getDb();
   const { timeZone } = bookingSettings();
   const today = T.todayIn(timeZone);
-  // ?semana=1: además, las clases de la semana en curso (de lunes a domingo), incluidas las que ya pasaron
+  // ?semana=1: además, las clases de la semana en curso y la siguiente (de lunes a domingo), incluidas las que ya pasaron
   const monday = T.addDays(today, -((new Date(today + "T12:00:00Z").getUTCDay() + 6) % 7));
   const withWeek = !!req.query.semana;
   const base = await S.loadBase(db, withWeek ? monday : today);
@@ -23,7 +23,7 @@ module.exports = handler(["GET"], async (req, res) => {
     .map(s => S.publicView(s, booked.get(s.key)));
 
   const week = withWeek
-    ? S.occurrences(base, monday, T.addDays(monday, 6), { ignoreNotice: true }).map(s => S.publicView(s, booked.get(s.key)))
+    ? S.occurrences(base, monday, T.addDays(monday, 13), { ignoreNotice: true }).map(s => S.publicView(s, booked.get(s.key)))
     : undefined;
 
   // Días en que el horario semanal tiene clases recurrentes (las únicas no cuentan)

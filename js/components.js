@@ -7,7 +7,7 @@
 
    Y se usan así:
 
-     <site-nav current="judo" cta="#reservar"></site-nav>
+     <site-nav current="judo" cta="#horario"></site-nav>
      <site-footer></site-footer>
 
    current: inicio | judo | bjj | blog  → marca el enlace activo.
@@ -35,7 +35,7 @@
     connectedCallback(){
       const cur = this.getAttribute("current") || "";
       const p = paths(cur);
-      const cta = this.getAttribute("cta") || p.sec("reservas");
+      const cta = this.getAttribute("cta") || p.sec("horario");
       const mark = name => (cur === name ? ' aria-current="page"' : "");
 
       const nav = document.createElement("nav");
@@ -74,7 +74,7 @@
     </div>
     <div><h4>Horario</h4><ul data-site-list="hours"><li>Revisa el calendario de reservas</li><li>Consultas por Instagram o WhatsApp</li></ul></div>
     <div><h4>Contacto</h4><ul><li><a data-site-href="instagram" href="#">@<span data-site="contact.instagram">clubkizuna</span></a></li><li><a data-site-href="whatsapp" href="#">WhatsApp</a></li><li><a data-site-href="phone" data-site="contact.phone" href="#">+56 9 4796 6805</a></li><li><a data-site-href="facebook" href="#">Facebook</a></li><li><a data-site-href="tiktok" href="#">TikTok</a></li></ul></div>
-    <div><h4>Explora</h4><ul><li><a href="${p.page("judo.html")}">Judo</a></li><li><a href="${p.page("bjj.html")}">BJJ</a></li><li><a href="${p.sec("reservas")}">Agendar clase</a></li><li><a href="${p.sec("planes")}">Planes</a></li><li><a href="${p.page("blog.html")}">Blog</a></li></ul></div>
+    <div><h4>Explora</h4><ul><li><a href="${p.page("judo.html")}">Judo</a></li><li><a href="${p.page("bjj.html")}">BJJ</a></li><li><a href="${p.sec("horario")}">Agendar clase</a></li><li><a href="${p.sec("planes")}">Planes</a></li><li><a href="${p.page("blog.html")}">Blog</a></li></ul></div>
   </div>
   <div class="wrap foot-base"><span>© <span data-site="year">2026</span> <span data-site="name">Escuela de Artes Marciales Kizuna</span></span><span data-site="motto">Respeto · Disciplina · Constancia</span></div>`;
       this.replaceWith(footer);

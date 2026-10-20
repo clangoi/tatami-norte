@@ -6,7 +6,7 @@
    Uso en las páginas:
      TNBooking.mount(seccion)                       todas las clases
      TNBooking.mount(seccion, {slugs:["judo"]})     solo algunas (ids de clase, o "page:judo.html" para las de una página)
-     TNBooking.select(seccion, "judo")              abre esa clase
+     TNBooking.book(clave)                          abre el formulario de esa sesión sobre la página (lo llama el horario al tocar una clase)
    Expone window.TNBooking.
    ========================================================== */
 (function(){
@@ -52,9 +52,9 @@
     try { return JSON.parse(localStorage.getItem(CONTACT_KEY) || "{}") || {}; } catch (e) { return {}; }
   }
   function saveContact(c){ try { localStorage.setItem(CONTACT_KEY, JSON.stringify(c)); } catch (e) {} }
-  function renderMine(root){
-    const wrap = root.querySelector("[data-cal-mine]");
-    const list = root.querySelector("[data-cal-mine-list]");
+  function renderMine(){
+    const wrap = document.querySelector("[data-cal-mine]");
+    const list = document.querySelector("[data-cal-mine-list]");
     if (!wrap || !list) return;
     const mine = readMine();
     wrap.hidden = !mine.length;
@@ -67,57 +67,25 @@
   /* ---- Una sección de reservas ---- */
   function createView(root, opts){
     const container = root.querySelector("[data-cal-inline]");
-    const tabs = root.querySelector("[data-cal-tabs]");
     const fallback = root.querySelector("[data-cal-fallback]");
     const id = ++uid;
 
     let data = null;            // { classes, sessions }
-    let classId = null;         // pestaña elegida
-    let pick = null;            // clase pedida antes de que carguen los datos
+    let pending = null;         // sesión pedida antes de que carguen los datos
     let step = "list";          // list | form | done
     let chosen = null;          // sesión elegida en el formulario
     let sending = false;
 
     const visibleClasses = () => (data ? data.classes : []).filter(c => !opts.slugs || opts.slugs.some(t => t.startsWith("page:") ? String(c.page || "").split("#")[0] === t.slice(5) : t === c.id));
-    const sessionsOf = cid => data.sessions.filter(s => s.classId === cid);
 
-    /* --- pestañas --- */
-    function renderTabs(){
-      if (!tabs) return;
-      const list = visibleClasses();
-      tabs.hidden = list.length < 2;
-      tabs.replaceChildren(...list.map(c => {
-        const b = document.createElement("button");
-        b.type = "button"; b.textContent = c.label; b.dataset.slug = c.id;
-        b.setAttribute("aria-pressed", c.id === classId);
-        return b;
-      }));
-    }
-
-    /* --- lista de horarios --- */
-    function renderList(){
-      const sessions = sessionsOf(classId);
-      if (!sessions.length) {
-        container.innerHTML = '<p class="rv-empty">No hay horarios disponibles para esta clase en los próximos días. Escríbenos y te ayudamos.</p>';
-        return;
-      }
-      const byDate = {};
-      sessions.forEach(s => (byDate[s.date] = byDate[s.date] || []).push(s));
-      container.innerHTML = `<div class="rv-list">${Object.entries(byDate).map(([date, list]) => `
-        <section class="rv-day">
-          <h4>${esc(dayLabel(date))}</h4>
-          ${list.map(s => `
-          <article class="rv-session${s.full ? " is-full" : ""}">
-            <div class="rv-main">
-              <div class="rv-time">${esc(s.start)}–${esc(s.end)}</div>
-              <div class="rv-spots">${s.full ? "Clase completa" : `${s.capacity - s.taken} de ${s.capacity} cupos`}</div>
-              <button class="btn small" type="button" data-book="${esc(s.key)}"${s.full ? " disabled" : ""}>${s.full ? "Completa" : "Reservar"}</button>
-            </div>
-            <div class="rv-people">${s.attendees.length
-              ? `<span>Inscritos:</span> ${s.attendees.map(n => `<i>${esc(n)}</i>`).join("")}`
-              : "<span>Sé la primera persona en inscribirte.</span>"}</div>
-          </article>`).join("")}
-        </section>`).join("")}</div>`;
+    /* --- ventana sobre la página --- */
+    const showModal = () => { root.hidden = false; document.body.classList.add("modal-open"); root.scrollTop = 0; };
+    function closeModal(){
+      if (root.hidden) return;
+      root.hidden = true;
+      document.body.classList.remove("modal-open");
+      step = "list";
+      load();
     }
 
     /* --- formulario --- */
@@ -127,7 +95,7 @@
       const saved = readContact();
       const val = n => esc(saved[n] || "");
       container.innerHTML = `<form class="rv-form" novalidate>
-        <button class="rv-back" type="button" data-back>← Elegir otra hora</button>
+        <button class="rv-back" type="button" data-back>← Volver al horario</button>
         <div class="rv-pick"><b>${esc(s.classLabel)}</b><span>${esc(dayLabel(s.date))} · ${esc(s.start)}–${esc(s.end)}</span></div>
         <div class="field"><label for="${f("name")}">Nombre y apellido</label><input id="${f("name")}" name="name" autocomplete="name" maxlength="80" value="${val("name")}" required></div>
         <div class="field"><label for="${f("nick")}">Apodo <small>(opcional)</small></label><input id="${f("nick")}" name="nickname" maxlength="30" value="${val("nickname")}" placeholder="Así te verán los demás en la lista">
@@ -138,6 +106,7 @@
         <input class="rv-trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="err" data-err role="alert"></div>
         <button class="btn block" type="submit">Confirmar reserva</button>
+        <p class="rv-help">Tu primera clase es gratis: avísanos al llegar y trae agua y sandalias.</p>
       </form>`;
       // con datos guardados no hace falta escribir: queda listo para confirmar
       if (!saved.name) container.querySelector("input").focus({ preventScroll: true });
@@ -165,8 +134,6 @@
 
     function draw(){
       if (!data) return;
-      renderTabs();
-      if (step === "list") renderList();
     }
 
     /* --- datos --- */
@@ -189,36 +156,28 @@
       }
       if (fallback) fallback.hidden = true;
       container.hidden = false;
-      if (!list.some(c => c.id === classId)) classId = list.some(c => c.id === pick) ? pick : list[0].id;
       draw();
+      if (pending) { const k = pending; pending = null; open(k); }
     }
 
-    function select(cid){
-      pick = cid;
-      if (!data) return;
-      if (!visibleClasses().some(c => c.id === cid)) return;
-      classId = cid;
-      step = "list";
-      draw();
+    // Abre el formulario de una sesión; false si ya no se puede reservar (terminó o está completa)
+    function open(key){
+      if (!data) { pending = key; return true; }
+      const s = data.sessions.find(x => x.key === key && !x.full && visibleClasses().some(c => c.id === x.classId));
+      if (!s) { load(); return false; }
+      chosen = s;
+      step = "form";
+      renderForm();
+      showModal();
+      return true;
     }
 
     /* --- eventos --- */
-    tabs && tabs.addEventListener("click", e => {
-      const b = e.target.closest("[data-slug]");
-      if (b) select(b.dataset.slug);
+    // «Volver al horario», la ×, fuera de la ventana y Esc la cierran
+    root.addEventListener("click", e => {
+      if (e.target === root || e.target.closest("[data-close], [data-back]")) closeModal();
     });
-
-    container.addEventListener("click", e => {
-      const book = e.target.closest("[data-book]");
-      if (book) {
-        chosen = data.sessions.find(s => s.key === book.dataset.book);
-        if (!chosen) return;
-        step = "form";
-        renderForm();
-        return;
-      }
-      if (e.target.closest("[data-back]")) { step = "list"; draw(); load(); }
-    });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 
     container.addEventListener("submit", async e => {
       e.preventDefault();
@@ -238,7 +197,7 @@
         saveContact({ name: v("name"), nickname: v("nickname"), phone: v("phone"), email: v("email") });
         rememberBooking(res.booking);
         renderDone(res);
-        renderMine(root);
+        renderMine();
         const confirm = root.querySelector("[data-cal-confirm]");
         if (confirm) {
           const d = confirm.querySelector("[data-cal-confirm-date]");
@@ -262,9 +221,9 @@
     document.addEventListener("visibilitychange", () => { if (!document.hidden && step === "list") load(); });
 
     container.innerHTML = '<p class="cal-loading">Cargando horarios…</p>';
-    renderMine(root);
+    renderMine();
     load();
-    return { el: root, select };
+    return { el: root, open };
   }
 
   window.TNBooking = {
@@ -274,12 +233,7 @@
       roots.push(createView(root, opts));
       return true;
     },
-    select(target, slug){
-      const el = typeof target === "string" ? document.querySelector(target) : target;
-      const r = el && roots.find(r => r.el === el || el.contains(r.el) || r.el.contains(el));
-      if (r) r.select(slug);
-      return !!r;
-    },
+    book(key){ return !!roots[0] && roots[0].open(key); },
     onSuccess(fn){ successHandlers.push(fn); },
     onFail(fn){ failHandlers.push(fn); },
     manageUrl

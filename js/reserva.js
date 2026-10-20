@@ -49,7 +49,7 @@
       app.innerHTML = `<div class="rv-done">
         <div class="eyebrow">Reserva cancelada</div>${summary(b)}
         ${b.cancelReason ? `<p>Motivo: ${esc(b.cancelReason)}</p>` : ""}
-        <div class="rv-actions"><a class="btn small" href="/#reservas">Agendar otra clase</a></div></div>`;
+        <div class="rv-actions"><a class="btn small" href="/#horario">Agendar otra clase</a></div></div>`;
       return;
     }
     if (b.status === "rescheduled") {
@@ -74,7 +74,7 @@
           <button class="btn small ghost" type="button" data-mode="cancel" aria-pressed="${open === "cancel"}">Cancelar mi reserva</button>
         </div>
         ${open ? changeForm(open) : ""}
-      </div>` : '<p>Esta clase ya pasó. Puedes agendar otra desde la <a href="/#reservas" style="color:var(--gold)">portada</a>.</p>'}
+      </div>` : '<p>Esta clase ya pasó. Puedes agendar otra desde la <a href="/#horario" style="color:var(--gold)">portada</a>.</p>'}
     </div>`;
   }
 
@@ -164,7 +164,7 @@
     } catch (ex) {
       app.innerHTML = `<div class="rv-done"><div class="eyebrow">No encontramos tu reserva</div>
         <p>${esc(ex.message)} Revisa que el enlace esté completo o escríbenos${waLink("Hola, necesito ayuda con mi reserva.") ? ` por <a style="color:var(--gold)" href="${esc(waLink("Hola, necesito ayuda con mi reserva."))}">WhatsApp</a>` : ""}.</p>
-        <div class="rv-actions"><a class="btn small" href="/#reservas">Agendar una clase</a></div></div>`;
+        <div class="rv-actions"><a class="btn small" href="/#horario">Agendar una clase</a></div></div>`;
     }
   }
 

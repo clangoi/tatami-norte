@@ -275,21 +275,14 @@
 .sch-range{margin:0;color:var(--steel);font:600 14px/1 var(--label);letter-spacing:.14em;text-transform:uppercase}
 
 /* ---- Reservas propias (js/reservas.js, reserva.html) ---- */
-.rv-list{padding:28px clamp(16px,3vw,28px) 24px}
 .rv-empty{padding:40px 24px;color:var(--text-soft)}
-.rv-day+.rv-day{margin-top:26px}
-.rv-day h4{font:700 14px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 6px}
-.rv-day h4::first-letter{text-transform:uppercase}
-.rv-session{padding:14px 0;border-top:1px solid var(--navy-3)}
-.rv-main{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.rv-time{font:800 28px/1 var(--display);letter-spacing:.02em;color:var(--cream)}
-.rv-spots{flex:1;min-width:120px;font:600 13px/1.2 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--steel)}
-.rv-session.is-full .rv-time{color:var(--steel)}
-.rv-people{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:14px;color:var(--steel)}
-.rv-people span{margin-right:2px}
-.rv-people i{font-style:normal;color:var(--cream);background:var(--navy-2);border:1px solid var(--navy-3);padding:3px 9px;border-radius:99px;font-size:13px}
 .rv-form,.rv-done{padding:28px clamp(16px,3vw,32px) 32px;max-width:560px}
-.rv-back{background:none;border:0;color:var(--steel);font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:6px 0;margin-bottom:12px}
+/* Reserva: ventana sobre el horario */
+.rv-modal{max-width:560px;min-height:240px;overflow:hidden}
+.rv-modal::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--bronze),var(--gold))}
+.rv-modal .rv-form,.rv-modal .rv-done{max-width:none;padding-top:44px}
+.rv-modal .notice{margin:24px}
+.rv-back{display:inline-block;text-decoration:none;background:none;border:0;color:var(--steel);font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:6px 0;margin-bottom:12px}
 .rv-back:hover{color:var(--gold)}
 .rv-pick{display:flex;flex-direction:column;gap:4px;border-left:3px solid var(--bronze);padding:2px 0 2px 14px;margin:0 0 22px}
 .rv-pick b{font:800 26px/1.05 var(--display);text-transform:uppercase;color:var(--cream)}
@@ -347,5 +340,5 @@
   #horario .sec-head p{margin-top:20px;max-width:36ch}
   #horario .sch-nav{grid-column:1;grid-row:2;margin:0 0 32px}
   #horario .sch-legend{grid-column:2;grid-row:1/3;align-self:start;margin:0 0 32px;padding:22px 24px;border:1px solid var(--line);background:rgba(255,255,255,.03);gap:14px}
-  #horario .sch-weeks,#horario .sch-foot,#horario .sch-loading,#horario .sch-empty{grid-column:1/-1}
+  #horario .sch-weeks,#horario .my-bookings,#horario .sch-foot,#horario .sch-loading,#horario .sch-empty{grid-column:1/-1}
 }

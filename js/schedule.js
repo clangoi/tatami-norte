@@ -9,8 +9,7 @@
    <div data-schedule data-filter="judo"></div>       solo algunas (claves separadas por coma)
    data-filter acepta ids de clase y «page:judo.html» (todas las clases de la disciplina que apunta a esa página,
               según Configuración en el panel).
-   data-book: sección de reservas a la que lleva cada clase
-              (por defecto "#reservas"); se abre la pestaña de esa clase.
+   Al tocar una clase se abre encima del horario el formulario para reservar esa sesión (js/reservas.js).
    ========================================================== */
 (function(){
   const blocks = document.querySelectorAll("[data-schedule]");
@@ -51,7 +50,7 @@
     (res.week || res.sessions).forEach(s => {
       if (!disciplinas[s.classId]) return;
       (byDate[s.date] = byDate[s.date] || []).push({
-        dia: dayOf(s.date), fecha: s.date, inicio: s.start, fin: s.end, disciplina: s.classId, pick: s.classId,
+        dia: dayOf(s.date), fecha: s.date, inicio: s.start, fin: s.end, disciplina: s.classId, pick: s.classId, key: s.key, completa: !!s.full,
         nota: s.full ? "Completa" : ""
       });
     });
@@ -83,7 +82,7 @@
     const weeks = (data.semanas || [{ fechas: data.fechas || {}, clases: data.clases || [] }])
       .map(w => ({ ...w, clases: w.clases.filter(keep).sort((a, b) => a.inicio.localeCompare(b.inicio)) }));
     const classes = weeks.flatMap(w => w.clases);
-    const book = el.dataset.book || "#reservas";
+    const book = "#horario";
 
     if (!classes.length) {
       el.innerHTML = '<p class="sch-empty">No hay clases publicadas en las próximas semanas. Escríbenos para conocer los horarios.</p>';
@@ -107,7 +106,7 @@
     const design = k => Number.isInteger(disc[k]?.diseno) && disc[k].diseno >= 0 && disc[k].diseno <= 10 ? disc[k].diseno : 0;
     const stripe = k => TONES.includes(disc[k]?.franja) ? ` s-${disc[k].franja}` : "";
 
-    const cell = (c, isToday) => `<a class="sch-class t-${tone(c.disciplina)} ty-${design(c.disciplina)}${stripe(c.disciplina)}" href="${esc(book)}" data-pick="${esc(c.pick || c.disciplina)}" data-disc="${esc(c.disciplina)}" data-f-club="${esc(facet(c.disciplina).club)}" data-f-disciplina="${esc(facet(c.disciplina).disciplina)}" data-f-tipo="${esc(facet(c.disciplina).tipo)}"${isToday(c.dia) ? ` data-today data-start="${esc(c.inicio)}" data-end="${esc(c.fin)}"` : ""}>
+    const cell = (c, isToday) => `<a class="sch-class t-${tone(c.disciplina)} ty-${design(c.disciplina)}${stripe(c.disciplina)}" href="${esc(book)}" data-pick="${esc(c.pick || c.disciplina)}"${c.key ? ` data-key="${esc(c.key)}"${c.completa ? " data-full" : ""}` : ""} data-disc="${esc(c.disciplina)}" data-f-club="${esc(facet(c.disciplina).club)}" data-f-disciplina="${esc(facet(c.disciplina).disciplina)}" data-f-tipo="${esc(facet(c.disciplina).tipo)}"${isToday(c.dia) ? ` data-today data-start="${esc(c.inicio)}" data-end="${esc(c.fin)}"` : ""}>
         <span class="sch-name">${esc(disc[c.disciplina].nombre)}</span>
         <span class="sch-time">${esc(c.inicio)}–${esc(c.fin)}</span>
         ${c.nota ? `<span class="sch-note">${esc(c.nota)}</span>` : ""}
@@ -216,7 +215,10 @@
       return;
     }
     const a = e.target.closest(".sch-class");
-    if (a && window.TNBooking) window.TNBooking.select(a.getAttribute("href"), a.dataset.pick);
+    if (a && a.dataset.key && window.TNBooking) {
+      e.preventDefault();
+      if (!a.hasAttribute("data-full")) window.TNBooking.book(a.dataset.key);
+    }
   }));
 
   // «Clases de lunes a sábado.» según los días recurrentes del horario: "de martes a jueves" (3 o más seguidos) o "los lunes y viernes"

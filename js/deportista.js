@@ -7,7 +7,7 @@
 import { SDK, app as fbApp } from "./firebase.js";
 
 const {
-  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
 } = await import(`${SDK}/firebase-auth.js`);
 
 const auth = getAuth(fbApp);
@@ -78,16 +78,18 @@ root.addEventListener("submit", async e => {
   catch (ex) { err.textContent = authError(ex); btn.disabled = false; }
 });
 
+const askReset = email => fetch("/api/clave", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
+
 root.addEventListener("click", async e => {
   if (!e.target.closest("[data-forgot]")) return;
   const email = root.querySelector("#lEmail").value.trim();
   const err = root.querySelector("[data-err]");
   if (!email) { err.textContent = "Escribe tu correo arriba y vuelve a presionar."; return; }
+  err.textContent = "";
   try {
-    await sendPasswordResetEmail(auth, email, { url: location.origin + "/deportista" });
-    err.textContent = "";
-    toast("Si tu cuenta existe, te enviamos un correo para cambiar tu clave");
-  } catch (ex) { err.textContent = authError(ex); }
+    await askReset(email);
+    toast("Si tu cuenta existe, te enviamos un correo para crear una clave nueva");
+  } catch (ex) { err.textContent = "Sin conexión. Revisa tu internet."; }
 });
 
 /* ---------- Datos ---------- */
@@ -116,7 +118,8 @@ function header() {
   return `<div class="ath-top">
     <div><div class="eyebrow">Hola</div><h3 class="ath-h">${esc(data.profile.name.split(" ")[0] || "Deportista")}</h3>
       <p class="rv-help">${esc(data.profile.email)}</p></div>
-    <button class="btn small ghost" type="button" data-logout>Salir</button>
+    <div class="ath-actions"><button class="btn small ghost" type="button" data-newpass>Cambiar mi clave</button>
+      <button class="btn small ghost" type="button" data-logout>Salir</button></div>
   </div>
   <div class="ath-totals">
     <div class="ath-stat big"><b>${s.taken}</b><span>${s.taken === 1 ? "clase tomada" : "clases tomadas"}</span></div>
@@ -234,6 +237,11 @@ root.addEventListener("click", async e => {
   const t = e.target;
   if (t.closest("[data-logout]")) { signOut(auth); return; }
   if (t.closest("[data-reload]")) { load(); return; }
+  if (t.closest("[data-newpass]")) {
+    try { await askReset(data.profile.email); toast("Te enviamos un correo a " + data.profile.email + " para cambiar tu clave"); }
+    catch (ex) { toast("Sin conexión. Revisa tu internet."); }
+    return;
+  }
   const tb = t.closest("[data-tab]");
   if (tb) { tab = tb.dataset.tab; openPanel = null; render(); return; }
   const mo = t.closest("[data-month]");

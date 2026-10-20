@@ -18,7 +18,6 @@ function bookingSettings() {
   const c = (siteConfig().booking) || {};
   return {
     timeZone: c.timeZone || "America/Santiago",
-    minNoticeMinutes: Number.isFinite(c.minNoticeMinutes) ? c.minNoticeMinutes : 120,
     defaultCapacity: c.defaultCapacity || 15
   };
 }

@@ -21,9 +21,14 @@
 .ath-cell.is-blank{border:0;cursor:default}
 .ath-cell.has{background:var(--navy-2);color:var(--cream);border-color:var(--bronze)}
 .ath-cell.is-today{outline:1px solid var(--gold);outline-offset:-3px}
-.ath-cell.is-sel{background:var(--gold);color:var(--navy)}
 .ath-cell i{position:absolute;right:5px;bottom:4px;font:800 12px/1 var(--display);font-style:normal;color:var(--gold)}
-.ath-cell.is-sel i{color:var(--navy)}
 .ath-sync{margin-top:34px}
 .ath-sync-btns{margin-top:14px}
 .ath-foot{margin-top:48px;padding-top:6px;border-top:1px solid var(--line)}
+
+/* Calendario con historial: días con clases se tocan para ver el detalle */
+span.ath-cell{cursor:default}
+.ath-cell.is-off{border-style:dashed;color:var(--steel);cursor:pointer}
+.ath-cell.is-off i{color:var(--steel)}
+.ath-cell.has:hover,.ath-cell.is-off:hover,.ath-cell.has:focus-visible{border-color:var(--gold);outline:none}
+.ath-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}

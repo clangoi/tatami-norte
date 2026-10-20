@@ -3,7 +3,7 @@
    Misma estructura que el panel de administración (js/admin.js): vistas de carga,
    entrada y panel; pestañas arriba; listas en filas. Entra con el correo y la clave
    que creó con el enlace del correo (Firebase Auth) y habla con /api/deportista.
-   Secciones: Resumen (contadores) · Próximas (reagendar, cancelar) · Calendario · Historial.
+   Secciones: Resumen (contadores) · Próximas (reagendar, cancelar) · Calendario (historial: al tocar un día se abre el detalle).
    ========================================================== */
 import { SDK, app as fbApp } from "./firebase.js";
 import { infoTip } from "./admin-info.js";
@@ -27,7 +27,7 @@ const toast = msg => {
   clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, 3000);
 };
 
-const TABS = [["sum", "Resumen"], ["next", "Próximas"], ["cal", "Calendario"], ["past", "Historial"]];
+const TABS = [["sum", "Resumen"], ["next", "Próximas"], ["cal", "Calendario"]];
 let data = null;
 let tab = "sum";
 let month = todayStr().slice(0, 7);
@@ -144,7 +144,6 @@ function profileForm() {
 }
 
 const upcoming = () => data.bookings.filter(b => b.status === "confirmed" && b.canChange).sort((a, b) => a.startAt.localeCompare(b.startAt));
-const history = () => data.bookings.filter(b => !(b.status === "confirmed" && b.canChange));
 
 const reasonField = label => `<div class="field"><label>${label}</label>
   <textarea name="reason" rows="2" maxlength="300" required placeholder="Cuéntanos brevemente por qué"></textarea></div>`;
@@ -178,59 +177,77 @@ function viewNext() {
       : '<p class="adm-empty">No tienes clases próximas. Reserva una desde <a href="index.html#horario" style="color:var(--gold)">el horario del sitio</a>.</p>'}`;
 }
 
+const STATUS = { confirmed: "Tomada", cancelled: "Cancelada" };
+
+// Detalle de un día: las clases que tomó (o canceló) ese día, encima del calendario
+function dayDetail(date, list) {
+  return `<div class="adm-modal">
+    <div class="adm-modal-bg" data-close-day></div>
+    <section class="adm-detail" role="dialog" aria-modal="true" aria-label="Clases del ${esc(date)}" tabindex="-1">
+      <div class="adm-detail-head">
+        <h3 class="adm-detail-title">${esc(cap(dayLabel(date)))}</h3>
+        <button class="btn small ghost" type="button" data-close-day>Cerrar</button>
+      </div>
+      <div class="adm-rows">${list.map(b => {
+        const status = b.status === "confirmed" ? (b.canChange ? "Próxima" : "Tomada") : STATUS[b.status] || "Cambiada";
+        const meta = [b.club, b.discipline, b.type].filter(Boolean);
+        return `<div class="adm-row${b.status === "confirmed" ? "" : " is-fixed"}">
+          <div class="adm-row-main"><b>${esc(b.classLabel)}</b><span>${esc(b.start)}–${esc(b.end)}</span>
+            ${meta.length ? `<span class="ath-meta">${meta.map(m => `<span class="adm-chip">${esc(m)}</span>`).join("")}</span>` : ""}
+            ${b.cancelReason ? `<span>Motivo: ${esc(b.cancelReason)}</span>` : ""}</div>
+          <span class="adm-tag${b.status === "confirmed" ? " on" : ""}">${status}</span></div>`;
+      }).join("")}</div>
+    </section>
+  </div>`;
+}
+
 function viewCal() {
   const [y, m] = month.split("-").map(Number);
   const first = new Date(Date.UTC(y, m - 1, 1)), lead = (first.getUTCDay() + 6) % 7, days = new Date(Date.UTC(y, m, 0)).getUTCDate();
   const byDate = {};
-  data.bookings.filter(b => b.status === "confirmed").forEach(b => (byDate[b.date] = byDate[b.date] || []).push(b));
+  data.bookings.forEach(b => (byDate[b.date] = byDate[b.date] || []).push(b));
   const today = todayStr();
   const cells = [...Array(lead).fill('<span class="ath-cell is-blank"></span>')];
   for (let d = 1; d <= days; d++) {
     const date = `${month}-${String(d).padStart(2, "0")}`;
-    const n = (byDate[date] || []).length;
-    cells.push(`<button type="button" class="ath-cell${n ? " has" : ""}${date === today ? " is-today" : ""}${date === calDay ? " is-sel" : ""}" data-day="${date}"><span>${d}</span>${n ? `<i>${n}</i>` : ""}</button>`);
+    const list = byDate[date] || [];
+    const kept = list.filter(b => b.status === "confirmed").length;
+    const cls = `ath-cell${kept ? " has" : list.length ? " is-off" : ""}${date === today ? " is-today" : ""}`;
+    cells.push(list.length
+      ? `<button type="button" class="${cls}" data-day="${date}" aria-label="${esc(dayLabel(date))}: ${list.length} ${list.length === 1 ? "clase" : "clases"}"><span>${d}</span><i>${kept || list.length}</i></button>`
+      : `<span class="${cls}"><span>${d}</span></span>`);
   }
-  const sel = calDay ? (byDate[calDay] || []) : [];
   const cal = data.calendar;
   return `<div class="adm-bar"><h2>Mi calendario</h2></div>
-    ${infoTip("Suscribe tu calendario una sola vez y tus reservas aparecen, cambian y se quitan solas cuando agendas, reagendas o cancelas.")}
+    ${infoTip("Toca un día marcado para ver el detalle de las clases que tomaste, tienes o cancelaste ese día. Suscribe tu calendario una sola vez y tus reservas aparecen, cambian y se quitan solas cuando reagendas o cancelas.")}
     <div class="ath-month"><button class="btn small ghost" type="button" data-month="-1" aria-label="Mes anterior">←</button>
       <b>${esc(monthLabel(month))}</b><button class="btn small ghost" type="button" data-month="1" aria-label="Mes siguiente">→</button></div>
     <div class="ath-grid">${["L", "M", "X", "J", "V", "S", "D"].map(d => `<span class="ath-dow">${d}</span>`).join("")}${cells.join("")}</div>
-    ${calDay ? `<h3 class="adm-day">${esc(cap(dayLabel(calDay)))}</h3><div class="adm-rows">${sel.length ? sel.map(b => `<div class="adm-row">
-      <div class="adm-row-main"><b>${esc(b.classLabel)}</b><span>${esc(b.start)}–${esc(b.end)}</span></div>
-      <span class="adm-tag${b.canChange ? " on" : ""}">${b.canChange ? "Próxima" : "Tomada"}</span></div>`).join("") : '<p class="adm-empty">Sin clases ese día.</p>'}</div>` : ""}
+    ${calDay && byDate[calDay] ? dayDetail(calDay, byDate[calDay].sort((a, b) => a.startAt.localeCompare(b.startAt))) : ""}
     <div class="adm-bar ath-sync"><h2>Suscribir mi calendario</h2></div>
     <div class="adm-actions ath-sync-btns"><a class="btn" href="${esc(cal.google)}" target="_blank" rel="noopener">Google Calendar</a>
       <a class="btn ghost" href="${esc(cal.webcal)}">Apple / Outlook</a>
       <button class="btn ghost" type="button" data-copy="${esc(cal.ics)}">Copiar enlace</button></div>`;
 }
 
-function viewPast() {
-  const list = history().sort((a, b) => b.startAt.localeCompare(a.startAt));
-  const tag = b => b.status === "cancelled" ? "Cancelada" : b.status === "confirmed" ? "Tomada" : "Cambiada";
-  return `<div class="adm-bar"><h2>Historial</h2></div>
-    ${list.length ? `<div class="adm-rows">${list.map(b => `<div class="adm-row${b.status === "confirmed" ? "" : " is-fixed"}">
-      <div class="adm-row-main"><b>${esc(b.classLabel)}</b><span>${esc(cap(dayLabel(b.date)))} · ${esc(b.start)}${b.cancelReason ? ` · Motivo: ${esc(b.cancelReason)}` : ""}</span></div>
-      <span class="adm-tag${b.status === "confirmed" ? " on" : ""}">${tag(b)}</span></div>`).join("")}</div>`
-      : '<p class="adm-empty">Aquí verás las clases que vayas tomando.</p>'}`;
-}
-
 function render() {
-  const view = { sum: summary, next: viewNext, cal: viewCal, past: viewPast }[tab];
+  const view = { sum: summary, next: viewNext, cal: viewCal }[tab];
   const n = upcoming().length;
   $("#hello").textContent = "Hola, " + (data.profile.name.split(" ")[0] || "deportista");
   $("#tabs").innerHTML = TABS.map(([k, name]) =>
     `<button type="button" role="tab" aria-pressed="${k === tab}" data-tab="${k}">${name}${k === "next" && n ? ` (${n})` : ""}</button>`).join("");
+  document.body.classList.toggle("adm-modal-open", tab === "cal" && !!calDay);
   $("#body").innerHTML = `${data.profile.complete ? "" : profileForm()}${view()}
     <div class="ath-foot"><button class="adm-link" type="button" data-newpass>Cambiar mi clave</button></div>`;
 }
 
 /* ---------- Eventos ---------- */
+document.addEventListener("keydown", e => { if (e.key === "Escape" && calDay) { calDay = ""; if (data) render(); } });
+
 $("#tabs").addEventListener("click", e => {
   const tb = e.target.closest("[data-tab]");
   if (!tb) return;
-  tab = tb.dataset.tab; openPanel = null; render();
+  tab = tb.dataset.tab; openPanel = null; calDay = ""; render();
 });
 
 $("#body").addEventListener("click", async e => {
@@ -244,7 +261,8 @@ $("#body").addEventListener("click", async e => {
   const mo = t.closest("[data-month]");
   if (mo) { const [y, m] = month.split("-").map(Number); month = new Date(Date.UTC(y, m - 1 + Number(mo.dataset.month), 1)).toISOString().slice(0, 7); calDay = ""; render(); return; }
   const dy = t.closest("[data-day]");
-  if (dy) { calDay = calDay === dy.dataset.day ? "" : dy.dataset.day; render(); return; }
+  if (dy) { calDay = dy.dataset.day; render(); return; }
+  if (t.closest("[data-close-day]")) { calDay = ""; render(); return; }
   const cp = t.closest("[data-copy]");
   if (cp) { navigator.clipboard?.writeText(cp.dataset.copy).then(() => toast("Enlace copiado")); return; }
   const pn = t.closest("[data-panel]");

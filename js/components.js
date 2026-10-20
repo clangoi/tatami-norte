@@ -12,6 +12,10 @@
 
    current: inicio | judo | bjj | blog  → marca el enlace activo.
             En "inicio" los enlaces son anclas de la misma página.
+   Bajo «Disciplinas» van las disciplinas creadas en el panel (Clases → Configuración),
+   que llegan de /api/disciplinas; cada una lleva a su página (o a la sección Disciplinas
+   de la portada si no tiene). La última lista se guarda en el navegador para que el menú
+   no cambie al cargar.
    cta:     destino del botón "Clase gratis" (por defecto, las
             reservas de la portada).
 
@@ -31,12 +35,28 @@
     };
   };
 
+  const CACHE_KEY = "tn_disciplinas";
+  const FALLBACK = [{ name: "Judo", page: "judo.html" }, { name: "BJJ", page: "bjj.html" }];
+  const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const readCache = () => { try { const l = JSON.parse(localStorage.getItem(CACHE_KEY)); return Array.isArray(l) && l.length ? l : null; } catch (e) { return null; } };
+  const here = location.pathname.split("/").pop().replace(/.html$/, "");
+
+  // Enlaces de las disciplinas; la de la página abierta queda marcada
+  function disciplineLinks(list, p){
+    return list.map(d => {
+      const file = String(d.page || "").split("#")[0];
+      const href = file ? p.page(d.page) : p.sec("disciplinas");
+      const current = file && file.replace(/.html$/, "") === here ? ' aria-current="page"' : "";
+      return `<a href="${esc(href)}"${current}>${esc(d.name)}</a>`;
+    }).join("");
+  }
+
   class SiteNav extends HTMLElement {
     connectedCallback(){
       const cur = this.getAttribute("current") || "";
       const p = paths(cur);
       const cta = this.getAttribute("cta") || p.sec("horario");
-      const mark = name => (cur === name ? ' aria-current="page"' : "");
+      const mark = name => (cur === name ? ' aria-current="page"' : "");   // blog
 
       const nav = document.createElement("nav");
       nav.className = "nav";
@@ -46,9 +66,10 @@
     <a class="brand" href="${p.home}"><span class="brand-mark" data-site="initial">K</span><span class="brand-name" data-site="shortName">Kizuna</span></a>
     <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks">Menú</button>
     <div class="nav-links" id="navLinks">
-      <a href="${p.sec("disciplinas")}">Disciplinas</a>
-      <a href="${p.page("judo.html")}"${mark("judo")}>Judo</a>
-      <a href="${p.page("bjj.html")}"${mark("bjj")}>BJJ</a>
+      <div class="nav-group">
+        <a class="nav-parent" href="${p.sec("disciplinas")}">Disciplinas</a>
+        <div class="nav-sub" data-nav-disciplines>${disciplineLinks(readCache() || FALLBACK, p)}</div>
+      </div>
       <a href="${p.sec("horario")}">Horario</a>
       <a href="${p.sec("planes")}">Planes</a>
       <a href="${p.page("blog.html")}"${mark("blog")}>Blog</a>
@@ -56,6 +77,15 @@
     </div>
   </div>`;
       this.replaceWith(nav);
+
+      // Las disciplinas del panel reemplazan a las guardadas
+      fetch(new URL("api/disciplinas", root)).then(r => (r.ok ? r.json() : Promise.reject())).then(data => {
+        const list = (data.disciplines || []).filter(d => d && d.name);
+        if (!list.length) return;
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify(list)); } catch (e) {}
+        const box = nav.querySelector("[data-nav-disciplines]");
+        if (box) box.innerHTML = disciplineLinks(list, p);
+      }).catch(() => {});
     }
   }
 

@@ -54,8 +54,10 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   };
   const composeLabel = ({ discipline, type, club }) => `${discipline}${type ? " " + type : ""} · ${club}`;
   const lookCls = c => `t-${c.tone || "oro"} ty-${c.design || 0}${c.clubTone ? " s-" + c.clubTone : ""}`;
-  // Configuración: parámetros del horario de cada club (franja), disciplina (color y página) y tipo (diseño del bloque).
-  // Se guardan en settings/catalog; cada clase copia los suyos (tone, page, clubTone, design) para que el sitio los lea directo.
+  // Configuración: parámetros del horario de cada club (franja), disciplina (color y páginas) y tipo (diseño del bloque).
+  // Cada disciplina tiene su lista de páginas (pages). Se guardan en settings/catalog; cada clase copia los suyos
+  // (tone, pages, clubTone, design) para que el sitio los lea directo; page es la primera, por compatibilidad.
+  const pagesOf = o => (Array.isArray(o.pages) ? o.pages : o.page ? [o.page] : []);
   let catalog = { clubs: [], disciplines: [], types: [] };
   let cfgDraft = null;      // copia editable de la configuración mientras se está en esa pestaña
   const DESIGN_NAMES = ["Liso", "Contorno", "Punteado", "Tinte", "Rayado", "Doble borde", "Puntos", "Líneas", "Cuadrícula", "Degradado", "Ajedrez"];
@@ -66,13 +68,14 @@ export function initClases({ db, fs, esc, toast, saveError }) {
   function derive(parts) {
     const d = byName(catalog.disciplines, parts.discipline), c = byName(catalog.clubs, parts.club);
     const t = parts.type ? byName(catalog.types, parts.type) : null;
-    return { tone: d ? d.tone : "oro", page: d ? d.page || "" : "", clubTone: c ? c.tone : "", design: t ? t.design : 0 };
+    const pages = d ? pagesOf(d) : [];
+    return { tone: d ? d.tone : "oro", page: pages[0] || "", pages, clubTone: c ? c.tone : "", design: t ? t.design : 0 };
   }
   // Agrega a la configuración lo que usan unas clases y aún no está (primera vez o clases cargadas)
   function mergeIntoCatalog(cat, items) {
     items.forEach(it => {
       const p = partsOf(it);
-      if (p.discipline && !byName(cat.disciplines, p.discipline)) cat.disciplines.push({ id: uid(), name: p.discipline, tone: it.tone || "oro", page: it.page || "" });
+      if (p.discipline && !byName(cat.disciplines, p.discipline)) cat.disciplines.push({ id: uid(), name: p.discipline, tone: it.tone || "oro", pages: pagesOf(it) });
       if (p.club && !byName(cat.clubs, p.club)) cat.clubs.push({ id: uid(), name: p.club, tone: it.clubTone || "bronce" });
       if (p.type && !byName(cat.types, p.type)) {
         const used = new Set(cat.types.map(t => t.design));
@@ -97,6 +100,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     let saved = null;
     try { const snap = await fs.getDoc(fs.doc(db, "settings", "catalog")); if (snap.exists()) saved = snap.data(); } catch (e) { console.warn(e); }
     catalog = mergeIntoCatalog({ clubs: [], disciplines: [], types: [], ...(saved || {}) }, classes);
+    // Las disciplinas guardadas con una sola página pasan a la lista de páginas
+    catalog.disciplines.forEach(d => { d.pages = pagesOf(d); delete d.page; });
     cfgDraft = null;
   }
   async function loadBookings() {
@@ -1102,19 +1107,24 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     const nameField = (v, ph) => `<input data-f="name" maxlength="30" value="${esc(v)}" placeholder="${ph}" aria-label="Nombre">`;
     const clubs = cfgDraft.clubs.map(c => row(c.id, sw(`t-marino ty-0 s-${c.tone}`),
       `${nameField(c.name, "Kizuna, Núcleo…")}<select data-f="tone" aria-label="Color de la franja">${toneOptions(c.tone)}</select>`));
-    const discs = cfgDraft.disciplines.map(d => row(d.id, sw(`t-${d.tone} ty-0`),
-      `${nameField(d.name, "Judo, BJJ, Físico…")}<select data-f="tone" aria-label="Color">${toneOptions(d.tone)}</select>
-       <input data-f="page" maxlength="60" value="${esc(d.page || "")}" placeholder="judo.html (opcional)" aria-label="Página de la disciplina" list="dlPages">`));
+    // Cada disciplina trae debajo su lista de páginas, donde se muestran sus clases
+    const discs = cfgDraft.disciplines.map(d => `<div class="adm-cfg-group">${row(d.id, sw(`t-${d.tone} ty-0`),
+      `${nameField(d.name, "Judo, BJJ, Físico…")}<select data-f="tone" aria-label="Color">${toneOptions(d.tone)}</select>`)}
+      <div class="adm-cfg-pages" data-pages-of="${esc(d.id)}">
+        ${pagesOf(d).map((pg, i) => `<div class="adm-cfg-page"><input data-page maxlength="60" value="${esc(pg)}" placeholder="judo.html" aria-label="Página de ${esc(d.name || "la disciplina")}" list="dlPages">
+          ${iconBtn("trash", "Quitar página", `data-cfg-delpage="${esc(d.id)}:${i}"`)}</div>`).join("")}
+        <button class="btn small ghost" type="button" data-cfg-addpage="${esc(d.id)}">Agregar página</button>
+      </div></div>`);
     const types = cfgDraft.types.map(t => row(t.id, sw(`t-oro ty-${t.design}`),
       `${nameField(t.name, "Gi, No-Gi, Kids…")}<select data-f="design" aria-label="Diseño del bloque">${designOptions(t.design)}</select>`));
     return `<form data-form="config" novalidate>
       <div class="adm-bar"><h2>Configuración</h2>
         <div class="adm-actions"><button class="btn ghost" type="button" data-cfg-discard${dirty ? "" : " disabled"}>Descartar</button><button class="btn" type="submit">Guardar</button></div></div>
-      ${infoTip(`Aquí defines lo que usa el horario de cada clase. Al crear una clase solo eliges su <b>disciplina</b>, su <b>tipo</b> (opcional) y su <b>club</b>: el color sale de la disciplina, el diseño del bloque del tipo y la franja lateral del club. La <b>página</b> de la disciplina es donde se muestran sus clases (por ejemplo <code>judo.html</code>). Si cambias algo aquí, se actualizan todas las clases que lo usan. El código de cada clase se arma solo con estos tres datos.`)}
+      ${infoTip(`Aquí defines lo que usa el horario de cada clase. Al crear una clase solo eliges su <b>disciplina</b>, su <b>tipo</b> (opcional) y su <b>club</b>: el color sale de la disciplina, el diseño del bloque del tipo y la franja lateral del club. Cada disciplina tiene debajo sus <b>páginas</b>, donde se muestran sus clases (por ejemplo <code>judo.html</code>); puede tener varias. Si cambias algo aquí, se actualizan todas las clases que lo usan. El código de cada clase se arma solo con estos tres datos.`)}
       <datalist id="dlPages"><option value="judo.html"><option value="bjj.html"><option value="bjj.html#no-gi"></datalist>
       <div class="adm-cfg-grid">
         ${section("clubs", "Clubes", "Quién imparte la clase. Su color es la franja lateral del bloque.", clubs, "Agregar club")}
-        ${section("disciplines", "Disciplinas", "Su color pinta el bloque y su página es donde se listan sus clases.", discs, "Agregar disciplina")}
+        ${section("disciplines", "Disciplinas", "Su color pinta el bloque; debajo van las páginas donde se listan sus clases.", discs, "Agregar disciplina")}
         ${section("types", "Tipos", "Cada tipo tiene su propio diseño de bloque. Una clase puede no tener tipo.", types, "Agregar tipo")}
       </div>
       <div class="err" data-err role="alert"></div>
@@ -1164,6 +1174,10 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       if (!item) return;
       rw.querySelectorAll("[data-f]").forEach(el => { item[el.dataset.f] = el.dataset.f === "design" ? Number(el.value) : el.value; });
     });
+    form.querySelectorAll("[data-pages-of]").forEach(box => {
+      const item = cfgDraft.disciplines.find(i => i.id === box.dataset.pagesOf);
+      if (item) item.pages = [...box.querySelectorAll("[data-page]")].map(el => el.value);
+    });
   }
 
   const usesOf = (sec, name) => classes.filter(c => {
@@ -1184,7 +1198,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
         if (!it.name) return fail(`Hay un ${labels[sec]} sin nombre.`);
         if (seen.has(norm(it.name))) return fail(`El ${labels[sec]} «${it.name}» está repetido.`);
         seen.add(norm(it.name));
-        if (sec === "disciplines" && it.page && !/^[A-Za-z0-9_\-\/.]+(#[A-Za-z0-9_-]+)?$/.test(it.page)) return fail(`La página de «${it.name}» no es válida (por ejemplo judo.html).`);
+        const bad = sec === "disciplines" && it.pages.find(pg => !/^[A-Za-z0-9_\-\/.]+(#[A-Za-z0-9_-]+)?$/.test(pg));
+        if (bad) return fail(`La página «${bad}» de «${it.name}» no es válida (por ejemplo judo.html).`);
       }
     }
     // Cada clase toma los valores nuevos de su disciplina, tipo y club (también si cambió el nombre de alguno)
@@ -1195,10 +1210,10 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       const nd = od && next.disciplines.find(i => i.id === od.id), nc = oc && next.clubs.find(i => i.id === oc.id), nt = ot && next.types.find(i => i.id === ot.id);
       if (!nd || !nc || (p.type && !nt)) return;       // clases con datos que no están en la configuración: se dejan como están
       const parts = { discipline: nd.name, type: nt ? nt.name : "", club: nc.name };
-      const want = { label: composeLabel(parts), discipline: parts.discipline, club: parts.club, tone: nd.tone, page: nd.page || "", clubTone: nc.tone, design: nt ? nt.design : 0 };
+      const want = { label: composeLabel(parts), discipline: parts.discipline, club: parts.club, tone: nd.tone, page: pagesOf(nd)[0] || "", pages: pagesOf(nd), clubTone: nc.tone, design: nt ? nt.design : 0 };
       if (nt) want.type = nt.name;
       const patch = {};
-      Object.entries(want).forEach(([key, v]) => { if (k[key] !== v) patch[key] = v; });
+      Object.entries(want).forEach(([key, v]) => { if (JSON.stringify(k[key]) !== JSON.stringify(v)) patch[key] = v; });
       if (Object.keys(patch).length) patches.set(k.id, patch);
     });
     const tooLong = [...patches.values()].find(pt => pt.label && pt.label.length > 60);
@@ -1220,7 +1235,8 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       render();
     } catch (e) { console.warn(e); fail(saveError(e)); }
   }
-  const cloneCatalogOf = c => JSON.parse(JSON.stringify(c, (k, v) => (typeof v === "string" && ["name", "page"].includes(k) ? v.trim() : v)));
+  // Copia limpia: nombres y páginas sin espacios, y sin páginas vacías ni repetidas
+  const cloneCatalogOf = c => JSON.parse(JSON.stringify(c, (k, v) => (k === "pages" && Array.isArray(v) ? [...new Set(v.map(x => String(x).trim()).filter(Boolean))] : typeof v === "string" && k === "name" ? v.trim() : v)));
 
   /* ---------- Dibujo ---------- */
   function render() {
@@ -1307,10 +1323,25 @@ export function initClases({ db, fs, esc, toast, saveError }) {
     if (cfgAdd) {
       readConfig();
       const sec = cfgAdd.dataset.cfgAdd;
-      cfgDraft[sec].push({ clubs: { id: uid(), name: "", tone: "bronce" }, disciplines: { id: uid(), name: "", tone: "oro", page: "" }, types: { id: uid(), name: "", design: 1 } }[sec]);
+      cfgDraft[sec].push({ clubs: { id: uid(), name: "", tone: "bronce" }, disciplines: { id: uid(), name: "", tone: "oro", pages: [] }, types: { id: uid(), name: "", design: 1 } }[sec]);
       render();
       const rows = root.querySelectorAll('[data-sec="' + sec + '"] .adm-cfg-row [data-f="name"]');
       if (rows.length) rows[rows.length - 1].focus();
+      return;
+    }
+    const pgAdd = t.closest("[data-cfg-addpage]");
+    if (pgAdd) {
+      readConfig();
+      const d = cfgDraft.disciplines.find(i => i.id === pgAdd.dataset.cfgAddpage);
+      if (d) { d.pages = [...pagesOf(d), ""]; render(); const ins = root.querySelectorAll('[data-pages-of="' + d.id + '"] [data-page]'); if (ins.length) ins[ins.length - 1].focus(); }
+      return;
+    }
+    const pgDel = t.closest("[data-cfg-delpage]");
+    if (pgDel) {
+      readConfig();
+      const [id, idx] = pgDel.dataset.cfgDelpage.split(":");
+      const d = cfgDraft.disciplines.find(i => i.id === id);
+      if (d) { d.pages = pagesOf(d).filter((_, i) => i !== Number(idx)); render(); }
       return;
     }
     const cfgDel = t.closest("[data-cfg-del]");

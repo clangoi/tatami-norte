@@ -15,6 +15,7 @@
 
   const API = "/api";
   const STORE_KEY = "tn_bookings";
+  const CONTACT_KEY = "tn_contact";
   const REFRESH_MS = 30000;
 
   const successHandlers = [];
@@ -46,6 +47,11 @@
     list.sort((a, b) => new Date(a.startAt) - new Date(b.startAt));
     saveMine(list);
   }
+  /* ---- Datos de contacto recordados en este navegador, para no volver a escribirlos ---- */
+  function readContact(){
+    try { return JSON.parse(localStorage.getItem(CONTACT_KEY) || "{}") || {}; } catch (e) { return {}; }
+  }
+  function saveContact(c){ try { localStorage.setItem(CONTACT_KEY, JSON.stringify(c)); } catch (e) {} }
   function renderMine(root){
     const wrap = root.querySelector("[data-cal-mine]");
     const list = root.querySelector("[data-cal-mine-list]");
@@ -118,20 +124,23 @@
     function renderForm(){
       const s = chosen;
       const f = n => `rv${id}-${n}`;
+      const saved = readContact();
+      const val = n => esc(saved[n] || "");
       container.innerHTML = `<form class="rv-form" novalidate>
         <button class="rv-back" type="button" data-back>← Elegir otra hora</button>
         <div class="rv-pick"><b>${esc(s.classLabel)}</b><span>${esc(dayLabel(s.date))} · ${esc(s.start)}–${esc(s.end)}</span></div>
-        <div class="field"><label for="${f("name")}">Nombre y apellido</label><input id="${f("name")}" name="name" autocomplete="name" maxlength="80" required></div>
-        <div class="field"><label for="${f("nick")}">Apodo <small>(opcional)</small></label><input id="${f("nick")}" name="nickname" maxlength="30" placeholder="Así te verán los demás en la lista">
+        <div class="field"><label for="${f("name")}">Nombre y apellido</label><input id="${f("name")}" name="name" autocomplete="name" maxlength="80" value="${val("name")}" required></div>
+        <div class="field"><label for="${f("nick")}">Apodo <small>(opcional)</small></label><input id="${f("nick")}" name="nickname" maxlength="30" value="${val("nickname")}" placeholder="Así te verán los demás en la lista">
           <small class="rv-help">Sin apodo, los demás verán tu nombre y la inicial de tu apellido.</small></div>
-        <div class="field"><label for="${f("phone")}">Teléfono</label><input id="${f("phone")}" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+56 9 1234 5678" required></div>
-        <div class="field"><label for="${f("mail")}">Correo</label><input id="${f("mail")}" name="email" type="email" autocomplete="email" required>
+        <div class="field"><label for="${f("phone")}">Teléfono</label><input id="${f("phone")}" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+56 9 1234 5678" value="${val("phone")}" required></div>
+        <div class="field"><label for="${f("mail")}">Correo</label><input id="${f("mail")}" name="email" type="email" autocomplete="email" value="${val("email")}" required>
           <small class="rv-help">Ahí te enviamos la confirmación y el enlace para cambiar o cancelar.</small></div>
         <input class="rv-trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="err" data-err role="alert"></div>
         <button class="btn block" type="submit">Confirmar reserva</button>
       </form>`;
-      container.querySelector("input").focus({ preventScroll: true });
+      // con datos guardados no hace falta escribir: queda listo para confirmar
+      if (!saved.name) container.querySelector("input").focus({ preventScroll: true });
     }
 
     /* --- confirmación --- */
@@ -226,6 +235,7 @@
           body: JSON.stringify({ sessionKey: chosen.key, name: v("name"), nickname: v("nickname"), phone: v("phone"), email: v("email"), website: v("website") })
         });
         step = "done";
+        saveContact({ name: v("name"), nickname: v("nickname"), phone: v("phone"), email: v("email") });
         rememberBooking(res.booking);
         renderDone(res);
         renderMine(root);

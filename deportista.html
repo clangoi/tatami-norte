@@ -3,9 +3,10 @@
 <head>
 <!--
   PANEL DEL DEPORTISTA (ver DEPORTISTAS.md)
-  La cuenta la crea el equipo desde admin → Deportistas y la persona crea su clave con el enlace
-  que recibe por correo. Aquí agenda, reagenda y cancela sus clases, ve su calendario e historial
-  y suscribe sus reservas a su calendario personal.
+  Mismo esquema que el panel de administración (admin.html): barra superior, cabecera con pestañas y listas.
+  La cuenta la crea el equipo desde admin → Deportistas y la persona crea su clave con el enlace que recibe
+  por correo. Aquí agenda, reagenda y cancela sus clases, ve su calendario e historial y suscribe sus
+  reservas a su calendario personal.
 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -20,33 +21,61 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/pages/disciplina.css">
+<link rel="stylesheet" href="css/pages/articulo.css">
+<link rel="stylesheet" href="css/pages/admin.css">
 <link rel="stylesheet" href="css/pages/deportista.css">
-<script src="js/components.js"></script>
 </head>
 <body>
-<site-nav current="deportista"></site-nav>
-
-<header class="page-head">
-  <div class="page-head-word" aria-hidden="true">Dojo</div>
+<nav class="nav" aria-label="Panel">
   <div class="wrap">
-    <div class="eyebrow">Deportistas</div>
-    <h1 id="title">Mi panel</h1>
-    <p id="lead">Agenda, cambia o cancela tus clases y lleva tus reservas a tu calendario.</p>
-  </div>
-</header>
-
-<main>
-  <section class="sec light">
-    <div class="wrap">
-      <div class="cal-box ath" id="app" aria-live="polite">
-        <p class="cal-loading">Cargando…</p>
-      </div>
+    <a class="brand" href="index.html"><span class="brand-mark" data-site="initial">K</span><span class="brand-name">Mi panel <span data-site="shortName">Kizuna</span></span></a>
+    <div class="adm-nav">
+      <span class="adm-user" id="who" hidden></span>
+      <a class="btn small ghost" href="index.html">Ver sitio</a>
+      <button class="btn small ghost" id="logout" type="button" hidden>Salir</button>
     </div>
+  </div>
+</nav>
+
+<main class="adm">
+
+  <!-- Cargando sesión -->
+  <section class="wrap adm-center" id="vLoading">
+    <p class="adm-loading">Conectando…</p>
+  </section>
+
+  <!-- Inicio de sesión -->
+  <section class="wrap adm-center" id="vLogin" hidden>
+    <form class="panel adm-login" id="loginForm" novalidate>
+      <h3>Entrar a mi panel</h3>
+      <p class="hint">Tu cuenta la crea la escuela con el correo con el que te inscribes. Recibes un correo con el enlace para crear tu clave.</p>
+      <div class="field"><label for="lEmail">Correo</label><input id="lEmail" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="lPass">Clave</label><input id="lPass" type="password" autocomplete="current-password" required></div>
+      <div class="err" id="lErr" role="alert"></div>
+      <button class="btn block" type="submit">Entrar</button>
+      <button class="adm-link" id="forgot" type="button">Olvidé mi clave</button>
+    </form>
+  </section>
+
+  <!-- Sin acceso -->
+  <section class="wrap adm-center" id="vDenied" hidden>
+    <div class="panel adm-login">
+      <h3>Sin acceso</h3>
+      <p class="hint" id="deniedMsg"></p>
+      <button class="btn ghost block" type="button" id="deniedOut">Salir</button>
+    </div>
+  </section>
+
+  <!-- Panel -->
+  <section id="vApp" hidden>
+    <div class="wrap adm-head">
+      <div><div class="eyebrow" id="hello">Deportista</div><h1>Mi panel</h1></div>
+      <div class="filters" role="tablist" aria-label="Secciones" id="tabs"></div>
+    </div>
+    <div class="wrap" id="body"></div>
   </section>
 </main>
 
-<site-footer></site-footer>
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script src="site.config.js"></script>

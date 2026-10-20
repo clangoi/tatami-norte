@@ -50,7 +50,7 @@
     (res.week || res.sessions).forEach(s => {
       if (!disciplinas[s.classId]) return;
       (byDate[s.date] = byDate[s.date] || []).push({
-        dia: dayOf(s.date), fecha: s.date, inicio: s.start, fin: s.end, disciplina: s.classId, pick: s.classId, key: s.key, completa: !!s.full,
+        dia: dayOf(s.date), fecha: s.date, inicio: s.start, fin: s.end, disciplina: s.classId, pick: s.classId, key: s.key, completa: !!s.full, inscritos: s.taken, cupos: s.capacity,
         nota: s.full ? "Completa" : ""
       });
     });
@@ -109,6 +109,7 @@
     const cell = (c, isToday) => `<a class="sch-class t-${tone(c.disciplina)} ty-${design(c.disciplina)}${stripe(c.disciplina)}" href="${esc(book)}" data-pick="${esc(c.pick || c.disciplina)}"${c.key ? ` data-key="${esc(c.key)}"${c.completa ? " data-full" : ""}` : ""} data-disc="${esc(c.disciplina)}" data-f-club="${esc(facet(c.disciplina).club)}" data-f-disciplina="${esc(facet(c.disciplina).disciplina)}" data-f-tipo="${esc(facet(c.disciplina).tipo)}"${isToday(c.dia) ? ` data-today data-start="${esc(c.inicio)}" data-end="${esc(c.fin)}"` : ""}>
         <span class="sch-name">${esc(disc[c.disciplina].nombre)}</span>
         <span class="sch-time">${esc(c.inicio)}–${esc(c.fin)}</span>
+        ${c.cupos ? `<span class="sch-spots" title="Inscritos / cupos">${esc(c.inscritos)}/${esc(c.cupos)}</span>` : ""}
         ${c.nota ? `<span class="sch-note">${esc(c.nota)}</span>` : ""}
       </a>`;
 

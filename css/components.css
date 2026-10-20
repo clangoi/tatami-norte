@@ -250,6 +250,7 @@
 .sch-class.is-hi{outline:2px solid var(--gold);outline-offset:-2px}
 .sch-name{font:800 19px/1.05 var(--display);text-transform:uppercase}
 .sch-time{font:600 13px/1 var(--label);letter-spacing:.1em;font-variant-numeric:tabular-nums;opacity:.85}
+.sch-spots{font:700 13px/1 var(--label);letter-spacing:.1em;font-variant-numeric:tabular-nums;opacity:.9}
 .sch-note{font-size:13px;line-height:1.3;opacity:.85}
 
 .sch-list{display:none}

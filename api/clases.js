@@ -18,7 +18,7 @@ module.exports = handler(["GET"], async (req, res) => {
   const monday = T.addDays(today, -((new Date(today + "T12:00:00Z").getUTCDay() + 6) % 7));
   const withWeek = !!req.query.semana;
   const base = await S.loadBase(db, withWeek ? monday : today);
-  const booked = await S.confirmedBySession(db, today);
+  const booked = await S.confirmedBySession(db, withWeek ? monday : today);   // con la semana, también los inscritos de los días que ya pasaron
   const sessions = S.occurrences(base, today, S.horizonEnd(today))
     .map(s => S.publicView(s, booked.get(s.key)));
 

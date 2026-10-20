@@ -18,6 +18,7 @@ const B = require("./_lib/bookings");
 const S = require("./_lib/sessions");
 const T = require("./_lib/time");
 const mail = require("./_lib/mail");
+const ics = require("./_lib/ics");
 
 const clean = (v, max) => String(v || "").trim().replace(/\s+/g, " ").slice(0, max);
 
@@ -101,7 +102,10 @@ module.exports = handler(["GET", "POST"], async (req, res) => {
       mail.toAttendee("confirmed", booking, site).catch(e => { console.error(e); return false; }),
       mail.toHost("confirmed", booking, site).catch(e => console.error(e))
     ]);
-    return res.status(200).json({ id: booking.id, emailSent });
+    return res.status(200).json({
+      id: booking.id, booking: B.manageView(booking),
+      google: ics.googleUrl(mail.eventOf(booking, site)), ics: `${site}/api/calendario?t=${booking.id}`, emailSent
+    });
   }
 
   const reason = B.parseReason(body.reason);

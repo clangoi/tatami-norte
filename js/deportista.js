@@ -66,6 +66,7 @@ onAuthStateChanged(auth, async user => {
   $("#logout").hidden = !user;
   $("#who").hidden = !user;
   data = null;
+  try { user ? localStorage.setItem("tn_athlete", "1") : localStorage.removeItem("tn_athlete"); } catch (e) {}
   if (!user) { show("vLogin"); return; }
   $("#who").textContent = user.email;
   show("vLoading");

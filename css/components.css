@@ -343,3 +343,7 @@
   #horario .sch-legend{grid-column:2;grid-row:1/3;align-self:start;margin:0 0 32px;padding:22px 24px;border:1px solid var(--line);background:rgba(255,255,255,.03);gap:14px}
   #horario .sch-weeks,#horario .my-bookings,#horario .sch-foot,#horario .sch-loading,#horario .sch-empty{grid-column:1/-1}
 }
+/* Reserva de un deportista con sesión: datos con que se inscribe */
+.rv-who{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:0 0 20px;padding:14px 16px;border:1px solid var(--navy-3);background:var(--navy-2)}
+.rv-who dt{font:600 13px/1.6 var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--steel)}
+.rv-who dd{margin:0;color:var(--cream);overflow-wrap:anywhere}

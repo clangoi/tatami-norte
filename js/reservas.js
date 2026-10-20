@@ -18,6 +18,9 @@
   const CONTACT_KEY = "tn_contact";
   const REFRESH_MS = 30000;
 
+  const SELF = document.currentScript && document.currentScript.src;   // para cargar js/firebase.js desde cualquier página
+  const ATHLETE_FLAG = "tn_athlete";   // lo deja js/deportista.js al entrar; sin él no se carga Firebase en la portada
+
   const successHandlers = [];
   const failHandlers = [];
   const roots = [];
@@ -47,6 +50,35 @@
     list.sort((a, b) => new Date(a.startAt) - new Date(b.startAt));
     saveMine(list);
   }
+  /* ---- Deportista con sesión iniciada: reserva con los datos de su cuenta, sin formulario ----
+     Solo se carga Firebase si en este navegador entró alguna vez al panel de deportista. */
+  let athlete = null;          // { name, email, phone, user } cuando hay sesión y datos completos
+  const athleteWatchers = [];
+  function loadAthlete(){
+    let flagged = false;
+    try { flagged = !!localStorage.getItem(ATHLETE_FLAG); } catch (e) {}
+    if (!flagged || !SELF) return;
+    (async () => {
+      try {
+        const base = new URL("firebase.js", SELF).href;
+        const { SDK, app } = await import(base);
+        const { getAuth, onAuthStateChanged } = await import(`${SDK}/firebase-auth.js`);
+        onAuthStateChanged(getAuth(app), async user => {
+          athlete = null;
+          if (!user) { try { localStorage.removeItem(ATHLETE_FLAG); } catch (e) {} }
+          else {
+            try {
+              const token = await user.getIdToken();
+              const me = await api("/deportista", { headers: { Authorization: "Bearer " + token } });
+              if (me.profile.complete) athlete = { name: me.profile.name, email: me.profile.email, phone: me.profile.phone, user };
+            } catch (e) { /* sin cuenta activa: se usa el formulario de siempre */ }
+          }
+          athleteWatchers.forEach(fn => fn());
+        });
+      } catch (e) { console.warn(e); }
+    })();
+  }
+
   /* ---- Datos de contacto recordados en este navegador, para no volver a escribirlos ---- */
   function readContact(){
     try { return JSON.parse(localStorage.getItem(CONTACT_KEY) || "{}") || {}; } catch (e) { return {}; }
@@ -89,7 +121,24 @@
     }
 
     /* --- formulario --- */
+    // Con sesión de deportista: solo se muestran los datos con que se inscribe
+    function renderAthleteForm(){
+      const s = chosen;
+      container.innerHTML = `<form class="rv-form" data-athlete novalidate>
+        <button class="rv-back" type="button" data-back>← Volver al horario</button>
+        <div class="rv-pick"><b>${esc(s.classLabel)}</b><span>${esc(dayLabel(s.date))} · ${esc(s.start)}–${esc(s.end)}</span></div>
+        <p class="rv-help">Te inscribes con los datos de tu cuenta de deportista:</p>
+        <dl class="rv-who"><dt>Nombre</dt><dd>${esc(athlete.name)}</dd><dt>Teléfono</dt><dd>${esc(athlete.phone)}</dd><dt>Correo</dt><dd>${esc(athlete.email)}</dd></dl>
+        <div class="err" data-err role="alert"></div>
+        <button class="btn block" type="submit">Confirmar reserva</button>
+        <button class="rv-back" type="button" data-other>Reservar con otros datos</button>
+        <p class="rv-help">Puedes cambiar tus datos desde <a href="deportista.html" style="color:var(--gold)">Mi panel</a>.</p>
+      </form>`;
+    }
+
+    let forceForm = false;      // «Reservar con otros datos»
     function renderForm(){
+      if (athlete && !forceForm) return renderAthleteForm();
       const s = chosen;
       const f = n => `rv${id}-${n}`;
       const saved = readContact();
@@ -165,6 +214,7 @@
       const s = data.sessions.find(x => x.key === key && !x.full && visibleClasses().some(c => c.id === x.classId));
       if (!s) { load(); return false; }
       chosen = s;
+      forceForm = false;
       step = "form";
       renderForm();
       showModal();
@@ -178,22 +228,39 @@
     });
     document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 
+    container.addEventListener("click", e => {
+      if (e.target.closest("[data-other]")) { forceForm = true; renderForm(); }
+    });
+
+    // Si la sesión del deportista se resuelve con el formulario ya abierto, se cambia a sus datos
+    athleteWatchers.push(() => { if (step === "form" && chosen) renderForm(); });
+
     container.addEventListener("submit", async e => {
       e.preventDefault();
       if (sending) return;
       const form = e.target;
       const err = form.querySelector("[data-err]");
       const btn = form.querySelector("[type=submit]");
+      const asAthlete = form.hasAttribute("data-athlete");
       const v = n => form.elements[n].value.trim();
       err.textContent = "";
       sending = true; btn.disabled = true; btn.textContent = "Reservando…";
       try {
-        const res = await api("/reservar", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionKey: chosen.key, name: v("name"), phone: v("phone"), email: v("email"), website: v("website") })
-        });
+        let res;
+        if (asAthlete) {
+          const token = await athlete.user.getIdToken();
+          res = await api("/deportista", {
+            method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ action: "book", sessionKey: chosen.key })
+          });
+        } else {
+          res = await api("/reservar", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionKey: chosen.key, name: v("name"), phone: v("phone"), email: v("email"), website: v("website") })
+          });
+        }
         step = "done";
-        saveContact({ name: v("name"), phone: v("phone"), email: v("email") });
+        if (!asAthlete) saveContact({ name: v("name"), phone: v("phone"), email: v("email") });
         rememberBooking(res.booking);
         renderDone(res);
         renderMine();
@@ -224,6 +291,8 @@
     load();
     return { el: root, open };
   }
+
+  loadAthlete();
 
   window.TNBooking = {
     configured: true,

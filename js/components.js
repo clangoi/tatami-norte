@@ -73,6 +73,7 @@
       <a href="${p.sec("horario")}">Horario</a>
       <a href="${p.sec("planes")}">Planes</a>
       <a href="${p.page("blog.html")}"${mark("blog")}>Blog</a>
+      <a href="${p.page("deportista.html")}"${mark("deportista")}>Mi panel</a>
       <a class="btn small" href="${cta}">Clase gratis</a>
     </div>
   </div>`;

@@ -266,3 +266,13 @@ body.adm-dragging .adm-block{pointer-events:none}
 /* El horario semanal se desplaza dentro de su marco; al llegar al borde suma horas */
 .adm-sched-scroll{max-height:min(72vh,760px);overflow-y:auto;overscroll-behavior:contain}
 .adm-cal-head{position:sticky;top:0;z-index:5}
+
+/* Deportistas */
+.adm-ath.is-off .adm-row-main b{color:var(--steel);text-decoration:line-through}
+.adm-ath-chips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0}
+.adm-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border:1px solid var(--navy-3);background:var(--navy-2);color:var(--text-soft);font:600 12px/1.4 var(--label);letter-spacing:.08em;text-transform:uppercase}
+.adm-chip b{font:800 14px/1 var(--display);color:var(--gold)}
+.adm-chip.is-total{border-color:var(--gold);color:var(--cream)}
+.adm-chip.is-next{border-color:var(--bronze);color:var(--gold)}
+.adm-ath-form{max-width:640px}
+.adm-toolbar input[type=search]{font:500 15px/1.2 var(--body);letter-spacing:0;text-transform:none;color:var(--cream);background:var(--navy-2);border:1px solid var(--navy-3);padding:9px 12px;min-height:40px;min-width:min(320px,70vw)}

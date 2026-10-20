@@ -44,6 +44,7 @@ function bookingData(session, contact, extra = {}) {
     date: session.date, start: session.start, end: session.end, startAt: session.startAt, endAt: session.endAt,
     name: contact.name, nickname: contact.nickname, display: S.displayName(contact.name, contact.nickname),
     phone: contact.phone, waPhone: contact.waPhone, phoneKey: contact.phoneKey, email: contact.email,
+    emailKey: contact.email.toLowerCase(),
     status: "confirmed", createdAt: now,
     history: [{ type: extra.rescheduledFrom ? "rescheduled-in" : "created", at: now, ...(extra.history || {}) }],
     ...(extra.fields || {})
@@ -134,4 +135,4 @@ function manageView(b) {
   };
 }
 
-module.exports = { parseContact, parseReason, create, find, cancel, reschedule, manageView };
+module.exports = { parsePhone, parseContact, parseReason, create, find, cancel, reschedule, manageView };

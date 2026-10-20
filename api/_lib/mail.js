@@ -105,4 +105,16 @@ async function toHost(kind, b, site, extra) {
   return send({ to, subject: `${label}: ${b.display} · ${b.classLabel} ${b.date} ${b.start}`, html: layout(label, html), attachments });
 }
 
-module.exports = { toAttendee, toHost, eventOf, esc, longDate };
+// Invitación al panel personal: enlace para crear la clave. link = enlace de Firebase para fijar la contraseña
+async function toAthleteInvite({ email, name, link, site, reminder }) {
+  const first = esc(String(name || "").split(/\s+/)[0] || "");
+  const title = reminder ? "Crea o cambia tu clave" : "Tu panel de deportista está listo";
+  const html = `<p>Hola${first ? " " + first : ""},</p>
+    <p>${reminder ? "Aquí tienes un nuevo enlace para fijar tu clave." : "Creamos tu panel personal de deportista."} Desde ahí puedes agendar, reagendar y cancelar tus clases más rápido, ver tu historial y llevar tus reservas a tu calendario.</p>
+    <div style="margin:18px 0">${button(link, "Crear mi clave", true)}</div>
+    <p style="font-size:14px;color:#4c5264">Tu usuario es este correo (${esc(email)}). Después entras siempre en <a href="${esc(site)}/deportista">${esc(site.replace(/^https?:\/\//, ""))}/deportista</a>.</p>
+    <p style="font-size:13px;color:#6b6f7a">Si no esperabas este correo, ignóralo.</p>`;
+  return send({ to: email, toName: name, subject: title, html: layout(title, html) });
+}
+
+module.exports = { toAttendee, toHost, toAthleteInvite, eventOf, esc, longDate };

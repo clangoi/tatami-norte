@@ -3,6 +3,9 @@
    GET /api/calendario?t=ID          →  .ics de una reserva (para quien reservó)
    GET /api/calendario?feed=SECRETO  →  calendario de la escuela con todas las
                                         clases y sus inscritos (suscripción)
+   GET /api/calendario?a=TOKEN       →  calendario personal de un deportista (suscripción):
+                                        sus reservas, que se actualizan solas al agendar,
+                                        reagendar o cancelar
    SECRETO es la variable CALENDAR_FEED_SECRET en Vercel. Quien tenga ese
    enlace ve los nombres de los inscritos: no lo compartas.
    ========================================================== */
@@ -14,6 +17,7 @@ const B = require("./_lib/bookings");
 const S = require("./_lib/sessions");
 const T = require("./_lib/time");
 const mail = require("./_lib/mail");
+const A = require("./_lib/athletes");
 const ics = require("./_lib/ics");
 
 const same = (a, b) => {
@@ -46,6 +50,22 @@ module.exports = handler(["GET"], async (req, res) => {
     res.setHeader("Content-Type", "text/calendar; charset=utf-8");
     res.setHeader("Cache-Control", "public, s-maxage=300");
     return res.status(200).send(ics.calendar(`${cfg.shortName || cfg.name} · Clases`, events));
+  }
+
+  if (req.query.a !== undefined) {
+    const token = String(req.query.a || "");
+    if (!/^[A-Za-z0-9_-]{20,64}$/.test(token)) throw new HttpError(404, "No encontrado.");
+    const found = await db.collection("athletes").where("calToken", "==", token).limit(1).get();
+    if (found.empty || found.docs[0].data().active === false) throw new HttpError(404, "No encontrado.");
+    const a = found.docs[0].data();
+    const cfg = siteConfig();
+    const since = Date.now() - 60 * 86400000;   // lo cancelado queda marcado para que el calendario lo quite
+    const events = (await A.bookingsOf(db, a.email))
+      .filter(b => new Date(b.startAt).getTime() >= since && b.status !== "rescheduled")
+      .map(b => ({ ...mail.eventOf(b, site), cancelled: b.status !== "confirmed" }));
+    res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+    res.setHeader("Cache-Control", "private, max-age=300");
+    return res.status(200).send(ics.calendar(`${cfg.shortName || cfg.name} · Mis clases`, events));
   }
 
   const b = await B.find(db, req.query.t);

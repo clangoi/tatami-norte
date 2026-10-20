@@ -21,4 +21,10 @@ function getDb() {
   return db;
 }
 
-module.exports = { getDb };
+// Firebase Auth (cuentas de los deportistas y verificación de sus sesiones)
+function getAuth() {
+  getDb();
+  return admin.auth();
+}
+
+module.exports = { getDb, getAuth };

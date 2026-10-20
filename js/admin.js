@@ -10,6 +10,7 @@ import { SDK, app, db, fs, cacheImage, hydrateImages } from "./firebase.js";
 import { toHtml, readingMinutes } from "./markdown.js";
 import { SEED_POSTS } from "./seed-posts.js";
 import { initClases } from "./admin-clases.js";
+import { initDeportistas } from "./admin-deportistas.js";
 import "./admin-info.js";
 import { stateIcon, iconBtn } from "./admin-icons.js";
 
@@ -33,6 +34,8 @@ const slugify = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
   .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 // Pestaña Clases (horario, cupos y reservas): js/admin-clases.js
 const clases = initClases({ db, fs, esc, toast: msg => toast(msg), saveError: e => saveError(e) });
+// Pestaña Deportistas (cuentas del panel personal): js/admin-deportistas.js
+const deportistas = initDeportistas({ getToken: () => auth.currentUser.getIdToken(), esc, toast: msg => toast(msg) });
 const pattern = s => [...s].reduce((n, c) => n + c.charCodeAt(0), 0) % 4;
 
 function toast(msg){
@@ -122,10 +125,12 @@ $("#copyUid").addEventListener("click", () => {
 $$("[data-tab]").forEach(b => b.addEventListener("click", () => {
   if (!confirmLeave()) return;
   clases.reset();   // lo que estaba en borrador en Clases se olvida
+  deportistas.reset();
   closePost(); closePlan();
   $$("[data-tab]").forEach(x => x.setAttribute("aria-pressed", x === b));
   $$("[data-view]").forEach(v => v.hidden = v.dataset.view !== b.dataset.tab);
   if (b.dataset.tab === "classes") clases.activate();
+  if (b.dataset.tab === "athletes") deportistas.activate();
 }));
 
 /* ==========================================================

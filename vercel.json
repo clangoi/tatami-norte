@@ -16,6 +16,12 @@
     },
     "api/calendario.js": {
       "includeFiles": "site.config.js"
+    },
+    "api/deportista.js": {
+      "includeFiles": "site.config.js"
+    },
+    "api/deportistas.js": {
+      "includeFiles": "site.config.js"
     }
   },
   "headers": [

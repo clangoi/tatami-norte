@@ -3,7 +3,7 @@
    Misma estructura que el panel de administración (js/admin.js): vistas de carga,
    entrada y panel; pestañas arriba; listas en filas. Entra con el correo y la clave
    que creó con el enlace del correo (Firebase Auth) y habla con /api/deportista.
-   Secciones: Resumen (contadores) · Agendar · Próximas (reagendar, cancelar) · Calendario · Historial.
+   Secciones: Resumen (contadores) · Próximas (reagendar, cancelar) · Calendario · Historial.
    ========================================================== */
 import { SDK, app as fbApp } from "./firebase.js";
 import { infoTip } from "./admin-info.js";
@@ -27,13 +27,12 @@ const toast = msg => {
   clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, 3000);
 };
 
-const TABS = [["sum", "Resumen"], ["book", "Agendar"], ["next", "Próximas"], ["cal", "Calendario"], ["past", "Historial"]];
+const TABS = [["sum", "Resumen"], ["next", "Próximas"], ["cal", "Calendario"], ["past", "Historial"]];
 let data = null;
 let tab = "sum";
 let month = todayStr().slice(0, 7);
 let calDay = "";
 let openPanel = null;       // { id, kind: "cancel" | "reschedule" }
-let filter = { club: "", discipline: "" };
 
 const api = async (body) => {
   const token = await auth.currentUser.getIdToken();
@@ -147,24 +146,6 @@ function profileForm() {
 const upcoming = () => data.bookings.filter(b => b.status === "confirmed" && b.canChange).sort((a, b) => a.startAt.localeCompare(b.startAt));
 const history = () => data.bookings.filter(b => !(b.status === "confirmed" && b.canChange));
 
-function viewBook() {
-  const clubs = [...new Set(data.sessions.map(s => s.club).filter(Boolean))].sort();
-  const discs = [...new Set(data.sessions.map(s => s.discipline).filter(Boolean))].sort();
-  const list = data.sessions.filter(s => (!filter.club || s.club === filter.club) && (!filter.discipline || s.discipline === filter.discipline));
-  const byDate = {};
-  list.forEach(s => (byDate[s.date] = byDate[s.date] || []).push(s));
-  const sel = (name, label, opts) => `<label>${label}<select data-filter="${name}"><option value="">Todos</option>${opts.map(o => `<option${filter[name] === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select></label>`;
-  return `<div class="adm-bar"><h2>Agendar una clase</h2></div>
-    ${infoTip("Las clases de esta semana y la próxima. Un toque en «Reservar» y listo: usamos tus datos guardados y te enviamos la confirmación con la invitación para tu calendario.")}
-    ${clubs.length > 1 || discs.length > 1 ? `<div class="adm-toolbar">${clubs.length > 1 ? sel("club", "Club", clubs) : ""}${discs.length > 1 ? sel("discipline", "Disciplina", discs) : ""}</div>` : ""}
-    ${Object.keys(byDate).length ? Object.entries(byDate).map(([date, items]) => `<h3 class="adm-day">${esc(cap(dayLabel(date)))}</h3>
-      <div class="adm-rows">${items.map(s => `<div class="adm-row">
-        <div class="adm-row-main"><b>${esc(s.classLabel)}</b><span>${esc(s.start)}–${esc(s.end)} · ${s.full ? "Completa" : `${s.capacity - s.taken} ${s.capacity - s.taken === 1 ? "cupo" : "cupos"}`}</span></div>
-        ${s.mine ? '<span class="adm-tag on">Inscrito</span>' : s.full ? '<span class="adm-tag">Completa</span>'
-          : `<button class="btn small" type="button" data-book="${esc(s.key)}">Reservar</button>`}
-      </div>`).join("")}</div>`).join("") : '<p class="adm-empty">No hay clases disponibles con esos filtros en los próximos días.</p>'}`;
-}
-
 const reasonField = label => `<div class="field"><label>${label}</label>
   <textarea name="reason" rows="2" maxlength="300" required placeholder="Cuéntanos brevemente por qué"></textarea></div>`;
 
@@ -194,7 +175,7 @@ function viewNext() {
         <button class="btn small ghost" type="button" data-panel="reschedule" data-id="${esc(b.id)}" aria-pressed="${!!openPanel && openPanel.id === b.id && openPanel.kind === "reschedule"}">Reagendar</button>
         <button class="btn small ghost adm-danger" type="button" data-panel="cancel" data-id="${esc(b.id)}" aria-pressed="${!!openPanel && openPanel.id === b.id && openPanel.kind === "cancel"}">Cancelar</button>
       </div></div>${panelFor(b)}</div>`).join("")}</div>`
-      : '<p class="adm-empty">No tienes clases próximas. Ve a «Agendar» para reservar una.</p>'}`;
+      : '<p class="adm-empty">No tienes clases próximas. Reserva una desde <a href="index.html#horario" style="color:var(--gold)">el horario del sitio</a>.</p>'}`;
 }
 
 function viewCal() {
@@ -236,7 +217,7 @@ function viewPast() {
 }
 
 function render() {
-  const view = { sum: summary, book: viewBook, next: viewNext, cal: viewCal, past: viewPast }[tab];
+  const view = { sum: summary, next: viewNext, cal: viewCal, past: viewPast }[tab];
   const n = upcoming().length;
   $("#hello").textContent = "Hola, " + (data.profile.name.split(" ")[0] || "deportista");
   $("#tabs").innerHTML = TABS.map(([k, name]) =>
@@ -268,21 +249,6 @@ $("#body").addEventListener("click", async e => {
   if (cp) { navigator.clipboard?.writeText(cp.dataset.copy).then(() => toast("Enlace copiado")); return; }
   const pn = t.closest("[data-panel]");
   if (pn) { const same = openPanel && openPanel.id === pn.dataset.id && openPanel.kind === pn.dataset.panel; openPanel = same ? null : { id: pn.dataset.id, kind: pn.dataset.panel }; render(); return; }
-  const bk = t.closest("[data-book]");
-  if (bk) {
-    if (!data.profile.complete) { toast("Completa tus datos para poder reservar"); return; }
-    bk.disabled = true; bk.textContent = "Reservando…";
-    try {
-      const res = await api({ action: "book", sessionKey: bk.dataset.book });
-      toast("Clase reservada" + (res.emailSent ? ": te enviamos la confirmación" : ""));
-    } catch (ex) { toast(ex.message); }
-    await load();
-  }
-});
-
-$("#body").addEventListener("change", e => {
-  const f = e.target.closest("[data-filter]");
-  if (f) { filter[f.dataset.filter] = f.value; render(); }
 });
 
 $("#body").addEventListener("submit", async e => {

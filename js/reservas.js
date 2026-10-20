@@ -97,9 +97,8 @@
       container.innerHTML = `<form class="rv-form" novalidate>
         <button class="rv-back" type="button" data-back>← Volver al horario</button>
         <div class="rv-pick"><b>${esc(s.classLabel)}</b><span>${esc(dayLabel(s.date))} · ${esc(s.start)}–${esc(s.end)}</span></div>
-        <div class="field"><label for="${f("name")}">Nombre y apellido</label><input id="${f("name")}" name="name" autocomplete="name" maxlength="80" value="${val("name")}" required></div>
-        <div class="field"><label for="${f("nick")}">Apodo <small>(opcional)</small></label><input id="${f("nick")}" name="nickname" maxlength="30" value="${val("nickname")}" placeholder="Así te verán los demás en la lista">
-          <small class="rv-help">Sin apodo, los demás verán tu nombre y la inicial de tu apellido.</small></div>
+        <div class="field"><label for="${f("name")}">Nombre y apellido</label><input id="${f("name")}" name="name" autocomplete="name" maxlength="80" value="${val("name")}" required>
+          <small class="rv-help">Los demás verán tu nombre y la inicial de tu apellido en la lista.</small></div>
         <div class="field"><label for="${f("phone")}">Teléfono</label><input id="${f("phone")}" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+56 9 1234 5678" value="${val("phone")}" required></div>
         <div class="field"><label for="${f("mail")}">Correo</label><input id="${f("mail")}" name="email" type="email" autocomplete="email" value="${val("email")}" required>
           <small class="rv-help">Ahí te enviamos la confirmación y el enlace para cambiar o cancelar.</small></div>
@@ -191,10 +190,10 @@
       try {
         const res = await api("/reservar", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionKey: chosen.key, name: v("name"), nickname: v("nickname"), phone: v("phone"), email: v("email"), website: v("website") })
+          body: JSON.stringify({ sessionKey: chosen.key, name: v("name"), phone: v("phone"), email: v("email"), website: v("website") })
         });
         step = "done";
-        saveContact({ name: v("name"), nickname: v("nickname"), phone: v("phone"), email: v("email") });
+        saveContact({ name: v("name"), phone: v("phone"), email: v("email") });
         rememberBooking(res.booking);
         renderDone(res);
         renderMine();

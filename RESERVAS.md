@@ -6,7 +6,7 @@ Las clases, los horarios y los cupos se administran en `/admin` → **Clases**; 
 
 | Necesidad | Cómo |
 |---|---|
-| Guardar nombre y teléfono | Cada reserva guarda nombre, apodo (opcional), teléfono y correo en Firestore (`bookings`). |
+| Guardar nombre y teléfono | Cada reserva guarda nombre, teléfono y correo en Firestore (`bookings`). El formulario pide esos tres datos; el apodo ya no se pide (las reservas antiguas lo conservan). |
 | Reagendar o cancelar | Enlace único en el correo y en «Tus reservas» → `/reserva?t=…`. |
 | Motivo obligatorio | El formulario y el servidor lo exigen (mínimo 3 letras) al cancelar y al reprogramar. |
 | Nombres de los asistentes | La lista de cada clase muestra el apodo, o nombre + inicial del apellido («Camila R.»). Nunca teléfono ni correo. Se actualiza sola cada 30 s. |

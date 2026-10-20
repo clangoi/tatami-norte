@@ -181,7 +181,7 @@ export function initClases({ db, fs, esc, toast, saveError }) {
       <div class="adm-person-main">
         <b>${esc(b.name)}</b>${b.nickname ? ` <span class="adm-nick">“${esc(b.nickname)}”</span>` : ""}
         ${by ? `<span class="adm-tag on" title="${esc(by.reason || "")}">Reprogramó desde ${esc(keyLabel(by.from))}</span>` : ""}
-        <span>${esc(b.phone)} · ${esc(b.email)}</span>
+        <span>${esc(b.phone)}${b.email ? " · " + esc(b.email) : ""}</span>
         ${by && by.reason ? `<span class="adm-reason">Motivo del cambio: ${esc(by.reason)}</span>` : ""}
       </div>
       <div class="adm-row-actions">

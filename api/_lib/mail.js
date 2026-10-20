@@ -69,6 +69,7 @@ const summary = b => `<p style="font-size:17px;margin:0 0 4px"><b>${esc(b.classL
 
 // kind: "confirmed" | "rescheduled" | "cancelled"
 async function toAttendee(kind, b, site) {
+  if (!b.email) return false;   // el correo es opcional al reservar
   const cfg = siteConfig();
   const a = cfg.address || {};
   const manage = `${site}/reserva?t=${b.id}`;
@@ -98,7 +99,7 @@ async function toHost(kind, b, site, extra) {
   if (!to) return false;
   const label = { confirmed: "Nueva reserva", rescheduled: "Reprogramó", cancelled: "Canceló" }[kind];
   const html = `${summary(b)}<p style="margin:0 0 6px"><b>${esc(b.name)}</b>${b.nickname ? ` (${esc(b.nickname)})` : ""}</p>
-    <p style="margin:0 0 6px">Teléfono: <a href="https://wa.me/${esc(b.waPhone)}">${esc(b.phone)}</a><br>Correo: ${esc(b.email)}</p>
+    <p style="margin:0 0 6px">Teléfono: <a href="https://wa.me/${esc(b.waPhone)}">${esc(b.phone)}</a>${b.email ? `<br>Correo: ${esc(b.email)}` : ""}</p>
     ${extra ? `<p style="margin:14px 0 0;padding:12px;background:#F6F2E7">${extra}</p>` : ""}`;
   const attachments = kind === "cancelled" ? undefined : [{ name: "clase.ics", content: Buffer.from(ics.calendar("Clase", [eventOf(b, site)])).toString("base64") }];
   return send({ to, subject: `${label}: ${b.display} · ${b.classLabel} ${b.date} ${b.start}`, html: layout(label, html), attachments });

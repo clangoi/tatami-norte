@@ -3,7 +3,7 @@
    Misma estructura que el panel de administración (js/admin.js): vistas de carga,
    entrada y panel; pestañas arriba; listas en filas. Entra con el correo y la clave
    que creó con el enlace del correo (Firebase Auth) y habla con /api/deportista.
-   Secciones: Resumen (contadores) · Próximas (reagendar, cancelar) · Calendario (historial: al tocar un día se abre el detalle).
+   Secciones: Resumen (contadores) · Próximas (reagendar, cancelar) · Historial (calendario mensual: al tocar un día se abre el detalle).
    ========================================================== */
 import { SDK, app as fbApp } from "./firebase.js";
 import { infoTip } from "./admin-info.js";
@@ -27,7 +27,7 @@ const toast = msg => {
   clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, 3000);
 };
 
-const TABS = [["sum", "Resumen"], ["next", "Próximas"], ["cal", "Calendario"]];
+const TABS = [["sum", "Resumen"], ["next", "Próximas"], ["cal", "Historial"]];
 let data = null;
 let tab = "sum";
 let month = todayStr().slice(0, 7);
@@ -218,7 +218,7 @@ function viewCal() {
       : `<span class="${cls}"><span>${d}</span></span>`);
   }
   const cal = data.calendar;
-  return `<div class="adm-bar"><h2>Mi calendario</h2></div>
+  return `<div class="adm-bar"><h2>Mi historial</h2></div>
     ${infoTip("Toca un día marcado para ver el detalle de las clases que tomaste, tienes o cancelaste ese día. Suscribe tu calendario una sola vez y tus reservas aparecen, cambian y se quitan solas cuando reagendas o cancelas.")}
     <div class="ath-month"><button class="btn small ghost" type="button" data-month="-1" aria-label="Mes anterior">←</button>
       <b>${esc(monthLabel(month))}</b><button class="btn small ghost" type="button" data-month="1" aria-label="Mes siguiente">→</button></div>

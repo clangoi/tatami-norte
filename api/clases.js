@@ -1,7 +1,8 @@
 /* ==========================================================
    Kizuna · Clases disponibles
    GET /api/clases  →  { classes, sessions, today }  (con ?semana=1 también week y days)
-   Las próximas sesiones con cupos y los nombres de quienes ya
+   Las sesiones de la semana en curso y la siguiente (también las que ya pasaron: se puede
+   inscribir a cualquiera dentro de esas dos semanas), con cupos y los nombres de quienes ya
    se inscribieron (nombre + inicial o apodo; nunca teléfono ni correo).
    ========================================================== */
 const { handler } = require("./_lib/http");
@@ -15,11 +16,12 @@ module.exports = handler(["GET"], async (req, res) => {
   const { timeZone } = bookingSettings();
   const today = T.todayIn(timeZone);
   // ?semana=1: además, las clases de la semana en curso y la siguiente (de lunes a domingo), incluidas las que ya pasaron
-  const monday = T.addDays(today, -((new Date(today + "T12:00:00Z").getUTCDay() + 6) % 7));
+  const monday = S.weekStart(today);
   const withWeek = !!req.query.semana;
-  const base = await S.loadBase(db, withWeek ? monday : today);
-  const booked = await S.confirmedBySession(db, withWeek ? monday : today);   // con la semana, también los inscritos de los días que ya pasaron
-  const sessions = S.occurrences(base, today, S.horizonEnd(today))
+  // Se puede reservar cualquier clase de la semana en curso y la siguiente, aunque ya haya pasado
+  const base = await S.loadBase(db, monday);
+  const booked = await S.confirmedBySession(db, monday);
+  const sessions = S.occurrences(base, monday, S.horizonEnd(today), { ignoreNotice: true })
     .map(s => S.publicView(s, booked.get(s.key)));
 
   const week = withWeek

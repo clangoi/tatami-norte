@@ -5,7 +5,7 @@ El horario de la portada (sección "Horario") y de las páginas de Judo y BJJ se
 ## Cómo se muestra
 
 1. Se muestra **la semana en curso**, de lunes a sábado (el domingo solo si tiene clases), cada día con su fecha.
-2. Los días que ya pasaron se ven más claros y sus clases no se pueden reservar. Al empezar una semana nueva se muestran los días de esa semana.
+2. Los días que ya pasaron se ven más claros, pero sus clases se pueden reservar igual mientras sean de la semana en curso o la siguiente. Al empezar una semana nueva se muestran los días de esa semana.
 3. Las clases canceladas solo una semana, o con cierre, no aparecen ese día.
 4. Una clase llena se marca como «Completa».
 

@@ -50,6 +50,12 @@ function horizonEnd(today) {
   return T.addDays(today, (7 - dow) % 7 + 7);
 }
 
+// Lunes de la semana en curso: desde ahí se puede reservar cualquier clase, aunque ya haya pasado
+function weekStart(today) {
+  const dow = new Date(today + "T12:00:00Z").getUTCDay();
+  return T.addDays(today, -((dow + 6) % 7));
+}
+
 // Sesiones reservables entre dos fechas (inclusive). Respeta cierres; se puede reservar hasta que la clase termina.
 function occurrences(base, from, to, opts = {}) {
   const { timeZone: tz, defaultCapacity } = bookingSettings();
@@ -98,15 +104,16 @@ function publicView(session, bookings) {
   };
 }
 
-// Sesión por clave si todavía se puede reservar; si no, el error que corresponde
+// Sesión por clave si se puede reservar (semana en curso o siguiente, haya pasado o no); si no, el error que corresponde
 async function bookableSession(db, key) {
   const parsed = parseKey(key);
   if (!parsed) throw new HttpError(400, "Esa clase no existe.");
   const { timeZone } = bookingSettings();
   const today = T.todayIn(timeZone);
-  if (parsed.date > horizonEnd(today)) throw new HttpError(400, "Solo se puede reservar la semana en curso y la siguiente.");
+  if (parsed.date > horizonEnd(today) || parsed.date < weekStart(today)) throw new HttpError(400, "Solo se puede reservar la semana en curso y la siguiente.");
   const base = await loadBase(db, parsed.date);
-  const found = occurrences(base, parsed.date, parsed.date).find(s => s.key === key);
+  // Dentro de esas semanas se puede reservar aunque la clase ya haya pasado
+  const found = occurrences(base, parsed.date, parsed.date, { ignoreNotice: true }).find(s => s.key === key);
   if (!found) throw new HttpError(409, "Esa clase ya no está disponible. Elige otra.");
   return found;
 }
@@ -122,4 +129,4 @@ function displayName(name, nickname) {
   return `${parts[0]} ${surname[0].toUpperCase()}.`;
 }
 
-module.exports = { horizonEnd, keyOf, parseKey, loadBase, occurrences, confirmedBySession, publicView, bookableSession, displayName };
+module.exports = { weekStart, horizonEnd, keyOf, parseKey, loadBase, occurrences, confirmedBySession, publicView, bookableSession, displayName };

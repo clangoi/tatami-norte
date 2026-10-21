@@ -331,7 +331,6 @@
 
 /* Días de la semana en curso que ya pasaron: más claros y sin poder reservarse */
 .sch-day.is-past,.sch-cell.is-past,.sch-list-day.is-past{opacity:.45}
-.is-past .sch-class{pointer-events:none}
 
 /* Horario (inicio): título y filtros comparten la cabecera en computador, sin hueco a la derecha */
 @media (min-width:900px){

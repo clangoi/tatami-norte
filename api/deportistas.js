@@ -17,7 +17,9 @@ const { getDb, getAuth } = require("./_lib/firebase");
 const A = require("./_lib/athletes");
 const B = require("./_lib/bookings");
 const mail = require("./_lib/mail");
+const X = require("./_lib/attendance");
 
+const medicalOn = () => !!(require("./_lib/config").siteConfig().features || {}).medicalRecord;   // ficha médica en pausa: ver site.config.js
 const clean = (v, max) => String(v || "").trim().replace(/\s+/g, " ").slice(0, max);
 
 function phoneFields(raw) {
@@ -68,9 +70,11 @@ async function disciplineNames(db, classes) {
 }
 
 async function list(db) {
-  const [athletesSnap, bookingsSnap, classes] = await Promise.all([
-    db.collection("athletes").get(), db.collection("bookings").get(), A.classCatalog(db)
+  const [athletesSnap, bookingsSnap, classes, present] = await Promise.all([
+    db.collection("athletes").get(), db.collection("bookings").get(), A.classCatalog(db), X.allPresent(db)
   ]);
+  const presentBy = new Map();
+  present.forEach(r => { if (r.emailKey) presentBy.set(r.emailKey, [...(presentBy.get(r.emailKey) || []), r]); });
   const all = bookingsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const byEmail = new Map();
   all.forEach(b => {
@@ -82,9 +86,10 @@ async function list(db) {
     const a = d.data();
     return {
       id: d.id, email: a.email, name: a.name || "", nickname: a.nickname || "", phone: a.phone || "", active: a.active !== false,
-      emergencyName: a.emergencyName || "", emergencyPhone: a.emergencyPhone || "", ranks: a.ranks || {}, medical: a.medical || null,
+      emergencyName: a.emergencyName || "", emergencyPhone: a.emergencyPhone || "", ranks: a.ranks || {}, medical: medicalOn() && a.medical ? a.medical : null,
       createdAt: a.createdAt || "", invitedAt: a.invitedAt || "", lastLoginAt: a.lastLoginAt || "",
-      ...A.summarize(byEmail.get(A.normEmail(a.email)) || [], classes)
+      ...A.summarize(byEmail.get(A.normEmail(a.email)) || [], classes),
+      attendance: (({ total, last90, sinceGrade }) => ({ total, last90, sinceGrade }))(X.summarize(presentBy.get(A.normEmail(a.email)) || [], classes, a.ranks))
     };
   }).sort((a, b) => a.name.localeCompare(b.name, "es") || a.email.localeCompare(b.email));
 

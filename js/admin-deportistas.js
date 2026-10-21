@@ -29,6 +29,7 @@ export function initDeportistas({ getToken, esc, toast }) {
     judo: ["6º kyu (blanco)", "5º kyu (amarillo)", "4º kyu (naranja)", "3º kyu (verde)", "2º kyu (azul)", "1º kyu (café)", "1º dan (negro)"]
   };
   const gradesFor = name => { const n = norm(name); return n.includes("judo") ? GRADES.judo : n.includes("bjj") || n.includes("jiu") ? GRADES.bjj : []; };
+  const MEDICAL = !!((window.SITE_CONFIG || {}).features || {}).medicalRecord;   // ficha médica en pausa (site.config.js → features)
   const MED = [["conditions", "Condiciones médicas"], ["injuries", "Lesiones"], ["allergies", "Alergias"], ["medications", "Medicamentos"], ["bloodType", "Grupo sanguíneo"], ["insurance", "Previsión / seguro"]];
   const chips = list => list.length
     ? list.map(c => `<span class="adm-chip">${esc(c.name)} <b>${c.count}</b></span>`).join("")
@@ -56,7 +57,7 @@ export function initDeportistas({ getToken, esc, toast }) {
           ${a.disciplines.map(c => `<span class="adm-chip" title="Disciplina">${esc(c.name)} <b>${c.count}</b></span>`).join("")}
           ${a.types.map(c => `<span class="adm-chip" title="Tipo">${esc(c.name)} <b>${c.count}</b></span>`).join("")}
           ${a.upcoming ? `<span class="adm-chip is-next">${a.upcoming} ${a.upcoming === 1 ? "próxima" : "próximas"}</span>` : ""}</span>
-        <span class="adm-ath-chips">${Object.entries(a.ranks || {}).map(([d, r]) => `<span class="adm-chip is-total" title="Grado">${esc(d)} · ${esc(r.grade)}</span>`).join("")}${a.medical ? "" : '<span class="adm-chip is-next" title="Aún no llena su ficha médica">Ficha médica pendiente</span>'}</span>
+        <span class="adm-ath-chips">${a.attendance.total ? `<span class="adm-chip is-next" title="Asistencias reales: total y últimos 90 días">Asistió ${a.attendance.total} · 90 d: ${a.attendance.last90}</span>` : ""}${Object.entries(a.ranks || {}).map(([d, r]) => `<span class="adm-chip is-total" title="Grado y clases asistidas desde que lo tiene">${esc(d)} · ${esc(r.grade)} <b>${(a.attendance.sinceGrade || {})[d] || 0}</b></span>`).join("")}${MEDICAL && !a.medical ? '<span class="adm-chip is-next" title="Aún no llena su ficha médica">Ficha médica pendiente</span>' : ""}</span>
         <span>${a.active ? "" : "Desactivado · "}${a.lastLoginAt ? "Último ingreso: " + esc(when(a.lastLoginAt)) : "Aún no ha entrado"}</span>
       </div>
       <div class="adm-row-actions">
@@ -88,11 +89,11 @@ export function initDeportistas({ getToken, esc, toast }) {
           <datalist id="aGr${i}">${gradesFor(d).map(g => `<option value="${esc(g)}">`).join("")}</datalist>
           <input name="since${i}" type="date" value="${esc(r.since || "")}" aria-label="Desde cuándo en ${esc(d)}"></div>`;
       }).join("") : '<p class="adm-help">Todavía no hay disciplinas creadas en Clases → Configuración.</p>'}</div>
-      <h3 class="adm-sub">Ficha médica</h3>
+      ${!MEDICAL ? "" : `<h3 class="adm-sub">Ficha médica</h3>
       ${med ? `<dl class="adm-med">${MED.map(([k, label]) => `<dt>${label}</dt><dd>${med[k] ? esc(med[k]) : "—"}</dd>`).join("")}
         <dt>Declaración</dt><dd>Aceptada el ${esc(when(med.consentAt))}${med.updatedAt ? " · actualizada el " + esc(when(med.updatedAt)) : ""}</dd></dl>
         <small class="adm-help">La llena el propio deportista. Es información sensible: úsala solo en caso de emergencia.</small>`
-        : '<p class="adm-help">Aún no completa su ficha médica.</p>'}`;
+        : '<p class="adm-help">Aún no completa su ficha médica.</p>'}`}`;
   }
 
   function form() {

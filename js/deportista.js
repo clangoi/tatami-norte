@@ -27,6 +27,7 @@ const toast = msg => {
   clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, 3000);
 };
 
+const MEDICAL = !!((window.SITE_CONFIG || {}).features || {}).medicalRecord;   // ficha médica en pausa (site.config.js → features)
 const TABS = [["sum", "Resumen"], ["next", "Próximas"], ["cal", "Historial"], ["me", "Mi perfil"]];
 let data = null;
 let tab = "sum";
@@ -121,22 +122,30 @@ const counters = (title, list) => `<div class="adm-cfg"><h3>${title}</h3>${list.
 
 const shortDate = iso => iso ? new Date(iso + "T12:00:00").toLocaleDateString(locale, { month: "short", year: "numeric" }) : "";
 
+function attendanceCard() {
+  const a = data.attendance || { total: 0, last90: 0 };
+  return `<div class="adm-cfg"><h3>Asistencias</h3>
+    <div class="ath-stat"><b>${a.total}</b><span>${a.total === 1 ? "clase asistida" : "clases asistidas"}</span></div>
+    <div class="ath-stat"><b>${a.last90}</b><span>en los últimos 90 días</span></div>
+    <p class="adm-help adm-cfg-empty">Las marca tu instructor al pasar lista.</p></div>`;
+}
+
 function ranksCard() {
   const list = Object.entries(data.ranks || {});
   return `<div class="adm-cfg"><h3>Mis grados</h3>${list.length
-    ? list.map(([d, r]) => `<div class="ath-stat ath-rank"><b>${esc(r.grade)}</b><span>${esc(d)}${r.since ? " · desde " + esc(shortDate(r.since)) : ""}</span></div>`).join("")
+    ? list.map(([d, r]) => `<div class="ath-stat ath-rank"><b>${esc(r.grade)}</b><span>${esc(d)}${r.since ? " · desde " + esc(shortDate(r.since)) : ""}<small>${r.count} ${r.count === 1 ? "clase asistida" : "clases asistidas"} desde este grado</small></span></div>`).join("")
     : '<p class="adm-help adm-cfg-empty">Tu instructor registrará tu grado en cada disciplina.</p>'}</div>`;
 }
 
 function summary() {
   const s = data.summary;
   return `<div class="adm-bar"><h2>Mi resumen</h2></div>
-    ${infoTip("Las disciplinas y los clubes salen solos de las clases que has tomado: cuentan las reservas confirmadas cuya clase ya pasó. Las clases que cancelas o cambias no suman.")}
+    ${infoTip("Las disciplinas y los clubes salen solos de tus reservas: cuentan las confirmadas cuya clase ya pasó. Las clases que cancelas o cambias no suman. «Asistencias» es distinto: son las clases a las que realmente llegaste, marcadas por tu instructor, y son las que cuentan para tus grados.")}
     <div class="adm-cfg-grid ath-sum">
       <div class="adm-cfg"><h3>Clases</h3>
         <div class="ath-stat"><b>${s.taken}</b><span>${s.taken === 1 ? "tomada" : "tomadas"}</span></div>
         <div class="ath-stat"><b>${s.upcoming}</b><span>${s.upcoming === 1 ? "próxima" : "próximas"}</span></div></div>
-      ${ranksCard()}${counters("Por club", s.clubs)}${counters("Por disciplina", s.disciplines)}${counters("Por tipo", s.types)}
+      ${attendanceCard()}${ranksCard()}${counters("Por club", s.clubs)}${counters("Por disciplina", s.disciplines)}${counters("Por tipo", s.types)}
     </div>`;
 }
 
@@ -144,7 +153,7 @@ function summary() {
 function notices() {
   const todo = [];
   if (!data.profile.complete) todo.push("tus datos de contacto (necesarios para reservar)");
-  if (!data.medical) todo.push("tu ficha médica");
+  if (MEDICAL && !data.medical) todo.push("tu ficha médica");
   if (!todo.length || tab === "me") return "";
   return `<div class="ath-notice" role="note"><span>Falta completar ${todo.join(" y ")}.</span>
     <button class="btn small" type="button" data-go="me">Completar</button></div>`;
@@ -164,7 +173,13 @@ function viewProfile() {
         ${f("pEmP", "emergencyPhone", "Teléfono de emergencia", p.emergencyPhone, 'type="tel" inputmode="tel" placeholder="+56 9 1234 5678"')}</div>
       <div class="err" data-err role="alert"></div>
     </form>
-    <form class="adm-editor ath-form" data-medical novalidate>
+    ${MEDICAL ? medicalForm(m) : ""}`;
+}
+
+function medicalForm(m) {
+  const f = (id, name, label, val, extra = "") => `<div class="field"><label for="${id}">${label}</label><input id="${id}" name="${name}" value="${esc(val)}" ${extra}></div>`;
+  const t = (name, label, val, max) => `<div class="field"><label>${label}</label><textarea name="${name}" rows="2" maxlength="${max}">${esc(val || "")}</textarea></div>`;
+  return `<form class="adm-editor ath-form" data-medical novalidate>
       <div class="adm-bar"><h2>Ficha médica</h2><div class="adm-actions"><button class="btn" type="submit">Guardar ficha</button></div></div>
       ${infoTip("Es información sensible: solo el equipo de la escuela la ve, y únicamente para actuar en una emergencia. Puedes actualizarla cuando quieras.")}
       ${t("conditions", "Condiciones médicas (asma, diabetes, problemas cardíacos…)", m.conditions, 500)}
@@ -224,13 +239,13 @@ function dayDetail(date, list) {
         <button class="btn small ghost" type="button" data-close-day>Cerrar</button>
       </div>
       <div class="adm-rows">${list.map(b => {
-        const status = b.status === "confirmed" ? (b.canChange ? "Próxima" : "Tomada") : STATUS[b.status] || "Cambiada";
+        const status = b.status === "confirmed" ? (b.canChange ? "Próxima" : b.attended === true ? "Asistió" : b.attended === false ? "Faltó" : "Sin registro") : STATUS[b.status] || "Cambiada";
         const meta = [b.club, b.discipline, b.type].filter(Boolean);
         return `<div class="adm-row${b.status === "confirmed" ? "" : " is-fixed"}">
           <div class="adm-row-main"><b>${esc(b.classLabel)}</b><span>${esc(b.start)}–${esc(b.end)}</span>
             ${meta.length ? `<span class="ath-meta">${meta.map(m => `<span class="adm-chip">${esc(m)}</span>`).join("")}</span>` : ""}
             ${b.cancelReason ? `<span>Motivo: ${esc(b.cancelReason)}</span>` : ""}</div>
-          <span class="adm-tag${b.status === "confirmed" ? " on" : ""}">${status}</span></div>`;
+          <span class="adm-tag${b.status === "confirmed" && b.attended !== false ? " on" : ""}">${status}</span></div>`;
       }).join("")}</div>
     </section>
   </div>`;

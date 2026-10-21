@@ -11,6 +11,7 @@ import { toHtml, readingMinutes } from "./markdown.js";
 import { SEED_POSTS } from "./seed-posts.js";
 import { initClases } from "./admin-clases.js";
 import { initDeportistas } from "./admin-deportistas.js";
+import { initAsistencia } from "./admin-asistencia.js";
 import "./admin-info.js";
 import { stateIcon, iconBtn } from "./admin-icons.js";
 
@@ -36,6 +37,8 @@ const slugify = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
 const clases = initClases({ db, fs, esc, toast: msg => toast(msg), saveError: e => saveError(e) });
 // Pestaña Deportistas (cuentas del panel personal): js/admin-deportistas.js
 const deportistas = initDeportistas({ getToken: () => auth.currentUser.getIdToken(), esc, toast: msg => toast(msg) });
+// Pestaña Asistencia (pasar lista en el tatami): js/admin-asistencia.js
+const asistencia = initAsistencia({ getToken: () => auth.currentUser.getIdToken(), esc, toast: msg => toast(msg) });
 const pattern = s => [...s].reduce((n, c) => n + c.charCodeAt(0), 0) % 4;
 
 function toast(msg){
@@ -126,11 +129,13 @@ $$("[data-tab]").forEach(b => b.addEventListener("click", () => {
   if (!confirmLeave()) return;
   clases.reset();   // lo que estaba en borrador en Clases se olvida
   deportistas.reset();
+  asistencia.reset();
   closePost(); closePlan();
   $$("[data-tab]").forEach(x => x.setAttribute("aria-pressed", x === b));
   $$("[data-view]").forEach(v => v.hidden = v.dataset.view !== b.dataset.tab);
   if (b.dataset.tab === "classes") clases.activate();
   if (b.dataset.tab === "athletes") deportistas.activate();
+  if (b.dataset.tab === "attendance") asistencia.activate();
 }));
 
 /* ==========================================================

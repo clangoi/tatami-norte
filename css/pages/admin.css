@@ -283,3 +283,21 @@ body.adm-dragging .adm-block{pointer-events:none}
 .adm-med{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;margin:10px 0;padding:12px 14px;border:1px solid var(--navy-3);background:var(--navy-2)}
 .adm-med dt{font:600 13px/1.5 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--steel)}
 .adm-med dd{margin:0;overflow-wrap:anywhere}
+
+/* Asistencia: pasar lista desde el celular */
+.att-day{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 18px}
+.att-day b{flex:1 1 200px;text-align:center;font:800 22px/1.1 var(--display);text-transform:uppercase}
+.att-sess{margin-bottom:16px}
+.att-list{display:flex;flex-direction:column;margin-top:8px}
+.att-person{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--navy-3)}
+.att-who{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 160px}
+.att-who b{font:700 18px/1.2 var(--body)}
+.att-who span{font-size:14px;color:var(--steel)}
+.att-tag{font:700 11px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;font-style:normal;border:1px solid var(--bronze);color:var(--gold);padding:3px 6px;margin-right:8px}
+.att-btns{display:flex;gap:8px}
+.att-btns .btn{min-width:84px;min-height:46px}
+.att-yes[aria-pressed="true"]{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+.att-no[aria-pressed="true"]{background:var(--danger);color:var(--navy);border-color:var(--danger)}
+.att-foot{margin-top:14px}
+.att-add{margin-top:16px;padding-top:14px;border-top:1px solid var(--navy-3)}
+@media (max-width:520px){.att-btns{width:100%}.att-btns .btn{flex:1}}

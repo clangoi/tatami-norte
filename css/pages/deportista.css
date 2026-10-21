@@ -39,3 +39,4 @@ span.ath-cell{cursor:default}
 .ath-notice span{color:var(--text-soft)}
 .ath-form{max-width:720px;margin-bottom:34px}
 .ath-form textarea{min-height:64px}
+.ath-rank small{display:block;margin-top:2px;font:500 13px/1.3 var(--body);letter-spacing:0;text-transform:none;color:var(--steel)}

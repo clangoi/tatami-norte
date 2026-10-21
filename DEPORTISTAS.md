@@ -13,7 +13,9 @@ Cada deportista tiene una cuenta y un panel personal en `/deportista`. Las cuent
 | Reagendar y cancelar | `/deportista` → **Próximas**. El motivo es obligatorio, igual que en `/reserva`. |
 | Perfil editable | **Mi perfil** → «Mis datos»: nombre, apodo (sale en las listas de inscritos), teléfono y contacto de emergencia. El correo no se cambia desde aquí. |
 | Grados por disciplina | Los asigna solo el equipo: admin → Deportistas → Editar → **Grados** (un campo por disciplina creada en Clases → Configuración, con sugerencias para BJJ y Judo y la fecha desde la que lo tiene). El deportista los ve en **Resumen → Mis grados**. |
-| Ficha médica | **Mi perfil** → «Ficha médica»: condiciones, lesiones, alergias, medicamentos, grupo sanguíneo y previsión, con una declaración de consentimiento (obligatoria para guardar). La ve solo el equipo, en Editar → Ficha médica (solo lectura), y la lista marca «Ficha médica pendiente» a quien no la llenó. Es información sensible: se guarda en `athletes/{uid}.medical`, que solo leen las funciones del servidor. |
+| Ficha médica | **EN PAUSA** hasta tener la asesoría legal sobre datos de salud. El código está hecho pero apagado: `features.medicalRecord` en `site.config.js` (false). Mientras está apagada no se muestra en Mi perfil ni en admin, y el servidor rechaza guardarla. Para activarla, cambiar ese valor a `true` (y revisar antes el texto de consentimiento). Ver «Pendiente» abajo. |
+| Pasar lista (asistencia real) | Admin → **Asistencia**, pensado para el celular del instructor: las clases del día con sus inscritos y dos toques por persona (**Vino** / **Faltó**; tocar de nuevo desmarca), «marcar presentes a los N sin marcar» y **Agregar a alguien que no reservó**: solo nombre (teléfono y correo opcionales), sin crear perfil. Si da el mismo correo de un deportista, la clase cuenta en su historial. Se puede pasar lista de hoy y de días anteriores, no de futuros. La instructora o el instructor debe estar en `admins` para entrar al panel. |
+| Asistencias y grados | En **Resumen**, el deportista ve «Asistencias» (total y últimos 90 días) y, en cada grado, cuántas clases asistió desde que lo tiene. En el panel de admin cada deportista muestra sus asistencias. Son distintas de las «clases tomadas» (reservas pasadas), que no confirman que haya ido. |
 | Historial | **Historial**: calendario mensual, vista mensual donde los días con clases se marcan con su cantidad. Al tocar uno se abre un detalle encima con las clases de ese día (hora, club, disciplina, tipo y si fue tomada, próxima o cancelada, con su motivo). No hay lista de historial aparte. También permite suscribir Google Calendar / Apple / Outlook a un enlace propio (`/api/calendario?a=…`): las reservas aparecen, cambian y se quitan solas. |
 | Disciplinas, clubes y contadores | Salen solos de las clases que tomó (reservas confirmadas ya pasadas): contador por **club**, por **disciplina** y por **tipo**, más el total y las próximas. Nadie los asigna a mano. |
 
@@ -31,7 +33,13 @@ No hace falta cambiar las reglas de Firestore: los deportistas nunca leen la bas
 
 ## Datos y archivos
 
+- `attendance/{sessionKey}__{id}` (Firestore): una asistencia por persona y clase (`present` true/false, `walkIn`, `emailKey`). Solo la leen y escriben las funciones del servidor (`api/asistencia.js`).
 - `athletes/{uid}` (Firestore): correo, nombre, teléfono, `active`, `calToken` (secreto de su calendario). El `uid` es el de Firebase Auth.
 - `bookings` ahora guardan también `emailKey` (correo en minúsculas) para unir las reservas con la cuenta.
 - `api/deportistas.js`: CRUD del panel (exige ser admin). `api/deportista.js`: panel personal (exige ser deportista activo). `api/_lib/athletes.js`: sesión y contadores.
 - `deportista.html` + `js/deportista.js` + `css/pages/deportista.css`; pestaña en `js/admin-deportistas.js`.
+
+## Pendiente
+
+- **Ficha médica**: activar cuando haya asesoría legal (consentimiento, quién puede verla, plazo de conservación, menores de edad).
+- **Quiénes pueden competir**: falta definir los criterios (por ejemplo: mínimo de asistencias en los últimos N días, tiempo mínimo en el grado actual, grado mínimo, ficha médica al día). Con los criterios definidos, el panel puede marcar a quienes cumplen en cada disciplina. Los datos que se necesitan (asistencias reales y grados con fecha) ya se guardan.

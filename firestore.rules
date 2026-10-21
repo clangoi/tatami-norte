@@ -154,6 +154,8 @@ service cloud.firestore {
     // athletes (deportistas): sin acceso desde el sitio. Solo api/deportistas.js y api/deportista.js
     // (cuenta de servicio) las leen y escriben. Ver DEPORTISTAS.md.
 
+    // attendance (asistencia real, ver DEPORTISTAS.md): solo la leen y escriben las funciones del servidor.
+
     // Todo lo demás, cerrado
     match /{document=**} {
       allow read, write: if false;

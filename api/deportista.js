@@ -20,7 +20,9 @@ const S = require("./_lib/sessions");
 const T = require("./_lib/time");
 const mail = require("./_lib/mail");
 const ics = require("./_lib/ics");
+const X = require("./_lib/attendance");
 
+const medicalOn = () => !!(require("./_lib/config").siteConfig().features || {}).medicalRecord;   // ficha médica en pausa: ver site.config.js
 const clean = (v, max) => String(v || "").trim().replace(/\s+/g, " ").slice(0, max);
 
 // Datos de contacto de la reserva: los del deportista
@@ -38,23 +40,26 @@ async function findOwn(db, a, id) {
   return b;
 }
 
-function bookingView(b, classes) {
+function bookingView(b, classes, marks) {
   const c = classes.get(b.classId) || {};
   const v = B.manageView(b);
   return {
     id: v.id, sessionKey: v.sessionKey, status: v.status, classId: v.classId, classLabel: v.classLabel, date: v.date,
     start: v.start, end: v.end, startAt: v.startAt, canChange: v.canChange,
     cancelReason: v.cancelReason, rescheduleReason: v.rescheduleReason,
-    club: c.club || "", discipline: c.discipline || "", type: c.type || ""
+    club: c.club || "", discipline: c.discipline || "", type: c.type || "",
+    attended: marks.has(b.id) ? marks.get(b.id) : null   // true vino, false faltó, null sin registro
   };
 }
 
 async function overview(db, a, site) {
   const { timeZone } = bookingSettings();
   const today = T.todayIn(timeZone);
-  const [mine, classes, base, booked] = await Promise.all([
-    A.bookingsOf(db, a.email), A.classCatalog(db), S.loadBase(db, today), S.confirmedBySession(db, today)
+  const [mine, classes, base, booked, records] = await Promise.all([
+    A.bookingsOf(db, a.email), A.classCatalog(db), S.loadBase(db, today), S.confirmedBySession(db, today), X.ofEmail(db, a.email)
   ]);
+  const marks = new Map(records.filter(r => r.bookingId).map(r => [r.bookingId, r.present]));
+  const attendance = X.summarize(records, classes, a.ranks);
   const heldKeys = new Set(mine.filter(b => b.status === "confirmed").map(b => b.sessionKey));
   const sessions = S.occurrences(base, today, S.horizonEnd(today)).map(s => {
     const c = classes.get(s.classId) || {};
@@ -67,10 +72,11 @@ async function overview(db, a, site) {
       emergencyName: a.emergencyName || "", emergencyPhone: a.emergencyPhone || "",
       complete: a.name.length >= 3 && !!B.parsePhone(a.phone)
     },
-    medical: a.medical || null,
-    ranks: a.ranks || {},
+    medical: medicalOn() ? a.medical || null : null,
+    ranks: Object.fromEntries(Object.entries(a.ranks || {}).map(([d, r]) => [d, { ...r, count: attendance.sinceGrade[d] || 0 }])),
+    attendance: { total: attendance.total, last90: attendance.last90, clubs: attendance.clubs, disciplines: attendance.disciplines, types: attendance.types },
     summary: A.summarize(mine, classes),
-    bookings: mine.filter(b => b.status !== "rescheduled").slice(0, 400).map(b => bookingView(b, classes)),
+    bookings: mine.filter(b => b.status !== "rescheduled").slice(0, 400).map(b => bookingView(b, classes, marks)),
     sessions,
     classes: [...new Set(sessions.map(s => s.classId))].map(id => ({ id, ...(classes.get(id) || {}) })),
     calendar: {
@@ -106,6 +112,7 @@ module.exports = handler(["GET", "POST"], async (req, res) => {
 
   // Ficha médica: la llena la propia persona, con su consentimiento. La ve solo el equipo (panel).
   if (body.action === "medical") {
+    if (!medicalOn()) throw new HttpError(403, "La ficha médica aún no está disponible.");
     if (body.consent !== true) throw new HttpError(400, "Para guardar tu ficha debes aceptar la declaración.");
     const now = new Date().toISOString();
     const medical = {

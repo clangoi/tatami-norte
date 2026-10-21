@@ -91,6 +91,13 @@ window.SITE_CONFIG = {
      tone: color de la disciplina (oro, bronce, cobre, marino, acero, plata, crema).
      clubTone: color de la franja lateral del club. El diseño del bloque lo da el tipo.
      page: página de la disciplina ("" si no tiene). */
+  /* ---- Funciones en pausa ----
+     medicalRecord: ficha médica del deportista (Mi perfil y panel de admin). Pendiente de la asesoría legal
+     sobre datos de salud: déjala en false hasta tenerla. Ver DEPORTISTAS.md. */
+  features: {
+    medicalRecord: false
+  },
+
   booking: {
     timeZone: "America/Santiago",                // hora de las clases
     defaultCapacity: 15,                         // cupos si la clase o el horario no definen otro

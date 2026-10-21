@@ -20,6 +20,9 @@
     "api/deportista.js": {
       "includeFiles": "site.config.js"
     },
+    "api/asistencia.js": {
+      "includeFiles": "site.config.js"
+    },
     "api/clave.js": {
       "includeFiles": "site.config.js"
     },

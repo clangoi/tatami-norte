@@ -250,6 +250,7 @@
 .sch-class.is-hi{outline:2px solid var(--gold);outline-offset:-2px}
 .sch-name{font:800 19px/1.05 var(--display);text-transform:uppercase}
 .sch-time{font:600 13px/1 var(--label);letter-spacing:.1em;font-variant-numeric:tabular-nums;opacity:.85}
+.sch-spots{font:700 13px/1 var(--label);letter-spacing:.1em;font-variant-numeric:tabular-nums;opacity:.9}
 .sch-note{font-size:13px;line-height:1.3;opacity:.85}
 
 .sch-list{display:none}
@@ -272,24 +273,17 @@
 /* Fecha bajo cada día y rango de la semana mostrada */
 .sch-date{display:block;margin-top:6px;font:500 12px/1 var(--label);letter-spacing:.1em;color:var(--steel)}
 .sch-list-day h3 .sch-date{display:inline;margin:0 0 0 8px;vertical-align:middle}
-.sch-range{margin:-24px 0 18px;color:var(--steel);font:600 14px/1 var(--label);letter-spacing:.14em;text-transform:uppercase}
+.sch-range{margin:0;color:var(--steel);font:600 14px/1 var(--label);letter-spacing:.14em;text-transform:uppercase}
 
 /* ---- Reservas propias (js/reservas.js, reserva.html) ---- */
-.rv-list{padding:28px clamp(16px,3vw,28px) 24px}
 .rv-empty{padding:40px 24px;color:var(--text-soft)}
-.rv-day+.rv-day{margin-top:26px}
-.rv-day h4{font:700 14px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 6px}
-.rv-day h4::first-letter{text-transform:uppercase}
-.rv-session{padding:14px 0;border-top:1px solid var(--navy-3)}
-.rv-main{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.rv-time{font:800 28px/1 var(--display);letter-spacing:.02em;color:var(--cream)}
-.rv-spots{flex:1;min-width:120px;font:600 13px/1.2 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--steel)}
-.rv-session.is-full .rv-time{color:var(--steel)}
-.rv-people{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:14px;color:var(--steel)}
-.rv-people span{margin-right:2px}
-.rv-people i{font-style:normal;color:var(--cream);background:var(--navy-2);border:1px solid var(--navy-3);padding:3px 9px;border-radius:99px;font-size:13px}
 .rv-form,.rv-done{padding:28px clamp(16px,3vw,32px) 32px;max-width:560px}
-.rv-back{background:none;border:0;color:var(--steel);font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:6px 0;margin-bottom:12px}
+/* Reserva: ventana sobre el horario */
+.rv-modal{max-width:560px;min-height:240px;overflow:hidden}
+.rv-modal::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--bronze),var(--gold))}
+.rv-modal .rv-form,.rv-modal .rv-done{max-width:none;padding-top:44px}
+.rv-modal .notice{margin:24px}
+.rv-back{display:inline-block;text-decoration:none;background:none;border:0;color:var(--steel);font:600 13px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:6px 0;margin-bottom:12px}
 .rv-back:hover{color:var(--gold)}
 .rv-pick{display:flex;flex-direction:column;gap:4px;border-left:3px solid var(--bronze);padding:2px 0 2px 14px;margin:0 0 22px}
 .rv-pick b{font:800 26px/1.05 var(--display);text-transform:uppercase;color:var(--cream)}
@@ -319,6 +313,22 @@
 .rv-opt b{color:var(--cream)}
 .rv-opt small{display:block;color:var(--steel);font-size:13px;margin-top:2px}
 
+/* Semanas lado a lado: se deslizan hacia el lado (esta semana y la próxima) */
+.sch-nav{margin-bottom:18px}
+.sch-weeks{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:14px}
+.sch-weeks>.sch-track{grid-column:2;grid-row:1}
+.sch-prev{grid-column:1;grid-row:1}
+.sch-next{grid-column:3;grid-row:1}
+.sch-arrow{width:48px;height:48px;display:grid;place-items:center;background:var(--navy);color:var(--gold);border:1px solid var(--gold);cursor:pointer;transition:background .15s,color .15s}
+.sch-arrow:hover:not(:disabled){background:var(--gold);color:var(--navy)}
+.sch-arrow:disabled{opacity:.3;cursor:default}
+.sch-arrow:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+@media (max-width:600px){.sch-weeks{column-gap:6px}.sch-arrow{width:36px;height:36px}}
+.sch-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.sch-track::-webkit-scrollbar{display:none}
+.sch-week{flex:0 0 100%;min-width:0;scroll-snap-align:start}
+@media (prefers-reduced-motion:no-preference){.sch-track{scroll-behavior:smooth}}
+
 /* Días de la semana en curso que ya pasaron: más claros y sin poder reservarse */
 .sch-day.is-past,.sch-cell.is-past,.sch-list-day.is-past{opacity:.45}
 .is-past .sch-class{pointer-events:none}
@@ -329,7 +339,7 @@
   #horario .wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);column-gap:56px;align-items:end}
   #horario .sec-head{grid-column:1;grid-row:1;display:block;margin-bottom:24px}
   #horario .sec-head p{margin-top:20px;max-width:36ch}
-  #horario .sch-range{grid-column:1;grid-row:2;margin:0 0 32px}
+  #horario .sch-nav{grid-column:1;grid-row:2;margin:0 0 32px}
   #horario .sch-legend{grid-column:2;grid-row:1/3;align-self:start;margin:0 0 32px;padding:22px 24px;border:1px solid var(--line);background:rgba(255,255,255,.03);gap:14px}
-  #horario .sch-grid,#horario .sch-list,#horario .sch-foot,#horario .sch-loading,#horario .sch-empty{grid-column:1/-1}
+  #horario .sch-weeks,#horario .my-bookings,#horario .sch-foot,#horario .sch-loading,#horario .sch-empty{grid-column:1/-1}
 }

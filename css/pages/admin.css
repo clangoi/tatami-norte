@@ -38,6 +38,11 @@
 .adm-cfg-row input,.adm-cfg-row select{min-width:0;flex:1 1 110px}
 .adm-cfg-sw{width:56px;height:34px;flex:none;padding:0 !important;min-height:0}
 .adm-cfg-empty{margin:0}
+.adm-cfg-group{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+.adm-cfg-group:first-of-type{padding-top:0;border-top:0}
+.adm-cfg-pages{margin-left:64px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.adm-cfg-page{display:flex;align-items:center;gap:8px;align-self:stretch}
+.adm-cfg-page input{min-width:0;flex:1 1 auto}
 .adm-classcode{display:block;font:600 15px/1.2 var(--label);letter-spacing:.06em;color:var(--steel);padding:8px 0}
 .adm-wa{margin-top:18px}
 .adm-wa textarea{width:100%;font:inherit;line-height:1.45;resize:vertical;background:var(--navy-2);color:var(--cream);border:1px solid var(--navy-3);padding:10px 12px}

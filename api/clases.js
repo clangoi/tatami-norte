@@ -14,16 +14,16 @@ module.exports = handler(["GET"], async (req, res) => {
   const db = getDb();
   const { timeZone } = bookingSettings();
   const today = T.todayIn(timeZone);
-  // ?semana=1: además, las clases de la semana en curso (de lunes a domingo), incluidas las que ya pasaron
+  // ?semana=1: además, las clases de la semana en curso y la siguiente (de lunes a domingo), incluidas las que ya pasaron
   const monday = T.addDays(today, -((new Date(today + "T12:00:00Z").getUTCDay() + 6) % 7));
   const withWeek = !!req.query.semana;
   const base = await S.loadBase(db, withWeek ? monday : today);
-  const booked = await S.confirmedBySession(db, today);
+  const booked = await S.confirmedBySession(db, withWeek ? monday : today);   // con la semana, también los inscritos de los días que ya pasaron
   const sessions = S.occurrences(base, today, S.horizonEnd(today))
     .map(s => S.publicView(s, booked.get(s.key)));
 
   const week = withWeek
-    ? S.occurrences(base, monday, T.addDays(monday, 6), { ignoreNotice: true }).map(s => S.publicView(s, booked.get(s.key)))
+    ? S.occurrences(base, monday, T.addDays(monday, 13), { ignoreNotice: true }).map(s => S.publicView(s, booked.get(s.key)))
     : undefined;
 
   // Días en que el horario semanal tiene clases recurrentes (las únicas no cuentan)
@@ -35,7 +35,7 @@ module.exports = handler(["GET"], async (req, res) => {
   const classes = [...base.classes.values()]
     .filter(c => c.active !== false && used.has(c.id))
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-    .map(c => ({ id: c.id, label: c.label, tone: c.tone || "oro", page: c.page || "", discipline: c.discipline || "", type: c.type || "", club: c.club || "", clubTone: c.clubTone || "", design: c.design || 0 }));
+    .map(c => ({ id: c.id, label: c.label, tone: c.tone || "oro", page: c.page || "", pages: Array.isArray(c.pages) ? c.pages : (c.page ? [c.page] : []), discipline: c.discipline || "", type: c.type || "", club: c.club || "", clubTone: c.clubTone || "", design: c.design || 0 }));
 
   res.setHeader("Cache-Control", "no-store");
   res.status(200).json({ classes, sessions, week, days, today });

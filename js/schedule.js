@@ -9,8 +9,7 @@
    <div data-schedule data-filter="judo"></div>       solo algunas (claves separadas por coma)
    data-filter acepta ids de clase y «page:judo.html» (todas las clases de la disciplina que apunta a esa página,
               según Configuración en el panel).
-   data-book: sección de reservas a la que lleva cada clase
-              (por defecto "#reservas"); se abre la pestaña de esa clase.
+   Al tocar una clase se abre encima del horario el formulario para reservar esa sesión (js/reservas.js).
    ========================================================== */
 (function(){
   const blocks = document.querySelectorAll("[data-schedule]");
@@ -36,7 +35,7 @@
   const shortDate = iso => { const [, m, d] = iso.split("-").map(Number); return `${d} ${MONTHS[m - 1]}`; };
   const addMin = (hhmm, min) => { const [h, m] = hhmm.split(":").map(Number); const t = h * 60 + m + min; return `${pad(Math.floor(t / 60) % 24)}:${pad(t % 60)}`; };
 
-  /* Reservas propias: la semana en curso (de lunes a domingo) según /api/clases.
+  /* Reservas propias: la semana en curso y la siguiente (de lunes a domingo), las dos que se pueden agendar, según /api/clases.
      Los días que ya pasaron se muestran más claros; al empezar otra semana se muestra esa.
      Las clases llenas se marcan. */
   async function fromOwn(){
@@ -51,19 +50,22 @@
     (res.week || res.sessions).forEach(s => {
       if (!disciplinas[s.classId]) return;
       (byDate[s.date] = byDate[s.date] || []).push({
-        dia: dayOf(s.date), fecha: s.date, inicio: s.start, fin: s.end, disciplina: s.classId, pick: s.classId,
+        dia: dayOf(s.date), fecha: s.date, inicio: s.start, fin: s.end, disciplina: s.classId, pick: s.classId, key: s.key, completa: !!s.full, inscritos: s.taken, cupos: s.capacity,
         nota: s.full ? "Completa" : ""
       });
     });
 
-    const fechas = {};
-    for (let i = 0; i < 7; i++) {
-      const iso = addDay(mondayIso, i);
-      fechas[dayOf(iso)] = iso;
-    }
-    const clases = [];
-    Object.values(fechas).forEach(iso => clases.push(...(byDate[iso] || [])));
-    return { disciplinas, clases, fechas, dias: res.days, hoy: todayIso, nota: cfg.note || "" };
+    const semanas = [0, 7].map(off => {
+      const fechas = {};
+      for (let i = 0; i < 7; i++) {
+        const iso = addDay(mondayIso, off + i);
+        fechas[dayOf(iso)] = iso;
+      }
+      const clases = [];
+      Object.values(fechas).forEach(iso => clases.push(...(byDate[iso] || [])));
+      return { fechas, clases, titulo: off ? "Próxima semana" : "Esta semana" };
+    });
+    return { disciplinas, semanas, dias: res.days, hoy: todayIso, nota: cfg.note || "" };
   }
 
   function fromJson(){
@@ -75,15 +77,12 @@
   function render(el, data){
     const disc = data.disciplinas || {};
     const filter = (el.dataset.filter || "").split(",").map(s => s.trim()).filter(Boolean);
-    const classes = (data.clases || [])
-      .filter(c => disc[c.disciplina] && (!filter.length || filter.some(t => t.startsWith("page:") ? String(disc[c.disciplina].pagina || "").split("#")[0] === t.slice(5) : t === c.disciplina)))
-      .sort((a, b) => a.inicio.localeCompare(b.inicio));
-    const book = el.dataset.book || "#reservas";
-    const fechas = data.fechas || {};
-    const isToday = k => fechas[k] ? fechas[k] === data.hoy : k === todayKey;
-    const isPast = k => !!fechas[k] && !!data.hoy && fechas[k] < data.hoy;   // día de esta semana que ya pasó
-    const pastCls = k => (isPast(k) ? " is-past" : "");
-    const dateLabel = k => fechas[k] ? `<span class="sch-date">${shortDate(fechas[k])}</span>` : "";
+    const keep = c => disc[c.disciplina] && (!filter.length || filter.some(t => t.startsWith("page:") ? String(disc[c.disciplina].pagina || "").split("#")[0] === t.slice(5) : t === c.disciplina));
+    // Una o más semanas (el horario del archivo json trae una sola)
+    const weeks = (data.semanas || [{ fechas: data.fechas || {}, clases: data.clases || [] }])
+      .map(w => ({ ...w, clases: w.clases.filter(keep).sort((a, b) => a.inicio.localeCompare(b.inicio)) }));
+    const classes = weeks.flatMap(w => w.clases);
+    const book = "#horario";
 
     if (!classes.length) {
       el.innerHTML = '<p class="sch-empty">No hay clases publicadas en las próximas semanas. Escríbenos para conocer los horarios.</p>';
@@ -95,7 +94,6 @@
     const days = DAYS.filter(([k]) => data.dias
       ? data.dias.includes(k) || classes.some(c => c.dia === k)
       : k !== "domingo" || classes.some(c => c.dia === k));
-    const times = [...new Set(classes.map(c => c.inicio))].sort();
     const used = Object.keys(disc).filter(k => classes.some(c => c.disciplina === k));
     const tone = k => TONES.includes(disc[k]?.tono) ? disc[k].tono : "oro";
     // Disciplina, tipo y club de cada clase (las antiguas los sacan de su nombre: «BJJ Gi · Kizuna»)
@@ -108,9 +106,10 @@
     const design = k => Number.isInteger(disc[k]?.diseno) && disc[k].diseno >= 0 && disc[k].diseno <= 10 ? disc[k].diseno : 0;
     const stripe = k => TONES.includes(disc[k]?.franja) ? ` s-${disc[k].franja}` : "";
 
-    const cell = c => `<a class="sch-class t-${tone(c.disciplina)} ty-${design(c.disciplina)}${stripe(c.disciplina)}" href="${esc(book)}" data-pick="${esc(c.pick || c.disciplina)}" data-disc="${esc(c.disciplina)}" data-f-club="${esc(facet(c.disciplina).club)}" data-f-disciplina="${esc(facet(c.disciplina).disciplina)}" data-f-tipo="${esc(facet(c.disciplina).tipo)}"${isToday(c.dia) ? ` data-today data-start="${esc(c.inicio)}" data-end="${esc(c.fin)}"` : ""}>
+    const cell = (c, isToday) => `<a class="sch-class t-${tone(c.disciplina)} ty-${design(c.disciplina)}${stripe(c.disciplina)}" href="${esc(book)}" data-pick="${esc(c.pick || c.disciplina)}"${c.key ? ` data-key="${esc(c.key)}"${c.completa ? " data-full" : ""}` : ""} data-disc="${esc(c.disciplina)}" data-f-club="${esc(facet(c.disciplina).club)}" data-f-disciplina="${esc(facet(c.disciplina).disciplina)}" data-f-tipo="${esc(facet(c.disciplina).tipo)}"${isToday(c.dia) ? ` data-today data-start="${esc(c.inicio)}" data-end="${esc(c.fin)}"` : ""}>
         <span class="sch-name">${esc(disc[c.disciplina].nombre)}</span>
         <span class="sch-time">${esc(c.inicio)}–${esc(c.fin)}</span>
+        ${c.cupos ? `<span class="sch-spots" title="Inscritos / cupos">${esc(c.inscritos)}/${esc(c.cupos)}</span>` : ""}
         ${c.nota ? `<span class="sch-note">${esc(c.nota)}</span>` : ""}
       </a>`;
 
@@ -132,8 +131,18 @@
         ${groups}
       </div>` : "";
 
-    // Vista de grilla (computador): filas por hora, columnas por día
-    const grid = `<div class="sch-grid" style="--days:${days.length}" role="table" aria-label="Horario semanal">
+    // Cada semana: grilla (computador) y lista (celular)
+    const weekHtml = w => {
+      const fechas = w.fechas || {};
+      const isToday = k => fechas[k] ? fechas[k] === data.hoy : (!data.semanas && k === todayKey);
+      const isPast = k => !!fechas[k] && !!data.hoy && fechas[k] < data.hoy;   // día que ya pasó
+      const pastCls = k => (isPast(k) ? " is-past" : "");
+      const dateLabel = k => fechas[k] ? `<span class="sch-date">${shortDate(fechas[k])}</span>` : "";
+      const cl = w.clases;
+      const times = [...new Set(cl.map(c => c.inicio))].sort();
+
+      // Vista de grilla (computador): filas por hora, columnas por día
+      const grid = `<div class="sch-grid" style="--days:${days.length}" role="table" aria-label="Horario semanal">
         <div class="sch-row sch-head" role="row">
           <div class="sch-corner" role="columnheader"></div>
           ${days.map(([k, , s]) => `<div class="sch-day${isToday(k) ? " is-today" : ""}${pastCls(k)}" role="columnheader">${s}${isToday(k) ? "<small>Hoy</small>" : ""}${dateLabel(k)}</div>`).join("")}
@@ -141,27 +150,51 @@
         ${times.map(t => `<div class="sch-row" role="row">
           <div class="sch-hour" role="rowheader">${esc(t)}</div>
           ${days.map(([k]) => {
-            const here = classes.filter(c => c.dia === k && c.inicio === t);
-            return `<div class="sch-cell${isToday(k) ? " is-today" : ""}${pastCls(k)}" role="cell">${here.map(cell).join("")}</div>`;
+            const here = cl.filter(c => c.dia === k && c.inicio === t);
+            return `<div class="sch-cell${isToday(k) ? " is-today" : ""}${pastCls(k)}" role="cell">${here.map(c => cell(c, isToday)).join("")}</div>`;
           }).join("")}
         </div>`).join("")}
       </div>`;
 
-    // Vista de lista (celular): un bloque por día
-    const list = `<div class="sch-list">
+      // Vista de lista (celular): un bloque por día
+      const list = `<div class="sch-list">
         ${days.map(([k, name]) => {
-          const here = classes.filter(c => c.dia === k);
+          const here = cl.filter(c => c.dia === k);
           return `<div class="sch-list-day${isToday(k) ? " is-today" : ""}${pastCls(k)}">
             <h3>${name}${isToday(k) ? " <small>Hoy</small>" : ""}${dateLabel(k)}</h3>
-            ${here.length ? here.map(cell).join("") : '<p class="sch-rest">Sin clases</p>'}
+            ${here.length ? here.map(c => cell(c, isToday)).join("") : '<p class="sch-rest">Sin clases</p>'}
           </div>`;
         }).join("")}
       </div>`;
+      return `<section class="sch-week" aria-label="${esc(w.titulo || "Semana")}">${grid}${list}</section>`;
+    };
 
     const note = data.nota ? `<p class="sch-foot">${esc(data.nota)}</p>` : "";
-    const shown = days.map(([k]) => fechas[k]).filter(Boolean).sort();
-    const range = shown.length ? `<p class="sch-range">Del ${shortDate(shown[0])} al ${shortDate(shown[shown.length - 1])}</p>` : "";
-    el.innerHTML = range + legend + grid + list + note;
+    const rangeOf = w => { const f = Object.values(w.fechas || {}).sort(); return f.length ? `Del ${shortDate(f[0])} al ${shortDate(f[f.length - 1])}` : ""; };
+    const many = weeks.length > 1;
+    const nav = `<div class="sch-nav"><p class="sch-range" aria-live="polite">${many ? "" : esc(rangeOf(weeks[0]))}</p></div>`;
+    const prev = many ? '<button type="button" class="sch-arrow sch-prev" data-week="-1" aria-label="Semana anterior"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>' : "";
+    const next = many ? '<button type="button" class="sch-arrow sch-next" data-week="1" aria-label="Semana siguiente"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>' : "";
+    el.innerHTML = nav + legend + `<div class="sch-weeks">${prev}<div class="sch-track">${weeks.map(weekHtml).join("")}</div>${next}</div>` + note;
+    if (many) setupSlider(el, weeks.map(w => (w.titulo ? w.titulo + " · " : "") + rangeOf(w)));
+  }
+
+  // Semanas lado a lado: se pasan con deslizar el dedo o con las flechas
+  function setupSlider(el, labels){
+    const track = el.querySelector(".sch-track");
+    const label = el.querySelector(".sch-range");
+    const arrows = el.querySelectorAll("[data-week]");
+    const current = () => Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    const sync = () => {
+      const i = Math.min(labels.length - 1, Math.max(0, current()));
+      label.textContent = labels[i];
+      arrows.forEach(b => { b.disabled = i + Number(b.dataset.week) < 0 || i + Number(b.dataset.week) > labels.length - 1; });
+    };
+    track.addEventListener("scroll", sync, { passive: true });
+    arrows.forEach(b => b.addEventListener("click", () => {
+      track.scrollTo({ left: (current() + Number(b.dataset.week)) * track.clientWidth, behavior: "smooth" });
+    }));
+    sync();
   }
 
   // Un solo manejador por bloque: filtros y clic en una clase
@@ -183,7 +216,10 @@
       return;
     }
     const a = e.target.closest(".sch-class");
-    if (a && window.TNBooking) window.TNBooking.select(a.getAttribute("href"), a.dataset.pick);
+    if (a && a.dataset.key && window.TNBooking) {
+      e.preventDefault();
+      if (!a.hasAttribute("data-full")) window.TNBooking.book(a.dataset.key);
+    }
   }));
 
   // «Clases de lunes a sábado.» según los días recurrentes del horario: "de martes a jueves" (3 o más seguidos) o "los lunes y viernes"

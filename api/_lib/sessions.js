@@ -50,10 +50,10 @@ function horizonEnd(today) {
   return T.addDays(today, (7 - dow) % 7 + 7);
 }
 
-// Sesiones reservables entre dos fechas (inclusive). Respeta cierres y aviso mínimo.
+// Sesiones reservables entre dos fechas (inclusive). Respeta cierres; se puede reservar hasta que la clase termina.
 function occurrences(base, from, to, opts = {}) {
-  const { timeZone: tz, minNoticeMinutes, defaultCapacity } = bookingSettings();
-  const earliest = Date.now() + (opts.ignoreNotice ? -Infinity : minNoticeMinutes * 60000);
+  const { timeZone: tz, defaultCapacity } = bookingSettings();
+  const now = opts.ignoreNotice ? -Infinity : Date.now();
   const closedAll = new Set(base.closures.filter(c => !c.slotId).map(c => c.date));
   const closedSlot = new Set(base.closures.filter(c => c.slotId).map(c => keyOf(c.slotId, c.date)));
   const out = [];
@@ -66,7 +66,7 @@ function occurrences(base, from, to, opts = {}) {
       if (!cls || cls.active === false) continue;
       const s = build(base, slot, date, tz, defaultCapacity);
       if (closedAll.has(date) || closedSlot.has(s.key)) continue;
-      if (new Date(s.startAt).getTime() < earliest) continue;
+      if (new Date(s.endAt).getTime() <= now) continue;
       out.push(s);
     }
   }

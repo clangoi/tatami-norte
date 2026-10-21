@@ -6,7 +6,7 @@ Las clases, los horarios y los cupos se administran en `/admin` → **Clases**; 
 
 | Necesidad | Cómo |
 |---|---|
-| Guardar nombre y teléfono | Cada reserva guarda nombre, apodo (opcional), teléfono y correo en Firestore (`bookings`). |
+| Guardar nombre y teléfono | Cada reserva guarda nombre, teléfono y correo en Firestore (`bookings`). El formulario pide esos tres datos; el apodo ya no se pide (las reservas antiguas lo conservan). |
 | Reagendar o cancelar | Enlace único en el correo y en «Tus reservas» → `/reserva?t=…`. |
 | Motivo obligatorio | El formulario y el servidor lo exigen (mínimo 3 letras) al cancelar y al reprogramar. |
 | Nombres de los asistentes | La lista de cada clase muestra el apodo, o nombre + inicial del apellido («Camila R.»). Nunca teléfono ni correo. Se actualiza sola cada 30 s. |
@@ -72,7 +72,7 @@ El `código` de cada clase es el que usan `judo.html` y `bjj.html` en `TNBooking
 
 ## Cómo funcionan los cupos y los cambios
 
-- Una **sesión** es un horario semanal en una fecha concreta. Se puede reservar hasta `minNoticeMinutes` (2 h) antes y hasta el domingo de la semana siguiente (la semana en curso y la próxima); el aviso mínimo se ajusta en `site.config.js → booking`.
+- Una **sesión** es un horario semanal en una fecha concreta. Se puede reservar hasta el último minuto de la clase (mientras no haya terminado) y hasta el domingo de la semana siguiente (la semana en curso y la próxima).
 - El cupo se comprueba dentro de una transacción de Firestore: si dos personas toman el último cupo a la vez, una recibe «la clase se llenó».
 - Una misma persona (mismo teléfono) no puede reservar dos veces la misma clase.
 - **Reprogramar** solo permite otra hora de la misma clase. La reserva original queda como «reprogramada» (con su motivo) y se crea una nueva; en el panel ves ambas.

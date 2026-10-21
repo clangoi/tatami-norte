@@ -93,7 +93,6 @@ window.SITE_CONFIG = {
      page: página de la disciplina ("" si no tiene). */
   booking: {
     timeZone: "America/Santiago",                // hora de las clases
-    minNoticeMinutes: 120,                       // no se reserva con menos aviso que este
     defaultCapacity: 15,                         // cupos si la clase o el horario no definen otro
     classes: [
       { discipline: "BJJ",   type: "Gi",       club: "Kizuna", slug: "jiu-jitsu-gi",        tone: "bronce", clubTone: "marino", page: "bjj.html" },

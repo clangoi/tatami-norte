@@ -2,8 +2,9 @@
    Kizuna · Panel personal del deportista
    Todas las llamadas llevan  Authorization: Bearer <ID token de Firebase>
    GET  /api/deportista
-        →  { profile, summary, bookings, sessions, classes, calendar }
-   POST /api/deportista { action: "profile", name, phone }
+        →  { profile, medical, ranks, summary, bookings, sessions, classes, calendar }
+   POST /api/deportista { action: "profile", name, nickname, phone, emergencyName, emergencyPhone }
+   POST /api/deportista { action: "medical", conditions, injuries, allergies, medications, bloodType, insurance, consent }
    POST /api/deportista { action: "book", sessionKey }
    POST /api/deportista { action: "cancel", id, reason }
    POST /api/deportista { action: "reschedule", id, newSessionKey, reason }
@@ -26,7 +27,7 @@ const clean = (v, max) => String(v || "").trim().replace(/\s+/g, " ").slice(0, m
 function contactOf(a) {
   const phone = B.parsePhone(a.phone);
   if (a.name.length < 3 || !phone) throw new HttpError(400, "Completa tu nombre y teléfono para poder reservar.");
-  return { name: a.name, nickname: "", email: a.email, ...phone };
+  return { name: a.name, nickname: a.nickname || "", email: a.email, ...phone };
 }
 
 const ownsBooking = (a, b) => A.normEmail(b.email) === A.normEmail(a.email);
@@ -61,7 +62,13 @@ async function overview(db, a, site) {
   });
   const webcal = `${site.replace(/^https?:/, "webcal:")}/api/calendario?a=${a.calToken}`;
   return {
-    profile: { name: a.name, email: a.email, phone: a.phone || "", complete: a.name.length >= 3 && !!B.parsePhone(a.phone) },
+    profile: {
+      name: a.name, nickname: a.nickname || "", email: a.email, phone: a.phone || "",
+      emergencyName: a.emergencyName || "", emergencyPhone: a.emergencyPhone || "",
+      complete: a.name.length >= 3 && !!B.parsePhone(a.phone)
+    },
+    medical: a.medical || null,
+    ranks: a.ranks || {},
     summary: A.summarize(mine, classes),
     bookings: mine.filter(b => b.status !== "rescheduled").slice(0, 400).map(b => bookingView(b, classes)),
     sessions,
@@ -91,7 +98,23 @@ module.exports = handler(["GET", "POST"], async (req, res) => {
     const phone = B.parsePhone(body.phone);
     if (name.length < 3) throw new HttpError(400, "Escribe tu nombre completo.");
     if (!phone) throw new HttpError(400, "Revisa tu número de teléfono.");
-    await ref.update({ name, phone: phone.phone, waPhone: phone.waPhone, phoneKey: phone.phoneKey });
+    const nickname = clean(body.nickname, 30);
+    const emergency = A.parseEmergency(body.emergencyName, body.emergencyPhone);
+    await ref.update({ name, nickname, phone: phone.phone, waPhone: phone.waPhone, phoneKey: phone.phoneKey, ...emergency });
+    return res.status(200).json({ ok: true });
+  }
+
+  // Ficha médica: la llena la propia persona, con su consentimiento. La ve solo el equipo (panel).
+  if (body.action === "medical") {
+    if (body.consent !== true) throw new HttpError(400, "Para guardar tu ficha debes aceptar la declaración.");
+    const now = new Date().toISOString();
+    const medical = {
+      conditions: clean(body.conditions, 500), injuries: clean(body.injuries, 500),
+      allergies: clean(body.allergies, 300), medications: clean(body.medications, 300),
+      bloodType: clean(body.bloodType, 8), insurance: clean(body.insurance, 80),
+      consentAt: (athlete.medical && athlete.medical.consentAt) || now, consentVersion: "v1", updatedAt: now
+    };
+    await ref.update({ medical });
     return res.status(200).json({ ok: true });
   }
 

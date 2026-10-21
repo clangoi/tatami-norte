@@ -4,7 +4,9 @@
    GET  /api/deportistas                        →  { athletes, candidates }
    POST /api/deportistas { action: "create", email, name?, phone? }
    POST /api/deportistas { action: "resend", id }       reenvía el enlace para crear la clave
-   POST /api/deportistas { action: "update", id, name, phone, active }
+   POST /api/deportistas { action: "update", id, name, nickname, phone, emergencyName, emergencyPhone, ranks, active }
+        ranks: { "<disciplina>": { grade, since } }. Los grados los asigna solo el equipo.
+   La ficha médica (medical) la llena la persona; el equipo la ve aquí, solo para emergencias.
    POST /api/deportistas { action: "delete", id }
    Crear un deportista no es automático: lo decide el equipo, con el correo con
    el que la persona se inscribió (esté o no en las reservas). Se crea su cuenta
@@ -57,6 +59,14 @@ function peopleFromBookings(all) {
   return map;
 }
 
+// Disciplinas de la configuración de clases (o, si no hay, las de las clases): para asignar grados
+async function disciplineNames(db, classes) {
+  const saved = await db.collection("settings").doc("catalog").get();
+  const names = saved.exists && Array.isArray(saved.data().disciplines) ? saved.data().disciplines.map(d => d.name) : [];
+  if (!names.length) classes.forEach(c => names.push(c.discipline));
+  return [...new Set(names.map(n => String(n || "").trim()).filter(Boolean))];
+}
+
 async function list(db) {
   const [athletesSnap, bookingsSnap, classes] = await Promise.all([
     db.collection("athletes").get(), db.collection("bookings").get(), A.classCatalog(db)
@@ -71,7 +81,8 @@ async function list(db) {
   const athletes = athletesSnap.docs.map(d => {
     const a = d.data();
     return {
-      id: d.id, email: a.email, name: a.name || "", phone: a.phone || "", active: a.active !== false,
+      id: d.id, email: a.email, name: a.name || "", nickname: a.nickname || "", phone: a.phone || "", active: a.active !== false,
+      emergencyName: a.emergencyName || "", emergencyPhone: a.emergencyPhone || "", ranks: a.ranks || {}, medical: a.medical || null,
       createdAt: a.createdAt || "", invitedAt: a.invitedAt || "", lastLoginAt: a.lastLoginAt || "",
       ...A.summarize(byEmail.get(A.normEmail(a.email)) || [], classes)
     };
@@ -81,7 +92,7 @@ async function list(db) {
   const candidates = [...peopleFromBookings(all).values()]
     .filter(p => !have.has(p.email))
     .sort((a, b) => b.last.localeCompare(a.last));
-  return { athletes, candidates };
+  return { athletes, candidates, disciplines: await disciplineNames(db, classes) };
 }
 
 module.exports = handler(["GET", "POST"], async (req, res) => {
@@ -141,7 +152,10 @@ module.exports = handler(["GET", "POST"], async (req, res) => {
     const name = clean(body.name, 80);
     if (name.length < 3) throw new HttpError(400, "Escribe el nombre completo.");
     const phone = phoneFields(body.phone);
-    const patch = { name, phone: phone.phone || "", waPhone: phone.waPhone || "", phoneKey: phone.phoneKey || "", active: body.active !== false };
+    const patch = {
+      name, nickname: clean(body.nickname, 30), phone: phone.phone || "", waPhone: phone.waPhone || "", phoneKey: phone.phoneKey || "",
+      ...A.parseEmergency(body.emergencyName, body.emergencyPhone), ranks: A.parseRanks(body.ranks), active: body.active !== false
+    };
     await ref.update(patch);
     await auth.updateUser(snap.id, { displayName: name, disabled: !patch.active }).catch(e => console.warn(e));
     return res.status(200).json({ ok: true });

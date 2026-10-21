@@ -276,3 +276,10 @@ body.adm-dragging .adm-block{pointer-events:none}
 .adm-chip.is-next{border-color:var(--bronze);color:var(--gold)}
 .adm-ath-form{max-width:640px}
 .adm-toolbar input[type=search]{font:500 15px/1.2 var(--body);letter-spacing:0;text-transform:none;color:var(--cream);background:var(--navy-2);border:1px solid var(--navy-3);padding:9px 12px;min-height:40px;min-width:min(320px,70vw)}
+.adm-sub{font:800 22px/1 var(--display);text-transform:uppercase;margin:26px 0 4px}
+.adm-ranks{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.adm-rank-name{flex:0 0 120px;font:800 18px/1 var(--display);text-transform:uppercase}
+.adm-ranks .adm-cfg-row input[type=date]{flex:0 1 170px}
+.adm-med{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;margin:10px 0;padding:12px 14px;border:1px solid var(--navy-3);background:var(--navy-2)}
+.adm-med dt{font:600 13px/1.5 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--steel)}
+.adm-med dd{margin:0;overflow-wrap:anywhere}

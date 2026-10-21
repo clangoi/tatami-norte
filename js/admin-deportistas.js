@@ -23,6 +23,13 @@ export function initDeportistas({ getToken, esc, toast }) {
 
   const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const when = iso => iso ? new Date(iso).toLocaleDateString("es-CL", { day: "numeric", month: "short", year: "numeric" }) : "";
+  // Sugerencias de grado según la disciplina (se puede escribir cualquier otro)
+  const GRADES = {
+    bjj: ["Blanco", "Azul", "Morado", "Café", "Negro"],
+    judo: ["6º kyu (blanco)", "5º kyu (amarillo)", "4º kyu (naranja)", "3º kyu (verde)", "2º kyu (azul)", "1º kyu (café)", "1º dan (negro)"]
+  };
+  const gradesFor = name => { const n = norm(name); return n.includes("judo") ? GRADES.judo : n.includes("bjj") || n.includes("jiu") ? GRADES.bjj : []; };
+  const MED = [["conditions", "Condiciones médicas"], ["injuries", "Lesiones"], ["allergies", "Alergias"], ["medications", "Medicamentos"], ["bloodType", "Grupo sanguíneo"], ["insurance", "Previsión / seguro"]];
   const chips = list => list.length
     ? list.map(c => `<span class="adm-chip">${esc(c.name)} <b>${c.count}</b></span>`).join("")
     : '<span class="adm-help">Aún sin clases tomadas</span>';
@@ -49,6 +56,7 @@ export function initDeportistas({ getToken, esc, toast }) {
           ${a.disciplines.map(c => `<span class="adm-chip" title="Disciplina">${esc(c.name)} <b>${c.count}</b></span>`).join("")}
           ${a.types.map(c => `<span class="adm-chip" title="Tipo">${esc(c.name)} <b>${c.count}</b></span>`).join("")}
           ${a.upcoming ? `<span class="adm-chip is-next">${a.upcoming} ${a.upcoming === 1 ? "próxima" : "próximas"}</span>` : ""}</span>
+        <span class="adm-ath-chips">${Object.entries(a.ranks || {}).map(([d, r]) => `<span class="adm-chip is-total" title="Grado">${esc(d)} · ${esc(r.grade)}</span>`).join("")}${a.medical ? "" : '<span class="adm-chip is-next" title="Aún no llena su ficha médica">Ficha médica pendiente</span>'}</span>
         <span>${a.active ? "" : "Desactivado · "}${a.lastLoginAt ? "Último ingreso: " + esc(when(a.lastLoginAt)) : "Aún no ha entrado"}</span>
       </div>
       <div class="adm-row-actions">
@@ -57,6 +65,34 @@ export function initDeportistas({ getToken, esc, toast }) {
         <button class="btn small ghost" type="button" data-del="${esc(a.id)}">Eliminar</button>
       </div>
     </div>`;
+  }
+
+  // Solo al editar: apodo, contacto de emergencia, grados y ficha médica (solo lectura)
+  function extra(a) {
+    const disciplines = [...new Set([...(data.disciplines || []), ...Object.keys(a.ranks || {})])];
+    const med = a.medical;
+    return `<div class="row2">
+        <div class="field"><label for="aNick">Apodo (sale en las listas de inscritos)</label><input id="aNick" name="nickname" maxlength="30" value="${esc(a.nickname)}"></div>
+        <div class="field"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="aEmN">Contacto de emergencia</label><input id="aEmN" name="emergencyName" maxlength="80" placeholder="Nombre" value="${esc(a.emergencyName)}"></div>
+        <div class="field"><label for="aEmP">Teléfono de emergencia</label><input id="aEmP" name="emergencyPhone" type="tel" maxlength="24" placeholder="+56 9 1234 5678" value="${esc(a.emergencyPhone)}"></div>
+      </div>
+      <h3 class="adm-sub">Grados</h3>
+      <small class="adm-help">Los asigna el equipo; el deportista los ve en su panel. Deja vacío si no tiene grado en esa disciplina.</small>
+      <div class="adm-ranks">${disciplines.length ? disciplines.map((d, i) => {
+        const r = (a.ranks || {})[d] || {};
+        return `<div class="adm-cfg-row" data-rank="${esc(d)}"><b class="adm-rank-name">${esc(d)}</b>
+          <input name="grade${i}" list="aGr${i}" maxlength="40" placeholder="Grado" value="${esc(r.grade || "")}" aria-label="Grado en ${esc(d)}">
+          <datalist id="aGr${i}">${gradesFor(d).map(g => `<option value="${esc(g)}">`).join("")}</datalist>
+          <input name="since${i}" type="date" value="${esc(r.since || "")}" aria-label="Desde cuándo en ${esc(d)}"></div>`;
+      }).join("") : '<p class="adm-help">Todavía no hay disciplinas creadas en Clases → Configuración.</p>'}</div>
+      <h3 class="adm-sub">Ficha médica</h3>
+      ${med ? `<dl class="adm-med">${MED.map(([k, label]) => `<dt>${label}</dt><dd>${med[k] ? esc(med[k]) : "—"}</dd>`).join("")}
+        <dt>Declaración</dt><dd>Aceptada el ${esc(when(med.consentAt))}${med.updatedAt ? " · actualizada el " + esc(when(med.updatedAt)) : ""}</dd></dl>
+        <small class="adm-help">La llena el propio deportista. Es información sensible: úsala solo en caso de emergencia.</small>`
+        : '<p class="adm-help">Aún no completa su ficha médica.</p>'}`;
   }
 
   function form() {
@@ -79,6 +115,7 @@ export function initDeportistas({ getToken, esc, toast }) {
           ${isNew ? '<small class="adm-help">Si el correo ya tiene reservas, se toma de ahí cuando lo dejas vacío.</small>' : ""}</div>
         <div class="field"><label for="aPhone">Teléfono</label><input id="aPhone" name="phone" type="tel" maxlength="24" placeholder="+56 9 1234 5678" value="${esc(a ? a.phone : "")}"></div>
       </div>
+      ${isNew ? "" : extra(a)}
       ${isNew ? "" : `<label class="check"><input type="checkbox" name="active"${a.active ? " checked" : ""}> Cuenta activa (si no, no puede entrar a su panel)</label>`}
       <div class="err" data-err role="alert"></div>
     </form>`;
@@ -120,7 +157,13 @@ export function initDeportistas({ getToken, esc, toast }) {
         toast(res.emailSent ? "Deportista creado: le enviamos el enlace para crear su clave" : "Deportista creado, pero el correo no salió");
         if (!res.emailSent) prompt("Correo no configurado o falló. Envíale este enlace para que cree su clave:", res.link);
       } else {
-        await api({ action: "update", id: editing, name: f.name.value, phone: f.phone.value, active: f.active.checked });
+        const ranks = {};
+        form.querySelectorAll("[data-rank]").forEach(r => {
+          const grade = r.querySelector("input[name^=grade]").value.trim();
+          if (grade) ranks[r.dataset.rank] = { grade, since: r.querySelector("input[type=date]").value };
+        });
+        await api({ action: "update", id: editing, name: f.name.value, nickname: f.nickname.value, phone: f.phone.value,
+          emergencyName: f.emergencyName.value, emergencyPhone: f.emergencyPhone.value, ranks, active: f.active.checked });
         toast("Guardado");
       }
       editing = null;

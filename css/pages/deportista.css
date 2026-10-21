@@ -32,3 +32,10 @@ span.ath-cell{cursor:default}
 .ath-cell.is-off i{color:var(--steel)}
 .ath-cell.has:hover,.ath-cell.is-off:hover,.ath-cell.has:focus-visible{border-color:var(--gold);outline:none}
 .ath-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+
+/* Perfil, grados y avisos */
+.ath-rank b{font-size:26px}
+.ath-notice{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 22px;padding:12px 14px;border-left:3px solid var(--gold);background:rgba(214,189,140,.06)}
+.ath-notice span{color:var(--text-soft)}
+.ath-form{max-width:720px;margin-bottom:34px}
+.ath-form textarea{min-height:64px}

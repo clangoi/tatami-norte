@@ -3,7 +3,7 @@
    Misma estructura que el panel de administración (js/admin.js): vistas de carga,
    entrada y panel; pestañas arriba; listas en filas. Entra con el correo y la clave
    que creó con el enlace del correo (Firebase Auth) y habla con /api/deportista.
-   Secciones: Resumen (contadores) · Próximas (reagendar, cancelar) · Historial (calendario mensual: al tocar un día se abre el detalle).
+   Secciones: Resumen (contadores) · Próximas (reagendar, cancelar) · Historial (calendario mensual: al tocar un día se abre el detalle) · Mi perfil (datos, contacto de emergencia y ficha médica).
    ========================================================== */
 import { SDK, app as fbApp } from "./firebase.js";
 import { infoTip } from "./admin-info.js";
@@ -27,7 +27,7 @@ const toast = msg => {
   clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, 3000);
 };
 
-const TABS = [["sum", "Resumen"], ["next", "Próximas"], ["cal", "Historial"]];
+const TABS = [["sum", "Resumen"], ["next", "Próximas"], ["cal", "Historial"], ["me", "Mi perfil"]];
 let data = null;
 let tab = "sum";
 let month = todayStr().slice(0, 7);
@@ -119,6 +119,15 @@ const counters = (title, list) => `<div class="adm-cfg"><h3>${title}</h3>${list.
   ? list.map(c => `<div class="ath-stat"><b>${c.count}</b><span>${esc(c.name)}</span></div>`).join("")
   : '<p class="adm-help adm-cfg-empty">Aún sin clases tomadas</p>'}</div>`;
 
+const shortDate = iso => iso ? new Date(iso + "T12:00:00").toLocaleDateString(locale, { month: "short", year: "numeric" }) : "";
+
+function ranksCard() {
+  const list = Object.entries(data.ranks || {});
+  return `<div class="adm-cfg"><h3>Mis grados</h3>${list.length
+    ? list.map(([d, r]) => `<div class="ath-stat ath-rank"><b>${esc(r.grade)}</b><span>${esc(d)}${r.since ? " · desde " + esc(shortDate(r.since)) : ""}</span></div>`).join("")
+    : '<p class="adm-help adm-cfg-empty">Tu instructor registrará tu grado en cada disciplina.</p>'}</div>`;
+}
+
 function summary() {
   const s = data.summary;
   return `<div class="adm-bar"><h2>Mi resumen</h2></div>
@@ -127,20 +136,46 @@ function summary() {
       <div class="adm-cfg"><h3>Clases</h3>
         <div class="ath-stat"><b>${s.taken}</b><span>${s.taken === 1 ? "tomada" : "tomadas"}</span></div>
         <div class="ath-stat"><b>${s.upcoming}</b><span>${s.upcoming === 1 ? "próxima" : "próximas"}</span></div></div>
-      ${counters("Por club", s.clubs)}${counters("Por disciplina", s.disciplines)}${counters("Por tipo", s.types)}
+      ${ranksCard()}${counters("Por club", s.clubs)}${counters("Por disciplina", s.disciplines)}${counters("Por tipo", s.types)}
     </div>`;
 }
 
-function profileForm() {
-  return `<form class="adm-editor ath-profile" data-profile novalidate>
-    <div class="adm-bar"><h2>Completa tus datos</h2><div class="adm-actions"><button class="btn" type="submit">Guardar</button></div></div>
-    <p class="adm-help adm-note">Los necesitamos para reservar por ti. Los demás verán solo tu nombre y la inicial de tu apellido.</p>
-    <div class="row2">
-      <div class="field"><label for="pName">Nombre y apellido</label><input id="pName" name="name" maxlength="80" value="${esc(data.profile.name)}" required></div>
-      <div class="field"><label for="pPhone">Teléfono</label><input id="pPhone" name="phone" type="tel" inputmode="tel" placeholder="+56 9 1234 5678" value="${esc(data.profile.phone)}" required></div>
-    </div>
-    <div class="err" data-err role="alert"></div>
-  </form>`;
+// Avisos arriba de todas las secciones hasta que los datos y la ficha estén completos
+function notices() {
+  const todo = [];
+  if (!data.profile.complete) todo.push("tus datos de contacto (necesarios para reservar)");
+  if (!data.medical) todo.push("tu ficha médica");
+  if (!todo.length || tab === "me") return "";
+  return `<div class="ath-notice" role="note"><span>Falta completar ${todo.join(" y ")}.</span>
+    <button class="btn small" type="button" data-go="me">Completar</button></div>`;
+}
+
+function viewProfile() {
+  const p = data.profile, m = data.medical || {};
+  const f = (id, name, label, val, extra = "") => `<div class="field"><label for="${id}">${label}</label><input id="${id}" name="${name}" value="${esc(val)}" ${extra}></div>`;
+  const t = (name, label, val, max) => `<div class="field"><label>${label}</label><textarea name="${name}" rows="2" maxlength="${max}">${esc(val || "")}</textarea></div>`;
+  return `<form class="adm-editor ath-form" data-profile novalidate>
+      <div class="adm-bar"><h2>Mis datos</h2><div class="adm-actions"><button class="btn" type="submit">Guardar</button></div></div>
+      ${infoTip("Tu nombre y tu teléfono se usan al reservar. En las listas de inscritos los demás ven tu apodo, o tu nombre con la inicial de tu apellido. Tu correo es tu usuario y no se cambia desde aquí.")}
+      <div class="row2">${f("pName", "name", "Nombre y apellido", p.name, 'maxlength="80" required')}${f("pNick", "nickname", "Apodo (opcional)", p.nickname, 'maxlength="30"')}</div>
+      <div class="row2">${f("pPhone", "phone", "Teléfono", p.phone, 'type="tel" inputmode="tel" placeholder="+56 9 1234 5678" required')}
+        <div class="field"><label>Correo</label><input value="${esc(p.email)}" readonly></div></div>
+      <div class="row2">${f("pEmN", "emergencyName", "Contacto de emergencia", p.emergencyName, 'maxlength="80" placeholder="Nombre"')}
+        ${f("pEmP", "emergencyPhone", "Teléfono de emergencia", p.emergencyPhone, 'type="tel" inputmode="tel" placeholder="+56 9 1234 5678"')}</div>
+      <div class="err" data-err role="alert"></div>
+    </form>
+    <form class="adm-editor ath-form" data-medical novalidate>
+      <div class="adm-bar"><h2>Ficha médica</h2><div class="adm-actions"><button class="btn" type="submit">Guardar ficha</button></div></div>
+      ${infoTip("Es información sensible: solo el equipo de la escuela la ve, y únicamente para actuar en una emergencia. Puedes actualizarla cuando quieras.")}
+      ${t("conditions", "Condiciones médicas (asma, diabetes, problemas cardíacos…)", m.conditions, 500)}
+      ${t("injuries", "Lesiones actuales o recientes", m.injuries, 500)}
+      <div class="row2">${t("allergies", "Alergias", m.allergies, 300)}${t("medications", "Medicamentos que usas", m.medications, 300)}</div>
+      <div class="row2">${f("mBlood", "bloodType", "Grupo sanguíneo (opcional)", m.bloodType, 'maxlength="8" placeholder="O+"')}
+        ${f("mIns", "insurance", "Previsión o seguro (Fonasa, Isapre…)", m.insurance, 'maxlength="80"')}</div>
+      <label class="check"><input type="checkbox" name="consent"${m.consentAt ? " checked" : ""}> Declaro que estos datos son verdaderos y autorizo a la escuela a usarlos para atenderme en caso de emergencia. Sé que también debo avisar a mi instructor de cualquier cambio.</label>
+      ${m.updatedAt ? `<small class="adm-help">Última actualización: ${esc(new Date(m.updatedAt).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" }))}</small>` : ""}
+      <div class="err" data-err role="alert"></div>
+    </form>`;
 }
 
 const upcoming = () => data.bookings.filter(b => b.status === "confirmed" && b.canChange).sort((a, b) => a.startAt.localeCompare(b.startAt));
@@ -231,13 +266,13 @@ function viewCal() {
 }
 
 function render() {
-  const view = { sum: summary, next: viewNext, cal: viewCal }[tab];
+  const view = { sum: summary, next: viewNext, cal: viewCal, me: viewProfile }[tab];
   const n = upcoming().length;
   $("#hello").textContent = "Hola, " + (data.profile.name.split(" ")[0] || "deportista");
   $("#tabs").innerHTML = TABS.map(([k, name]) =>
     `<button type="button" role="tab" aria-pressed="${k === tab}" data-tab="${k}">${name}${k === "next" && n ? ` (${n})` : ""}</button>`).join("");
   document.body.classList.toggle("adm-modal-open", tab === "cal" && !!calDay);
-  $("#body").innerHTML = `${data.profile.complete ? "" : profileForm()}${view()}
+  $("#body").innerHTML = `${notices()}${view()}
     <div class="ath-foot"><button class="adm-link" type="button" data-newpass>Cambiar mi clave</button></div>`;
 }
 
@@ -253,6 +288,8 @@ $("#tabs").addEventListener("click", e => {
 $("#body").addEventListener("click", async e => {
   const t = e.target;
   if (t.closest("[data-reload]")) { load(); return; }
+  const go = t.closest("[data-go]");
+  if (go) { tab = go.dataset.go; openPanel = null; calDay = ""; render(); window.scrollTo({ top: 0 }); return; }
   if (t.closest("[data-newpass]")) {
     try { await askReset(data.profile.email); toast("Te enviamos un correo a " + data.profile.email + " para cambiar tu clave"); }
     catch (ex) { toast("Sin conexión. Revisa tu internet."); }
@@ -276,8 +313,14 @@ $("#body").addEventListener("submit", async e => {
   err.textContent = ""; btn.disabled = true;
   try {
     if (form.matches("[data-profile]")) {
-      await api({ action: "profile", name: form.elements.name.value, phone: form.elements.phone.value });
+      const v = n => form.elements[n].value;
+      await api({ action: "profile", name: v("name"), nickname: v("nickname"), phone: v("phone"), emergencyName: v("emergencyName"), emergencyPhone: v("emergencyPhone") });
       toast("Datos guardados");
+    } else if (form.matches("[data-medical]")) {
+      const v = n => form.elements[n].value;
+      await api({ action: "medical", conditions: v("conditions"), injuries: v("injuries"), allergies: v("allergies"), medications: v("medications"),
+        bloodType: v("bloodType"), insurance: v("insurance"), consent: form.elements.consent.checked });
+      toast("Ficha médica guardada");
     } else {
       const reason = form.elements.reason.value.trim();
       if (reason.length < 3) { err.textContent = "Cuéntanos el motivo (es obligatorio)."; btn.disabled = false; return; }

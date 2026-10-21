@@ -85,4 +85,29 @@ function summarize(list, classes) {
   return { taken, upcoming, clubs: toList(clubs), disciplines: toList(disciplines), types: toList(types) };
 }
 
-module.exports = { emailOk, normEmail, requireAdmin, requireAthlete, newToken, bookingsOf, classCatalog, summarize };
+const clean = (v, max) => String(v || "").trim().replace(/\s+/g, " ").slice(0, max);
+const isDate = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ""));
+
+// Grados por disciplina: { "BJJ": { grade: "Azul", since: "2025-03-10" } }. Los asigna el equipo; la persona solo los ve.
+function parseRanks(raw) {
+  const out = {};
+  Object.entries(raw && typeof raw === "object" ? raw : {}).slice(0, 20).forEach(([discipline, r]) => {
+    const key = clean(discipline, 40), grade = clean(r && r.grade, 40);
+    if (!key || !grade) return;   // sin grado = sin registro
+    out[key] = { grade, since: isDate(r.since) ? r.since : "" };
+  });
+  return out;
+}
+
+// Contacto de emergencia (opcional): nombre y teléfono van juntos
+function parseEmergency(name, phone) {
+  const n = clean(name, 80), raw = String(phone || "").trim();
+  if (!n && !raw) return { emergencyName: "", emergencyPhone: "" };
+  const { parsePhone } = require("./bookings");
+  const p = parsePhone(raw);
+  if (n.length < 3) throw new HttpError(400, "Escribe el nombre de tu contacto de emergencia.");
+  if (!p) throw new HttpError(400, "Revisa el teléfono de tu contacto de emergencia.");
+  return { emergencyName: n, emergencyPhone: p.phone };
+}
+
+module.exports = { clean, isDate, parseRanks, parseEmergency, emailOk, normEmail, requireAdmin, requireAthlete, newToken, bookingsOf, classCatalog, summarize };

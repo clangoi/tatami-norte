@@ -33,6 +33,8 @@ let data = null;
 let tab = "sum";
 let month = todayStr().slice(0, 7);
 let calDay = "";
+let survey = null;          // reserva cuya encuesta se está respondiendo
+const SURVEY_DAYS = 30;     // plazo para responder la encuesta de una clase
 let openPanel = null;       // { id, kind: "cancel" | "reschedule" }
 
 const api = async (body) => {
@@ -127,7 +129,7 @@ function attendanceCard() {
   return `<div class="adm-cfg"><h3>Asistencias</h3>
     <div class="ath-stat"><b>${a.total}</b><span>${a.total === 1 ? "clase asistida" : "clases asistidas"}</span></div>
     <div class="ath-stat"><b>${a.last90}</b><span>en los últimos 90 días</span></div>
-    <p class="adm-help adm-cfg-empty">Las marca tu instructor al pasar lista.</p></div>`;
+    <p class="adm-help adm-cfg-empty">Se registran al responder la encuesta de cada clase; si olvidas hacerlo, tu instructor puede marcarla.</p></div>`;
 }
 
 function ranksCard() {
@@ -137,10 +139,19 @@ function ranksCard() {
     : '<p class="adm-help adm-cfg-empty">Tu instructor registrará tu grado en cada disciplina.</p>'}</div>`;
 }
 
+function pendingBlock() {
+  const list = pendingSurveys();
+  if (!list.length) return "";
+  return `<div class="adm-bar"><h2>Clases por registrar</h2></div>
+    ${infoTip("Responde la encuesta de cada clase a la que fuiste: así queda registrada tu asistencia, que es la que cuenta para tus grados. Tienes " + SURVEY_DAYS + " días después de la clase; si se te pasó, pídele a tu instructor que la marque.")}
+    <div class="adm-rows">${list.map(b => `<div class="adm-row"><div class="adm-row-main"><b>${esc(b.classLabel)}</b><span>${esc(cap(dayLabel(b.date)))} · ${esc(b.start)}–${esc(b.end)}</span></div>
+      <button class="btn small" type="button" data-survey="${esc(b.id)}">Responder encuesta</button></div>`).join("")}</div>`;
+}
+
 function summary() {
   const s = data.summary;
-  return `<div class="adm-bar"><h2>Mi resumen</h2></div>
-    ${infoTip("Las disciplinas y los clubes salen solos de tus reservas: cuentan las confirmadas cuya clase ya pasó. Las clases que cancelas o cambias no suman. «Asistencias» es distinto: son las clases a las que realmente llegaste, marcadas por tu instructor, y son las que cuentan para tus grados.")}
+  return `${pendingBlock()}<div class="adm-bar"><h2>Mi resumen</h2></div>
+    ${infoTip("Las disciplinas y los clubes salen solos de tus reservas: cuentan las confirmadas cuya clase ya pasó. Las clases que cancelas o cambias no suman. «Asistencias» es distinto: son las clases a las que realmente llegaste (las registras respondiendo la encuesta, o las marca tu instructor), y son las que cuentan para tus grados.")}
     <div class="adm-cfg-grid ath-sum">
       <div class="adm-cfg"><h3>Clases</h3>
         <div class="ath-stat"><b>${s.taken}</b><span>${s.taken === 1 ? "tomada" : "tomadas"}</span></div>
@@ -154,9 +165,11 @@ function notices() {
   const todo = [];
   if (!data.profile.complete) todo.push("tus datos de contacto (necesarios para reservar)");
   if (MEDICAL && !data.medical) todo.push("tu ficha médica");
-  if (!todo.length || tab === "me") return "";
-  return `<div class="ath-notice" role="note"><span>Falta completar ${todo.join(" y ")}.</span>
-    <button class="btn small" type="button" data-go="me">Completar</button></div>`;
+  const pend = tab !== "sum" ? pendingSurveys().length : 0;
+  if (!todo.length && !pend) return "";
+  if (tab === "me" && !pend) return "";
+  return `<div class="ath-notice" role="note"><span>${[todo.length ? `Falta completar ${todo.join(" y ")}.` : "", pend ? `Tienes ${pend} ${pend === 1 ? "clase por registrar" : "clases por registrar"}: responde la encuesta.` : ""].filter(Boolean).join(" ")}</span>
+    <button class="btn small" type="button" data-go="${todo.length ? "me" : "sum"}">${todo.length ? "Completar" : "Ver"}</button></div>`;
 }
 
 function viewProfile() {
@@ -191,6 +204,36 @@ function medicalForm(m) {
       ${m.updatedAt ? `<small class="adm-help">Última actualización: ${esc(new Date(m.updatedAt).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" }))}</small>` : ""}
       <div class="err" data-err role="alert"></div>
     </form>`;
+}
+
+// Clases ya terminadas, sin asistencia registrada y dentro del plazo: se registran respondiendo la encuesta
+const canSurvey = b => b.status === "confirmed" && b.attended === null && !!b.endAt
+  && new Date(b.endAt) <= new Date() && Date.now() - new Date(b.endAt) <= SURVEY_DAYS * 86400000;
+const pendingSurveys = () => data.bookings.filter(canSurvey).sort((a, b) => b.startAt.localeCompare(a.startAt));
+
+function surveyModal() {
+  const b = data.bookings.find(x => x.id === survey);
+  if (!b) return "";
+  return `<div class="adm-modal">
+    <div class="adm-modal-bg" data-close-survey></div>
+    <section class="adm-detail" role="dialog" aria-modal="true" aria-label="Encuesta de la clase" tabindex="-1">
+      <div class="adm-detail-head">
+        <h3 class="adm-detail-title">${esc(b.classLabel)}</h3>
+        <button class="btn small ghost" type="button" data-close-survey>Cerrar</button>
+      </div>
+      <p class="adm-help">${esc(cap(dayLabel(b.date)))} · ${esc(b.start)}–${esc(b.end)}</p>
+      <form class="ath-survey" data-survey-form data-id="${esc(b.id)}" novalidate>
+        <fieldset class="field"><legend>¿Qué tan cansado quedaste con el entrenamiento?</legend>
+          <div class="ath-scale">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<label><input type="radio" name="fatigue" value="${n}"><span>${n}</span></label>`).join("")}</div>
+          <div class="ath-scale-ends"><span>1 · Muy suave</span><span>10 · Agotado</span></div></fieldset>
+        <div class="field"><label for="svComment">Comentarios (opcional)</label>
+          <textarea id="svComment" name="comment" rows="3" maxlength="500" placeholder="¿Cómo te sentiste? ¿Algo que quieras contarle a tu instructor?"></textarea></div>
+        <p class="adm-help">Al responder queda registrado que asististe a esta clase.</p>
+        <div class="err" data-err role="alert"></div>
+        <button class="btn" type="submit">Registrar mi asistencia</button>
+      </form>
+    </section>
+  </div>`;
 }
 
 const upcoming = () => data.bookings.filter(b => b.status === "confirmed" && b.canChange).sort((a, b) => a.startAt.localeCompare(b.startAt));
@@ -241,10 +284,12 @@ function dayDetail(date, list) {
       <div class="adm-rows">${list.map(b => {
         const status = b.status === "confirmed" ? (b.canChange ? "Próxima" : b.attended === true ? "Asistió" : b.attended === false ? "Faltó" : "Sin registro") : STATUS[b.status] || "Cambiada";
         const meta = [b.club, b.discipline, b.type].filter(Boolean);
+        const answered = b.fatigue ? `<span>Cansancio: <b>${b.fatigue}/10</b>${b.comment ? ` · “${esc(b.comment)}”` : ""}</span>` : "";
+        const ask = canSurvey(b) ? `<button class="btn small" type="button" data-survey="${esc(b.id)}">Responder encuesta</button>` : "";
         return `<div class="adm-row${b.status === "confirmed" ? "" : " is-fixed"}">
           <div class="adm-row-main"><b>${esc(b.classLabel)}</b><span>${esc(b.start)}–${esc(b.end)}</span>
             ${meta.length ? `<span class="ath-meta">${meta.map(m => `<span class="adm-chip">${esc(m)}</span>`).join("")}</span>` : ""}
-            ${b.cancelReason ? `<span>Motivo: ${esc(b.cancelReason)}</span>` : ""}</div>
+            ${b.cancelReason ? `<span>Motivo: ${esc(b.cancelReason)}</span>` : ""}${answered}${ask}</div>
           <span class="adm-tag${b.status === "confirmed" && b.attended !== false ? " on" : ""}">${status}</span></div>`;
       }).join("")}</div>
     </section>
@@ -286,13 +331,16 @@ function render() {
   $("#hello").textContent = "Hola, " + (data.profile.name.split(" ")[0] || "deportista");
   $("#tabs").innerHTML = TABS.map(([k, name]) =>
     `<button type="button" role="tab" aria-pressed="${k === tab}" data-tab="${k}">${name}${k === "next" && n ? ` (${n})` : ""}</button>`).join("");
-  document.body.classList.toggle("adm-modal-open", tab === "cal" && !!calDay);
-  $("#body").innerHTML = `${notices()}${view()}
+  document.body.classList.toggle("adm-modal-open", (tab === "cal" && !!calDay) || !!survey);
+  $("#body").innerHTML = `${notices()}${view()}${survey ? surveyModal() : ""}
     <div class="ath-foot"><button class="adm-link" type="button" data-newpass>Cambiar mi clave</button></div>`;
 }
 
 /* ---------- Eventos ---------- */
-document.addEventListener("keydown", e => { if (e.key === "Escape" && calDay) { calDay = ""; if (data) render(); } });
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape" || !data) return;
+  if (survey) { survey = null; render(); } else if (calDay) { calDay = ""; render(); }
+});
 
 $("#tabs").addEventListener("click", e => {
   const tb = e.target.closest("[data-tab]");
@@ -303,6 +351,9 @@ $("#tabs").addEventListener("click", e => {
 $("#body").addEventListener("click", async e => {
   const t = e.target;
   if (t.closest("[data-reload]")) { load(); return; }
+  const sv = t.closest("[data-survey]");
+  if (sv) { survey = sv.dataset.survey; calDay = ""; render(); return; }
+  if (t.closest("[data-close-survey]")) { survey = null; render(); return; }
   const go = t.closest("[data-go]");
   if (go) { tab = go.dataset.go; openPanel = null; calDay = ""; render(); window.scrollTo({ top: 0 }); return; }
   if (t.closest("[data-newpass]")) {
@@ -331,6 +382,12 @@ $("#body").addEventListener("submit", async e => {
       const v = n => form.elements[n].value;
       await api({ action: "profile", name: v("name"), nickname: v("nickname"), phone: v("phone"), emergencyName: v("emergencyName"), emergencyPhone: v("emergencyPhone") });
       toast("Datos guardados");
+    } else if (form.matches("[data-survey-form]")) {
+      const pick = form.querySelector("input[name=fatigue]:checked");
+      if (!pick) { err.textContent = "Elige un número del 1 al 10."; btn.disabled = false; return; }
+      await api({ action: "survey", id: form.dataset.id, fatigue: Number(pick.value), comment: form.elements.comment.value });
+      survey = null;
+      toast("Asistencia registrada. ¡Gracias!");
     } else if (form.matches("[data-medical]")) {
       const v = n => form.elements[n].value;
       await api({ action: "medical", conditions: v("conditions"), injuries: v("injuries"), allergies: v("allergies"), medications: v("medications"),

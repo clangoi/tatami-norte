@@ -1,7 +1,9 @@
 /* Asistencia real: quién llegó a cada clase.
    attendance/{sessionKey}__{id}: un documento por persona y clase.
    - id = el de su reserva, o "w…" si llegó sin reservar (no hace falta que tenga cuenta).
-   - present: true (vino) o false (faltó). Sin documento = el instructor aún no la marcó.
+   - present: true (vino) o false (faltó). Sin documento = aún no está registrada.
+   - source: "athlete" (respondió la encuesta de la clase: eso implica que fue) o "admin" (la marcó el equipo).
+   - fatigue (1 a 10) y comment: la encuesta de cansancio que responde el deportista al terminar la clase.
    - emailKey une la asistencia con la cuenta del deportista, si dejó su correo.
    Solo las funciones del servidor lo leen y escriben (ver firestore.rules). */
 const crypto = require("crypto");
@@ -9,6 +11,15 @@ const crypto = require("crypto");
 const docId = (sessionKey, id) => `${sessionKey}__${id}`;
 const newWalkInId = () => "w" + crypto.randomBytes(7).toString("base64url");
 const isWalkIn = id => /^w[A-Za-z0-9_-]{6,20}$/.test(String(id || ""));
+
+// Asistencia de una reserva (la encuesta o el pase de lista de quien reservó)
+function fromBooking(b, extra) {
+  return {
+    sessionKey: b.sessionKey, classId: b.classId, classLabel: b.classLabel, date: b.date, start: b.start, startAt: b.startAt,
+    name: b.name, email: b.email || "", emailKey: String(b.email || "").trim().toLowerCase(), phone: b.phone || "",
+    bookingId: b.id, walkIn: false, ...extra
+  };
+}
 
 const fromSnap = snap => snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
@@ -43,4 +54,4 @@ function summarize(records, classes, ranks = {}) {
   return { total: present.length, last90, clubs: toList(clubs), disciplines: toList(disciplines), types: toList(types), sinceGrade };
 }
 
-module.exports = { docId, newWalkInId, isWalkIn, ofDate, ofEmail, allPresent, summarize };
+module.exports = { fromBooking, docId, newWalkInId, isWalkIn, ofDate, ofEmail, allPresent, summarize };

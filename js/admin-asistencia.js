@@ -1,7 +1,9 @@
 /* ==========================================================
    Kizuna · Panel → Asistencia (pasar lista)
-   Pensado para el celular del instructor, en el tatami: las clases del día con
-   sus inscritos y dos toques por persona (vino / faltó). Quien llega sin reservar
+   La asistencia la marca el propio deportista al responder la encuesta de cansancio
+   (1 a 10 y comentarios), y responderla cuenta como que fue. Esta pantalla es para el
+   equipo: ver las respuestas y marcar a quien olvidó responder. Pensado para el celular:
+   las clases del día con sus inscritos y dos toques por persona (vino / faltó). Quien llega sin reservar
    se agrega al momento, sin crear perfil. Habla con /api/asistencia.
    ========================================================== */
 export function initAsistencia({ getToken, esc, toast }) {
@@ -44,6 +46,7 @@ export function initAsistencia({ getToken, esc, toast }) {
   function person(s, p) {
     return `<div class="att-person" data-person="${esc(p.id)}">
       <div class="att-who"><b>${esc(p.name)}</b>
+        ${p.fatigue ? `<span class="att-survey"><em class="att-tag att-fat">Cansancio ${p.fatigue}/10</em>${p.comment ? `“${esc(p.comment)}”` : ""}</span>` : p.present === true && p.source === "admin" ? '<span class="att-survey"><em class="att-tag">Marcada por el equipo</em></span>' : ""}
         <span>${p.walkIn ? '<em class="att-tag">Sin reserva</em>' : ""}${p.booked ? "" : p.walkIn ? "" : '<em class="att-tag">Reserva cancelada</em>'}${esc(p.phone || p.email || "")}</span></div>
       <div class="att-btns">
         <button type="button" class="btn small att-yes" data-mark="${esc(s.key)}|${esc(p.id)}|true" aria-pressed="${p.present === true}">Vino</button>
@@ -73,6 +76,7 @@ export function initAsistencia({ getToken, esc, toast }) {
     return `<section class="adm-sess att-sess">
       <header><div><b>${esc(s.classLabel)}</b><span>${esc(s.start)}–${esc(s.end)}</span></div>
         <span class="adm-tag on" title="Presentes">${count(s.people)} presentes · ${s.people.length} en lista</span></header>
+      ${s.answers ? `<p class="adm-help att-avg">Cansancio promedio: <b>${s.avgFatigue}/10</b> · ${s.answers} ${s.answers === 1 ? "respuesta" : "respuestas"} a la encuesta</p>` : ""}
       <div class="att-list">${s.people.length ? s.people.map(p => person(s, p)).join("") : '<p class="adm-help">Nadie se inscribió a esta clase.</p>'}</div>
       <div class="adm-actions att-foot">
         ${pending > 1 ? `<button class="btn small" type="button" data-all="${esc(s.key)}">Marcar presentes a los ${pending} sin marcar</button>` : ""}
@@ -85,7 +89,7 @@ export function initAsistencia({ getToken, esc, toast }) {
   function render() {
     const isToday = state.date === state.today;
     root.innerHTML = `<div class="adm-bar"><h2>Pasar lista</h2></div>
-      <div class="adm-info"><button type="button" class="adm-info-btn" data-info aria-expanded="false" aria-label="Cómo funciona esta sección" title="Cómo funciona esta sección">i</button><p class="adm-help adm-note adm-info-text" role="note" hidden>Toca «Vino» o «Faltó» en cada persona. Quien llegó sin reservar se agrega al momento, sin crear perfil. La asistencia que marques alimenta los grados y el historial de cada deportista. Solo se puede pasar lista de hoy y de días anteriores.</p></div>
+      <div class="adm-info"><button type="button" class="adm-info-btn" data-info aria-expanded="false" aria-label="Cómo funciona esta sección" title="Cómo funciona esta sección">i</button><p class="adm-help adm-note adm-info-text" role="note" hidden>Cada deportista marca su asistencia respondiendo, al terminar la clase, la encuesta de cansancio (1 a 10 y comentarios); responderla cuenta como que fue y aquí ves su respuesta. Si alguien olvidó responder, márcalo tú con «Vino». Quien llegó sin reservar se agrega al momento, sin crear perfil. La asistencia alimenta los grados y el historial de cada deportista. Solo se puede marcar de hoy y de días anteriores.</p></div>
       <div class="att-day">
         <button class="btn small ghost" type="button" data-day="-1" aria-label="Día anterior">←</button>
         <b>${isToday ? "Hoy · " : ""}${esc(cap(longDate(state.date)))}</b>
@@ -101,6 +105,7 @@ export function initAsistencia({ getToken, esc, toast }) {
     const s = state.sessions.find(x => x.key === key), p = s && s.people.find(x => x.id === id);
     if (!p) return;
     const next = p.present === present ? null : present;   // tocar de nuevo lo deja sin marcar
+    if (next === null && p.fatigue && !confirm("Esta persona respondió la encuesta. ¿Quitar su asistencia y su respuesta?")) return;
     const before = p.present;
     p.present = next; render();
     try { await api("", { action: "mark", sessionKey: key, id, present: next }); }

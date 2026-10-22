@@ -5,6 +5,7 @@
         →  { profile, medical, ranks, summary, bookings, sessions, classes, calendar }
    POST /api/deportista { action: "profile", name, nickname, phone, emergencyName, emergencyPhone }
    POST /api/deportista { action: "medical", conditions, injuries, allergies, medications, bloodType, insurance, consent }
+   POST /api/deportista { action: "survey", id, fatigue, comment }   encuesta de la clase ya terminada: responderla marca que asistió
    POST /api/deportista { action: "book", sessionKey }
    POST /api/deportista { action: "cancel", id, reason }
    POST /api/deportista { action: "reschedule", id, newSessionKey, reason }
@@ -23,6 +24,7 @@ const ics = require("./_lib/ics");
 const X = require("./_lib/attendance");
 
 const medicalOn = () => !!(require("./_lib/config").siteConfig().features || {}).medicalRecord;   // ficha médica en pausa: ver site.config.js
+const SURVEY_DAYS = 30;   // plazo para responder la encuesta de una clase
 const clean = (v, max) => String(v || "").trim().replace(/\s+/g, " ").slice(0, max);
 
 // Datos de contacto de la reserva: los del deportista
@@ -48,7 +50,10 @@ function bookingView(b, classes, marks) {
     start: v.start, end: v.end, startAt: v.startAt, canChange: v.canChange,
     cancelReason: v.cancelReason, rescheduleReason: v.rescheduleReason,
     club: c.club || "", discipline: c.discipline || "", type: c.type || "",
-    attended: marks.has(b.id) ? marks.get(b.id) : null   // true vino, false faltó, null sin registro
+    endAt: b.endAt,
+    attended: marks.has(b.id) ? marks.get(b.id).present : null,   // true vino, false faltó, null sin registro
+    fatigue: marks.has(b.id) ? marks.get(b.id).fatigue || null : null,
+    comment: marks.has(b.id) ? marks.get(b.id).comment || "" : ""
   };
 }
 
@@ -58,7 +63,7 @@ async function overview(db, a, site) {
   const [mine, classes, base, booked, records] = await Promise.all([
     A.bookingsOf(db, a.email), A.classCatalog(db), S.loadBase(db, today), S.confirmedBySession(db, today), X.ofEmail(db, a.email)
   ]);
-  const marks = new Map(records.filter(r => r.bookingId).map(r => [r.bookingId, r.present]));
+  const marks = new Map(records.filter(r => r.bookingId).map(r => [r.bookingId, r]));
   const attendance = X.summarize(records, classes, a.ranks);
   const heldKeys = new Set(mine.filter(b => b.status === "confirmed").map(b => b.sessionKey));
   const sessions = S.occurrences(base, today, S.horizonEnd(today)).map(s => {
@@ -136,6 +141,24 @@ module.exports = handler(["GET", "POST"], async (req, res) => {
       id: booking.id, booking: B.manageView(booking),
       google: ics.googleUrl(mail.eventOf(booking, site)), ics: `${site}/api/calendario?t=${booking.id}`, emailSent
     });
+  }
+
+  // Encuesta de cansancio (1 a 10) y comentarios: responderla implica haber ido a la clase
+  if (body.action === "survey") {
+    const b = await findOwn(db, athlete, body.id);
+    const fatigue = Number(body.fatigue);
+    if (!Number.isInteger(fatigue) || fatigue < 1 || fatigue > 10) throw new HttpError(400, "Elige un número del 1 al 10.");
+    if (b.status !== "confirmed") throw new HttpError(409, "Esa reserva ya no está activa.");
+    if (new Date(b.endAt).getTime() > Date.now()) throw new HttpError(409, "La encuesta se responde cuando termina la clase.");
+    if (Date.now() - new Date(b.endAt).getTime() > SURVEY_DAYS * 86400000) throw new HttpError(409, `Ya pasaron más de ${SURVEY_DAYS} días. Pídele a tu instructor que marque tu asistencia.`);
+    const ref = db.collection("attendance").doc(X.docId(b.sessionKey, b.id));
+    const snap = await ref.get();
+    if (snap.exists && snap.data().present === false) throw new HttpError(409, "Tu instructor registró que no asististe. Escríbele si es un error.");
+    const now = new Date().toISOString();
+    const survey = { fatigue, comment: clean(body.comment, 500), answeredAt: now };
+    if (snap.exists) await ref.update({ ...survey, present: true });
+    else await ref.set(X.fromBooking(b, { present: true, source: "athlete", markedAt: now, markedBy: athlete.id, ...survey }));
+    return res.status(200).json({ ok: true });
   }
 
   const reason = B.parseReason(body.reason);

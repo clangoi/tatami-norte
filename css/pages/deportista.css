@@ -40,3 +40,16 @@ span.ath-cell{cursor:default}
 .ath-form{max-width:720px;margin-bottom:34px}
 .ath-form textarea{min-height:64px}
 .ath-rank small{display:block;margin-top:2px;font:500 13px/1.3 var(--body);letter-spacing:0;text-transform:none;color:var(--steel)}
+
+/* Encuesta de cansancio */
+.ath-survey{margin-top:6px}
+.ath-survey fieldset{border:0;padding:0;margin:0 0 16px}
+.ath-survey legend{font:700 16px/1.3 var(--body);color:var(--cream);margin-bottom:10px;padding:0}
+.ath-scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+@media (min-width:520px){.ath-scale{grid-template-columns:repeat(10,1fr)}}
+.ath-scale label{display:block;cursor:pointer}
+.ath-scale input{position:absolute;opacity:0;pointer-events:none}
+.ath-scale span{display:flex;align-items:center;justify-content:center;min-height:46px;border:1px solid var(--navy-3);background:var(--navy);font:800 20px/1 var(--display);color:var(--text-soft)}
+.ath-scale input:checked + span{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.ath-scale input:focus-visible + span{outline:2px solid var(--gold);outline-offset:2px}
+.ath-scale-ends{display:flex;justify-content:space-between;margin-top:6px;font:600 12px/1.2 var(--label);letter-spacing:.1em;text-transform:uppercase;color:var(--steel)}

@@ -301,3 +301,6 @@ body.adm-dragging .adm-block{pointer-events:none}
 .att-foot{margin-top:14px}
 .att-add{margin-top:16px;padding-top:14px;border-top:1px solid var(--navy-3)}
 @media (max-width:520px){.att-btns{width:100%}.att-btns .btn{flex:1}}
+.att-survey{display:block;margin-top:2px;font-size:14px;font-style:italic;color:var(--text-soft)}
+.att-survey .att-fat{font-style:normal;color:var(--navy);background:var(--gold);border-color:var(--gold)}
+.att-avg b{color:var(--gold)}

@@ -3,7 +3,8 @@
    Todas las llamadas llevan  Authorization: Bearer <ID token de Firebase>
    GET  /api/asistencia?date=AAAA-MM-DD[&known=1]
         →  { date, today, sessions: [{ key, classLabel, start, end, capacity, people }], known? }
-        people: [{ id, name, phone, email, walkIn, booked, present: true | false | null }]
+        people: [{ id, name, phone, email, walkIn, booked, present: true | false | null, source, fatigue, comment }]
+        source: "athlete" (respondió la encuesta) | "admin"; fatigue 1-10 y comment vienen de la encuesta del deportista.
         known (con known=1): personas conocidas (cuentas y reservas) para completar al agregar a alguien.
    POST /api/asistencia { action: "mark", sessionKey, id, present: true | false | null }
    POST /api/asistencia { action: "walkin", sessionKey, name, phone?, email? }   llegó sin reservar
@@ -43,6 +44,9 @@ const recordFields = (s, who, uid, present) => ({
   present, markedAt: new Date().toISOString(), markedBy: uid
 });
 
+// Lo que dejó la encuesta de la clase (si la respondió)
+const survey = r => (r ? { source: r.source || "admin", fatigue: r.fatigue || null, comment: r.comment || "" } : { source: null, fatigue: null, comment: "" });
+
 // Personas que el instructor puede elegir al agregar a alguien: cuentas de deportistas y quienes ya reservaron
 async function known(db) {
   const [athletes, bookings] = await Promise.all([db.collection("athletes").get(), db.collection("bookings").get()]);
@@ -77,14 +81,16 @@ module.exports = handler(["GET", "POST"], async (req, res) => {
       const booked = confirmed.filter(b => b.sessionKey === s.key).sort((a, b) => a.name.localeCompare(b.name, "es"));
       const people = booked.map(b => ({
         id: b.id, name: b.name, phone: b.phone || "", email: b.email || "", walkIn: false, booked: true,
-        present: rec.has(b.id) ? rec.get(b.id).present : null
+        present: rec.has(b.id) ? rec.get(b.id).present : null, ...survey(rec.get(b.id))
       }));
       // Quien llegó sin reservar (o con una reserva que luego se canceló) y ya fue marcado
       rec.forEach((r, id) => {
         if (booked.some(b => b.id === id)) return;
-        people.push({ id, name: r.name, phone: r.phone || "", email: r.email || "", walkIn: !!r.walkIn, booked: false, present: r.present });
+        people.push({ id, name: r.name, phone: r.phone || "", email: r.email || "", walkIn: !!r.walkIn, booked: false, present: r.present, ...survey(r) });
       });
-      return { key: s.key, classLabel: s.classLabel, start: s.start, end: s.end, capacity: s.capacity, people };
+      const rated = people.filter(p => p.fatigue);
+      const avg = rated.length ? Math.round(rated.reduce((n, p) => n + p.fatigue, 0) / rated.length * 10) / 10 : null;
+      return { key: s.key, classLabel: s.classLabel, start: s.start, end: s.end, capacity: s.capacity, people, answers: rated.length, avgFatigue: avg };
     });
     return res.status(200).json({ date, today, sessions: out, known: req.query.known ? await known(db) : undefined });
   }
@@ -104,7 +110,10 @@ module.exports = handler(["GET", "POST"], async (req, res) => {
     } else {
       const b = await B.find(db, id);
       if (b.sessionKey !== s.key || b.status !== "confirmed") throw new HttpError(409, "Esa reserva ya no está activa en esta clase.");
-      await ref.set(recordFields(s, { name: b.name, email: b.email, phone: b.phone, bookingId: b.id }, user.uid, body.present));
+      const snap = await ref.get();
+      // Si la persona ya respondió la encuesta se conserva; solo cambia si vino o faltó
+      if (snap.exists) await ref.update({ present: body.present, markedAt: new Date().toISOString(), markedBy: user.uid });
+      else await ref.set({ ...recordFields(s, { name: b.name, email: b.email, phone: b.phone, bookingId: b.id }, user.uid, body.present), source: "admin" });
     }
     return res.status(200).json({ ok: true });
   }
@@ -118,7 +127,7 @@ module.exports = handler(["GET", "POST"], async (req, res) => {
     if (String(body.phone || "").trim() && !phone) throw new HttpError(400, "Revisa el teléfono.");
     const id = X.newWalkInId();
     await db.collection("attendance").doc(X.docId(s.key, id)).set(
-      recordFields(s, { name, email, phone: phone ? phone.phone : "", walkIn: true }, user.uid, true));
+      { ...recordFields(s, { name, email, phone: phone ? phone.phone : "", walkIn: true }, user.uid, true), source: "admin" });
     return res.status(200).json({ id });
   }
 

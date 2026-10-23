@@ -35,7 +35,7 @@ let tab = "sum";
 let month = todayStr().slice(0, 7);
 let calDay = "";
 let survey = null;          // reserva cuya encuesta se está respondiendo
-const SURVEY_DAYS = 30;     // plazo para responder la encuesta de una clase
+const SURVEY_DAYS = 7;      // plazo para responder la encuesta de una clase
 const SURVEY_LEAD_MIN = 20; // se habilita 20 minutos antes de que termine la clase
 let openPanel = null;       // { id, kind: "cancel" | "reschedule" }
 

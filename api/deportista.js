@@ -24,7 +24,7 @@ const ics = require("./_lib/ics");
 const X = require("./_lib/attendance");
 
 const medicalOn = () => !!(require("./_lib/config").siteConfig().features || {}).medicalRecord;   // ficha médica en pausa: ver site.config.js
-const SURVEY_DAYS = 30;       // plazo para responder la encuesta de una clase
+const SURVEY_DAYS = 7;        // plazo para responder la encuesta de una clase
 const SURVEY_LEAD_MIN = 20;   // se habilita 20 minutos antes de que termine la clase
 const clean = (v, max) => String(v || "").trim().replace(/\s+/g, " ").slice(0, max);
 

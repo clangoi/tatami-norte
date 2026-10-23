@@ -1,23 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 460" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif">
-  <rect width="800" height="460" fill="#1B2338"/>
-  <!-- Uke visto desde arriba (hombros y cabeza) -->
-  <g fill="none" stroke="#F6F2E7" stroke-width="3" stroke-linecap="round">
-    <ellipse cx="400" cy="230" rx="44" ry="96"/>
-    <circle cx="400" cy="230" r="22"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <g id="jk" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M206 272 L246 350 L268 420" stroke="currentColor" stroke-width="30" stroke-opacity=".72"/>
+      <path d="M200 272 L206 350 L198 420" stroke="currentColor" stroke-width="32"/>
+      <path d="M268 424 L292 424" stroke="#D6BD8C" stroke-width="12"/>
+      <path d="M198 424 L222 424" stroke="#D6BD8C" stroke-width="12"/>
+      <path d="M203 170 L203 268" stroke="currentColor" stroke-width="64"/>
+      <path d="M171 268 L235 268" stroke="#A98B5E" stroke-width="12" stroke-linecap="butt"/>
+      <path d="M218 270 L228 262" stroke="#A98B5E" stroke-width="8"/>
+      <path d="M212 138 L218 200 L226 262" stroke="#1B2338" stroke-opacity=".45" stroke-width="3"/>
+      <path d="M210 120 L210 142" stroke="#D6BD8C" stroke-width="14"/>
+      <circle cx="212" cy="100" r="24" fill="#D6BD8C" stroke="none"/>
+      <path d="M188 102 A24 24 0 0 1 234 92 Q210 94 200 114 Z" fill="#141a2b" stroke="none"/>
+    </g>
+  </defs>
+  <rect width="800" height="500" fill="#1B2338"/>
+  <path d="M100 430 L700 430" stroke="#2b3654" stroke-width="3"/>
+
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Uke, desequilibrado hacia Tori -->
+    <path d="M480 60 L480 425" stroke="#888D95" stroke-width="2" stroke-dasharray="6 8" opacity=".6"/>
+    <g transform="rotate(-14 480 425)">
+      <use href="#jk" transform="translate(713 0) scale(-1 1)" color="#888D95"/>
+      <g transform="translate(713 0) scale(-1 1)">
+        <path d="M200 170 L214 232 L232 292" stroke="#1B2338" stroke-width="27"/>
+        <path d="M200 170 L214 232 L232 292" stroke="#888D95" stroke-width="22"/>
+        <circle cx="233" cy="298" r="10" fill="#D6BD8C" stroke="none"/>
+      </g>
+    </g>
+    <!-- Tori -->
+    <use href="#jk" transform="translate(77 0)" color="#F6F2E7"/>
+    <path d="M274 166 L316 262 L448 266" stroke="#1B2338" stroke-width="27"/>
+    <path d="M274 166 L316 262 L448 266" stroke="#F6F2E7" stroke-width="22"/>
+    <path d="M292 164 L330 232 L420 195" stroke="#1B2338" stroke-width="27"/>
+    <path d="M292 164 L330 232 L420 195" stroke="#F6F2E7" stroke-width="22"/>
+    <circle cx="420" cy="195" r="11" fill="#D6BD8C" stroke="none"/>
+    <circle cx="448" cy="266" r="11" fill="#D6BD8C" stroke="none"/>
+    <circle cx="448" cy="266" r="22" stroke="#A98B5E" stroke-width="3.5"/>
+    <!-- Dirección de la tracción -->
+    <path d="M590 70 L330 70" stroke="#A98B5E" stroke-width="5"/>
+    <path d="M350 54 L328 70 L350 86" stroke="#A98B5E" stroke-width="5"/>
   </g>
-  <!-- Punto de agarre en la manga -->
-  <circle cx="356" cy="262" r="11" fill="#A98B5E"/>
-  <g stroke="#A98B5E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <path d="M356 262 L356 400"/><path d="M342 384 L356 402 L370 384"/>
-    <path d="M356 262 L356 124"/><path d="M342 140 L356 122 L370 140"/>
-    <path d="M356 262 L210 262"/><path d="M226 248 L208 262 L226 276"/>
+
+  <g font-weight="700" letter-spacing="1" text-anchor="middle">
+    <text x="460" y="50" font-size="22" fill="#A98B5E">TRACCIÓN DEL HIKITE</text>
+    <text x="400" y="472" font-size="19" font-weight="400" fill="#F6F2E7">La mano marca la dirección; el tronco entero pone la fuerza.</text>
   </g>
-  <g font-size="22" font-weight="700" fill="#F6F2E7" letter-spacing="1">
-    <text x="380" y="410">ATRÁS</text>
-    <text x="380" y="130">ADELANTE</text>
-    <text x="200" y="298" text-anchor="end">AL COSTADO</text>
-  </g>
-  <text x="640" y="214" font-size="26" font-weight="700" fill="#A98B5E" letter-spacing="1" text-anchor="middle">HIKITE</text>
-  <text x="640" y="242" font-size="19" fill="#F6F2E7" text-anchor="middle">La mano marca la dirección;</text>
-  <text x="640" y="266" font-size="19" fill="#F6F2E7" text-anchor="middle">el tronco entero pone la fuerza.</text>
 </svg>

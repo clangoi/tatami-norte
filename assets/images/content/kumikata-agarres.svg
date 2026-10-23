@@ -1,28 +1,50 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif">
-  <rect width="800" height="480" fill="#1B2338"/>
-  <!-- Uke visto de frente -->
-  <g fill="none" stroke="#F6F2E7" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
-    <circle cx="400" cy="92" r="34"/>
-    <path d="M330 168 Q400 140 470 168 L492 330 L308 330 Z"/>
-    <path d="M370 150 L400 220 L430 150"/>
-    <path d="M330 168 L262 318"/>
-    <path d="M470 168 L538 318"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <!-- Judoka de perfil mirando a la derecha (sin brazos) -->
+    <g id="jk" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M206 272 L246 350 L268 420" stroke="currentColor" stroke-width="30" stroke-opacity=".72"/>
+      <path d="M200 272 L206 350 L198 420" stroke="currentColor" stroke-width="32"/>
+      <path d="M268 424 L292 424" stroke="#D6BD8C" stroke-width="12"/>
+      <path d="M198 424 L222 424" stroke="#D6BD8C" stroke-width="12"/>
+      <path d="M203 170 L203 268" stroke="currentColor" stroke-width="64"/>
+      <path d="M171 268 L235 268" stroke="#A98B5E" stroke-width="12" stroke-linecap="butt"/>
+      <path d="M218 270 L228 262" stroke="#A98B5E" stroke-width="8"/>
+      <path d="M212 138 L218 200 L226 262" stroke="#1B2338" stroke-opacity=".45" stroke-width="3"/>
+      <path d="M210 120 L210 142" stroke="#D6BD8C" stroke-width="14"/>
+      <circle cx="212" cy="100" r="24" fill="#D6BD8C" stroke="none"/>
+      <path d="M188 102 A24 24 0 0 1 234 92 Q210 94 200 114 Z" fill="#141a2b" stroke="none"/>
+    </g>
+  </defs>
+  <rect width="800" height="500" fill="#1B2338"/>
+  <path d="M120 430 L680 430" stroke="#2b3654" stroke-width="3"/>
+
+  <g transform="translate(20 0)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Uke (judogi gris) -->
+    <use href="#jk" transform="translate(683 0) scale(-1 1)" color="#888D95"/>
+    <g transform="translate(683 0) scale(-1 1)">
+      <path d="M200 170 L214 232 L232 292" stroke="#1B2338" stroke-width="27"/>
+      <path d="M200 170 L214 232 L232 292" stroke="#888D95" stroke-width="22"/>
+      <circle cx="233" cy="298" r="10" fill="#D6BD8C" stroke="none"/>
+    </g>
+    <!-- Tori (judogi crema) -->
+    <use href="#jk" transform="translate(77 0)" color="#F6F2E7"/>
+    <!-- Brazos de Tori -->
+    <path d="M274 166 L322 262 L452 264" stroke="#1B2338" stroke-width="27"/>
+    <path d="M274 166 L322 262 L452 264" stroke="#F6F2E7" stroke-width="22"/>
+    <path d="M292 164 L348 222 L446 186" stroke="#1B2338" stroke-width="27"/>
+    <path d="M292 164 L348 222 L446 186" stroke="#F6F2E7" stroke-width="22"/>
+    <circle cx="448" cy="185" r="11" fill="#D6BD8C" stroke="none"/>
+    <circle cx="454" cy="266" r="11" fill="#D6BD8C" stroke="none"/>
+    <!-- Marcas de las manos -->
+    <circle cx="448" cy="185" r="22" stroke="#D6BD8C" stroke-width="3.5"/>
+    <circle cx="454" cy="266" r="22" stroke="#A98B5E" stroke-width="3.5"/>
   </g>
-  <!-- Tsurite: solapa -->
-  <circle cx="436" cy="186" r="11" fill="#D6BD8C"/>
-  <path d="M436 168 L436 112" stroke="#D6BD8C" stroke-width="4" stroke-linecap="round"/>
-  <path d="M424 124 L436 108 L448 124" fill="none" stroke="#D6BD8C" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M448 186 L600 186" stroke="#D6BD8C" stroke-width="2"/>
-  <text x="608" y="180" font-size="26" font-weight="700" fill="#D6BD8C" letter-spacing="1">TSURITE</text>
-  <text x="608" y="208" font-size="19" fill="#F6F2E7">Mano de la solapa</text>
-  <text x="608" y="232" font-size="19" fill="#888D95">Eleva y dirige</text>
-  <!-- Hikite: manga -->
-  <circle cx="276" cy="282" r="11" fill="#A98B5E"/>
-  <path d="M276 298 L236 348" stroke="#A98B5E" stroke-width="4" stroke-linecap="round"/>
-  <path d="M233 328 L236 350 L256 342" fill="none" stroke="#A98B5E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M265 282 L190 282" stroke="#A98B5E" stroke-width="2"/>
-  <text x="182" y="276" font-size="26" font-weight="700" fill="#A98B5E" letter-spacing="1" text-anchor="end">HIKITE</text>
-  <text x="182" y="304" font-size="19" fill="#F6F2E7" text-anchor="end">Mano de la manga</text>
-  <text x="182" y="328" font-size="19" fill="#888D95" text-anchor="end">Tira y marca el rumbo</text>
-  <text x="400" y="440" font-size="18" fill="#888D95" text-anchor="middle" letter-spacing="2">UKE, VISTO DE FRENTE</text>
+
+  <!-- Leyenda -->
+  <g font-size="22" font-weight="700" letter-spacing="1">
+    <circle cx="150" cy="472" r="9" fill="none" stroke="#D6BD8C" stroke-width="3.5"/>
+    <text x="168" y="479" fill="#D6BD8C">TSURITE<tspan dx="14" font-weight="400" font-size="19" fill="#F6F2E7">solapa · eleva</tspan></text>
+    <circle cx="450" cy="472" r="9" fill="none" stroke="#A98B5E" stroke-width="3.5"/>
+    <text x="468" y="479" fill="#A98B5E">HIKITE<tspan dx="14" font-weight="400" font-size="19" fill="#F6F2E7">manga · tira</tspan></text>
+  </g>
 </svg>

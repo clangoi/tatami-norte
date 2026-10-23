@@ -53,3 +53,10 @@ span.ath-cell{cursor:default}
 .ath-scale input:checked + span{background:var(--gold);border-color:var(--gold);color:var(--navy)}
 .ath-scale input:focus-visible + span{outline:2px solid var(--gold);outline-offset:2px}
 .ath-scale-ends{display:flex;justify-content:space-between;margin-top:6px;font:600 12px/1.2 var(--label);letter-spacing:.1em;text-transform:uppercase;color:var(--steel)}
+
+/* Días con clases por registrar (encuesta pendiente): color de alerta */
+.ath-hist{margin-top:40px}
+.ath-cell.is-todo{background:rgba(240,163,155,.18);border-color:var(--danger);color:var(--cream);box-shadow:inset 0 0 0 1px var(--danger)}
+.ath-cell.is-todo i{color:var(--danger)}
+.ath-legend{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:14px;color:var(--text-soft)}
+.ath-dot{display:inline-block;width:14px;height:14px;border:1px solid var(--danger);background:rgba(240,163,155,.18)}

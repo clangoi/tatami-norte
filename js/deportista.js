@@ -28,13 +28,14 @@ const toast = msg => {
 };
 
 const MEDICAL = !!((window.SITE_CONFIG || {}).features || {}).medicalRecord;   // ficha médica en pausa (site.config.js → features)
-const TABS = [["sum", "Resumen"], ["next", "Próximas"], ["cal", "Historial"], ["me", "Mi perfil"]];
+const TABS = [["sum", "Resumen"], ["next", "Próximas"], ["me", "Mi perfil"]];
 let data = null;
 let tab = "sum";
 let month = todayStr().slice(0, 7);
 let calDay = "";
 let survey = null;          // reserva cuya encuesta se está respondiendo
 const SURVEY_DAYS = 30;     // plazo para responder la encuesta de una clase
+const SURVEY_LEAD_MIN = 20; // se habilita 20 minutos antes de que termine la clase
 let openPanel = null;       // { id, kind: "cancel" | "reschedule" }
 
 const api = async (body) => {
@@ -139,25 +140,17 @@ function ranksCard() {
     : '<p class="adm-help adm-cfg-empty">Tu instructor registrará tu grado en cada disciplina.</p>'}</div>`;
 }
 
-function pendingBlock() {
-  const list = pendingSurveys();
-  if (!list.length) return "";
-  return `<div class="adm-bar"><h2>Clases por registrar</h2></div>
-    ${infoTip("Responde la encuesta de cada clase a la que fuiste: así queda registrada tu asistencia, que es la que cuenta para tus grados. Tienes " + SURVEY_DAYS + " días después de la clase; si se te pasó, pídele a tu instructor que la marque.")}
-    <div class="adm-rows">${list.map(b => `<div class="adm-row"><div class="adm-row-main"><b>${esc(b.classLabel)}</b><span>${esc(cap(dayLabel(b.date)))} · ${esc(b.start)}–${esc(b.end)}</span></div>
-      <button class="btn small" type="button" data-survey="${esc(b.id)}">Responder encuesta</button></div>`).join("")}</div>`;
-}
-
 function summary() {
   const s = data.summary;
-  return `${pendingBlock()}<div class="adm-bar"><h2>Mi resumen</h2></div>
+  return `<div class="adm-bar"><h2>Mi resumen</h2></div>
     ${infoTip("Las disciplinas y los clubes salen solos de tus reservas: cuentan las confirmadas cuya clase ya pasó. Las clases que cancelas o cambias no suman. «Asistencias» es distinto: son las clases a las que realmente llegaste (las registras respondiendo la encuesta, o las marca tu instructor), y son las que cuentan para tus grados.")}
     <div class="adm-cfg-grid ath-sum">
       <div class="adm-cfg"><h3>Clases</h3>
         <div class="ath-stat"><b>${s.taken}</b><span>${s.taken === 1 ? "tomada" : "tomadas"}</span></div>
         <div class="ath-stat"><b>${s.upcoming}</b><span>${s.upcoming === 1 ? "próxima" : "próximas"}</span></div></div>
       ${attendanceCard()}${ranksCard()}${counters("Por club", s.clubs)}${counters("Por disciplina", s.disciplines)}${counters("Por tipo", s.types)}
-    </div>`;
+    </div>
+    ${viewCal()}`;   // el historial va debajo de los contadores
 }
 
 // Avisos arriba de todas las secciones hasta que los datos y la ficha estén completos
@@ -206,9 +199,9 @@ function medicalForm(m) {
     </form>`;
 }
 
-// Clases ya terminadas, sin asistencia registrada y dentro del plazo: se registran respondiendo la encuesta
+// Clases que están por terminar (20 min antes) o ya terminaron, sin asistencia registrada y dentro del plazo: se registran respondiendo la encuesta
 const canSurvey = b => b.status === "confirmed" && b.attended === null && !!b.endAt
-  && new Date(b.endAt) <= new Date() && Date.now() - new Date(b.endAt) <= SURVEY_DAYS * 86400000;
+  && new Date(b.endAt).getTime() - SURVEY_LEAD_MIN * 60000 <= Date.now() && Date.now() - new Date(b.endAt) <= SURVEY_DAYS * 86400000;
 const pendingSurveys = () => data.bookings.filter(canSurvey).sort((a, b) => b.startAt.localeCompare(a.startAt));
 
 function surveyModal() {
@@ -307,17 +300,19 @@ function viewCal() {
     const date = `${month}-${String(d).padStart(2, "0")}`;
     const list = byDate[date] || [];
     const kept = list.filter(b => b.status === "confirmed").length;
-    const cls = `ath-cell${kept ? " has" : list.length ? " is-off" : ""}${date === today ? " is-today" : ""}`;
+    const todo = list.filter(canSurvey).length;   // clases sin encuesta respondida
+    const cls = `ath-cell${kept ? " has" : list.length ? " is-off" : ""}${todo ? " is-todo" : ""}${date === today ? " is-today" : ""}`;
     cells.push(list.length
-      ? `<button type="button" class="${cls}" data-day="${date}" aria-label="${esc(dayLabel(date))}: ${list.length} ${list.length === 1 ? "clase" : "clases"}"><span>${d}</span><i>${kept || list.length}</i></button>`
+      ? `<button type="button" class="${cls}" data-day="${date}" aria-label="${esc(dayLabel(date))}: ${list.length} ${list.length === 1 ? "clase" : "clases"}${todo ? ", con encuesta por responder" : ""}"><span>${d}</span><i>${kept || list.length}</i></button>`
       : `<span class="${cls}"><span>${d}</span></span>`);
   }
   const cal = data.calendar;
-  return `<div class="adm-bar"><h2>Mi historial</h2></div>
-    ${infoTip("Toca un día marcado para ver el detalle de las clases que tomaste, tienes o cancelaste ese día. Suscribe tu calendario una sola vez y tus reservas aparecen, cambian y se quitan solas cuando reagendas o cancelas.")}
+  return `<div class="adm-bar ath-hist"><h2>Mi historial</h2></div>
+    ${infoTip("Toca un día marcado para ver el detalle de las clases que tomaste, tienes o cancelaste ese día. Los días en rojo tienen clases por registrar: toca el día y responde la encuesta, que se habilita " + SURVEY_LEAD_MIN + " minutos antes de que termine la clase. Suscribe tu calendario una sola vez y tus reservas aparecen, cambian y se quitan solas cuando reagendas o cancelas.")}
     <div class="ath-month"><button class="btn small ghost" type="button" data-month="-1" aria-label="Mes anterior">←</button>
       <b>${esc(monthLabel(month))}</b><button class="btn small ghost" type="button" data-month="1" aria-label="Mes siguiente">→</button></div>
     <div class="ath-grid">${["L", "M", "X", "J", "V", "S", "D"].map(d => `<span class="ath-dow">${d}</span>`).join("")}${cells.join("")}</div>
+    ${pendingSurveys().length ? '<p class="ath-legend"><i class="ath-dot"></i> Rojo: tienes clases por registrar. Toca el día y responde la encuesta.</p>' : ""}
     ${calDay && byDate[calDay] ? dayDetail(calDay, byDate[calDay].sort((a, b) => a.startAt.localeCompare(b.startAt))) : ""}
     <div class="adm-bar ath-sync"><h2>Suscribir mi calendario</h2></div>
     <div class="adm-actions ath-sync-btns"><a class="btn" href="${esc(cal.google)}" target="_blank" rel="noopener">Google Calendar</a>
@@ -326,12 +321,12 @@ function viewCal() {
 }
 
 function render() {
-  const view = { sum: summary, next: viewNext, cal: viewCal, me: viewProfile }[tab];
+  const view = { sum: summary, next: viewNext, me: viewProfile }[tab];
   const n = upcoming().length;
   $("#hello").textContent = "Hola, " + (data.profile.name.split(" ")[0] || "deportista");
   $("#tabs").innerHTML = TABS.map(([k, name]) =>
     `<button type="button" role="tab" aria-pressed="${k === tab}" data-tab="${k}">${name}${k === "next" && n ? ` (${n})` : ""}</button>`).join("");
-  document.body.classList.toggle("adm-modal-open", (tab === "cal" && !!calDay) || !!survey);
+  document.body.classList.toggle("adm-modal-open", (tab === "sum" && !!calDay) || !!survey);
   $("#body").innerHTML = `${notices()}${view()}${survey ? surveyModal() : ""}
     <div class="ath-foot"><button class="adm-link" type="button" data-newpass>Cambiar mi clave</button></div>`;
 }

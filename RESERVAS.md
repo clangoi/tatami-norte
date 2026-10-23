@@ -7,7 +7,7 @@ Las clases, los horarios y los cupos se administran en `/admin` → **Clases**; 
 | Necesidad | Cómo |
 |---|---|
 | Guardar nombre y teléfono | Cada reserva guarda nombre, teléfono y correo en Firestore (`bookings`). El formulario pide esos tres datos; el apodo ya no se pide (las reservas antiguas lo conservan). |
-| Reagendar o cancelar | Enlace único en el correo y en «Tus reservas» → `/reserva?t=…`. |
+| Reagendar o cancelar | Enlace único en el correo de confirmación → `/reserva?t=…`; los deportistas con cuenta lo hacen desde su panel (`/deportista`). La portada ya no lista «Tus reservas». |
 | Motivo obligatorio | El formulario y el servidor lo exigen (mínimo 3 letras) al cancelar y al reprogramar. |
 | Nombres de los asistentes | La lista de cada clase muestra el apodo, o nombre + inicial del apellido («Camila R.»). Nunca teléfono ni correo. Se actualiza sola cada 30 s. |
 | Confirmación | Por correo (Brevo), con la invitación `.ics` adjunta. Ver más abajo por qué no es por WhatsApp. |

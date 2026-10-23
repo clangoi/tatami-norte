@@ -9,7 +9,6 @@
   let code = new URLSearchParams(location.search).get("t") || "";
   const SITE = window.SITE_CONFIG || {};
   const locale = (SITE.currency && SITE.currency.locale) || "es-CL";
-  const STORE_KEY = "tn_bookings";
 
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const dayLabel = date => new Date(date + "T12:00:00").toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
@@ -25,15 +24,6 @@
     if (!r.ok) throw Object.assign(new Error(data.error || "No se pudo completar. Intenta de nuevo."), { status: r.status });
     return data;
   });
-
-  // "Tus reservas" de la portada: se mantiene al día desde aquí
-  function updateMine(removeId, b){
-    try {
-      let list = JSON.parse(localStorage.getItem(STORE_KEY) || "[]").filter(x => x.id !== removeId);
-      if (b) list.push({ id: b.id, title: b.classLabel, date: b.date, start: b.start, startAt: b.startAt });
-      localStorage.setItem(STORE_KEY, JSON.stringify(list));
-    } catch (e) {}
-  }
 
   const waLink = text => SITE.contact && SITE.contact.whatsapp
     ? `https://wa.me/${SITE.contact.whatsapp}?text=${encodeURIComponent(text)}` : "";
@@ -137,11 +127,9 @@
       const res = await api("/reserva", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       mode = "view";
       if (body.action === "cancel") {
-        updateMine(code);
         state.booking = res.booking;
         toast("Reserva cancelada");
       } else {
-        updateMine(code, res.booking);
         code = res.booking.id;   // los próximos cambios usan la reserva nueva
         history.replaceState(null, "", manageUrl(code));
         await load(code);

@@ -81,12 +81,6 @@
 .light .cal-shell .notice strong{color:var(--navy)}
 .confirm{border:1px solid var(--gold);padding:20px;margin-top:20px}
 .confirm .code{font:800 clamp(26px,3vw,32px)/1.05 var(--display);color:var(--gold);letter-spacing:.03em;text-transform:uppercase;margin:8px 0 10px}
-.my-bookings{margin-top:26px}
-.my-bookings h4{font:700 14px/1 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--steel);margin:0 0 10px}
-.mb{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--navy-3);font-size:15px}
-.mb span:first-letter{text-transform:uppercase}
-.mb-link{flex:none;color:var(--steel);font:600 13px/1.2 var(--label);letter-spacing:.12em;text-transform:uppercase;text-align:right}
-.mb-link:hover{color:var(--gold)}
 
 /* ---- Planes de suscripción ---- */
 /* Carrusel horizontal: los planes nuevos se ven deslizando hacia el lado */
@@ -340,7 +334,7 @@
   #horario .sec-head p{margin-top:20px;max-width:36ch}
   #horario .sch-nav{grid-column:1;grid-row:2;margin:0 0 32px}
   #horario .sch-legend{grid-column:2;grid-row:1/3;align-self:start;margin:0 0 32px;padding:22px 24px;border:1px solid var(--line);background:rgba(255,255,255,.03);gap:14px}
-  #horario .sch-weeks,#horario .my-bookings,#horario .sch-foot,#horario .sch-loading,#horario .sch-empty{grid-column:1/-1}
+  #horario .sch-weeks,#horario .sch-foot,#horario .sch-loading,#horario .sch-empty{grid-column:1/-1}
 }
 /* Reserva de un deportista con sesión: datos con que se inscribe */
 .rv-who{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:0 0 20px;padding:14px 16px;border:1px solid var(--navy-3);background:var(--navy-2)}

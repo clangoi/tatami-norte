@@ -14,7 +14,7 @@
   const cfg = SITE.booking || {};
 
   const API = "/api";
-  const STORE_KEY = "tn_bookings";
+  const OLD_STORE_KEY = "tn_bookings";   // «Tus reservas» de la portada ya no existe: las reservas se ven en el panel del deportista
   const CONTACT_KEY = "tn_contact";
   const REFRESH_MS = 30000;
 
@@ -37,19 +37,6 @@
     return data;
   });
 
-  /* ---- Reservas hechas desde este navegador ("Tus reservas") ---- */
-  function readMine(){
-    try {
-      return JSON.parse(localStorage.getItem(STORE_KEY) || "[]").filter(b => new Date(b.startAt) > new Date());
-    } catch (e) { return []; }
-  }
-  function saveMine(list){ try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch (e) {} }
-  function rememberBooking(b){
-    const list = readMine().filter(x => x.id !== b.id);
-    list.push({ id: b.id, title: b.classLabel, date: b.date, start: b.start, startAt: b.startAt });
-    list.sort((a, b) => new Date(a.startAt) - new Date(b.startAt));
-    saveMine(list);
-  }
   /* ---- Deportista con sesión iniciada: reserva con los datos de su cuenta, sin formulario ----
      Solo se carga Firebase si en este navegador entró alguna vez al panel de deportista. */
   let athlete = null;          // { name, email, phone, user } cuando hay sesión y datos completos
@@ -84,18 +71,6 @@
     try { return JSON.parse(localStorage.getItem(CONTACT_KEY) || "{}") || {}; } catch (e) { return {}; }
   }
   function saveContact(c){ try { localStorage.setItem(CONTACT_KEY, JSON.stringify(c)); } catch (e) {} }
-  function renderMine(){
-    const wrap = document.querySelector("[data-cal-mine]");
-    const list = document.querySelector("[data-cal-mine-list]");
-    if (!wrap || !list) return;
-    const mine = readMine();
-    wrap.hidden = !mine.length;
-    list.innerHTML = mine.map(b => `<div class="mb">
-      <span>${esc(b.title)} · ${esc(dayLabel(b.date))}, ${esc(b.start)}</span>
-      <a class="mb-link" href="${esc(manageUrl(b.id))}">Cambiar o cancelar</a>
-    </div>`).join("");
-  }
-
   /* ---- Una sección de reservas ---- */
   function createView(root, opts){
     const container = root.querySelector("[data-cal-inline]");
@@ -261,15 +236,13 @@
         }
         step = "done";
         if (!asAthlete) saveContact({ name: v("name"), phone: v("phone"), email: v("email") });
-        rememberBooking(res.booking);
         renderDone(res);
-        renderMine();
         const confirm = root.querySelector("[data-cal-confirm]");
         if (confirm) {
           const d = confirm.querySelector("[data-cal-confirm-date]");
           const t = confirm.querySelector("[data-cal-confirm-text]");
           if (d) d.textContent = `${dayLabel(res.booking.date)}, ${res.booking.start}`;
-          if (t) t.textContent = `${res.booking.classLabel} está confirmada. Si necesitas cambiarla o cancelarla, usa el enlace en «Tus reservas». Llega 10 minutos antes.`;
+          if (t) t.textContent = `${res.booking.classLabel} está confirmada. Si necesitas cambiarla o cancelarla, usa el enlace del correo de confirmación. Llega 10 minutos antes.`;
           confirm.hidden = false;
         }
         successHandlers.forEach(fn => fn(res.booking, res.booking.classId));
@@ -287,11 +260,11 @@
     document.addEventListener("visibilitychange", () => { if (!document.hidden && step === "list") load(); });
 
     container.innerHTML = '<p class="cal-loading">Cargando horarios…</p>';
-    renderMine();
     load();
     return { el: root, open };
   }
 
+  try { localStorage.removeItem(OLD_STORE_KEY); } catch (e) {}   // limpia las reservas que quedaron guardadas en este navegador
   loadAthlete();
 
   window.TNBooking = {

@@ -28,6 +28,7 @@ const toast = msg => {
 };
 
 const MEDICAL = !!((window.SITE_CONFIG || {}).features || {}).medicalRecord;   // ficha médica en pausa (site.config.js → features)
+const RANKS = !!((window.SITE_CONFIG || {}).features || {}).athleteRanks;   // tarjeta «Mis grados» en pausa (site.config.js → features)
 const TABS = [["sum", "Resumen"], ["next", "Próximas"], ["me", "Mi perfil"]];
 let data = null;
 let tab = "sum";
@@ -129,8 +130,7 @@ function attendanceCard() {
   const a = data.attendance || { total: 0, last90: 0 };
   return `<div class="adm-cfg"><h3>Asistencias</h3>
     <div class="ath-stat"><b>${a.total}</b><span>${a.total === 1 ? "clase asistida" : "clases asistidas"}</span></div>
-    <div class="ath-stat"><b>${a.last90}</b><span>en los últimos 90 días</span></div>
-    <p class="adm-help adm-cfg-empty">Se registran al responder la encuesta de cada clase; si olvidas hacerlo, tu instructor puede marcarla.</p></div>`;
+    <div class="ath-stat"><b>${a.last90}</b><span>en los últimos 90 días</span></div></div>`;
 }
 
 function ranksCard() {
@@ -148,7 +148,7 @@ function summary() {
       <div class="adm-cfg"><h3>Clases</h3>
         <div class="ath-stat"><b>${s.taken}</b><span>${s.taken === 1 ? "tomada" : "tomadas"}</span></div>
         <div class="ath-stat"><b>${s.upcoming}</b><span>${s.upcoming === 1 ? "próxima" : "próximas"}</span></div></div>
-      ${attendanceCard()}${ranksCard()}${counters("Por club", s.clubs)}${counters("Por disciplina", s.disciplines)}${counters("Por tipo", s.types)}
+      ${attendanceCard()}${RANKS ? ranksCard() : ""}${counters("Por club", s.clubs)}${counters("Por disciplina", s.disciplines)}${counters("Por tipo", s.types)}
     </div>
     ${viewCal()}`;   // el historial va debajo de los contadores
 }

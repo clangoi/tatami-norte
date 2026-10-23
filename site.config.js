@@ -93,9 +93,12 @@ window.SITE_CONFIG = {
      page: página de la disciplina ("" si no tiene). */
   /* ---- Funciones en pausa ----
      medicalRecord: ficha médica del deportista (Mi perfil y panel de admin). Pendiente de la asesoría legal
-     sobre datos de salud: déjala en false hasta tenerla. Ver DEPORTISTAS.md. */
+     sobre datos de salud: déjala en false hasta tenerla. Ver DEPORTISTAS.md.
+     athleteRanks: tarjeta «Mis grados» en el panel del deportista. En pausa (false): el equipo puede seguir
+     asignando grados en admin, pero el deportista no los ve todavía. */
   features: {
-    medicalRecord: false
+    medicalRecord: false,
+    athleteRanks: false
   },
 
   booking: {

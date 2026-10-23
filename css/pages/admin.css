@@ -315,3 +315,14 @@ body.adm-dragging .adm-block{pointer-events:none}
   .adm-ranks .adm-cfg-row input,.adm-ranks .adm-cfg-row input[type=date]{width:100%;min-width:0;flex:none}
 }
 .adm-ath-chips:not(:has(.adm-chip)){display:none}
+
+/* Deportistas: el desglose por club, disciplina y tipo va plegado */
+.adm-ath-more{margin:2px 0}
+.adm-ath-more summary{display:inline-flex;align-items:center;gap:6px;min-height:32px;cursor:pointer;font:600 12px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--steel);list-style:none}
+.adm-ath-more summary::-webkit-details-marker{display:none}
+.adm-ath-more summary::before{content:"▸";font-size:11px;transition:transform .15s}
+.adm-ath-more[open] summary::before{transform:rotate(90deg)}
+.adm-ath-more summary:hover{color:var(--gold)}
+.adm-ath-grp{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 0}
+.adm-ath-grp-label{flex:0 0 90px;font:600 12px/1.2 var(--label);letter-spacing:.1em;text-transform:uppercase;color:var(--steel)}
+@media (max-width:520px){.adm-ath-grp-label{flex-basis:100%}}

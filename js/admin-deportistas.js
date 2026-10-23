@@ -47,17 +47,22 @@ export function initDeportistas({ getToken, esc, toast }) {
   async function reload() { data = await api(); render(); }
 
   /* ---------- Dibujo ---------- */
+  // Desglose por club, disciplina y tipo: plegado, para que cada fila no se llene de etiquetas
+  const openMore = new Set();
+  function breakdown(a) {
+    const groups = [["Clubes", a.clubs], ["Disciplinas", a.disciplines], ["Tipos", a.types]].filter(([, list]) => list.length);
+    if (!groups.length) return "";
+    return `<details class="adm-ath-more" data-more="${esc(a.id)}"${openMore.has(a.id) ? " open" : ""}><summary>Por club, disciplina y tipo</summary>
+      ${groups.map(([label, list]) => `<div class="adm-ath-grp"><span class="adm-ath-grp-label">${label}</span>${list.map(c => `<span class="adm-chip">${esc(c.name)} <b>${c.count}</b></span>`).join("")}</div>`).join("")}</details>`;
+  }
+
   function row(a) {
     return `<div class="adm-row adm-ath${a.active ? "" : " is-off"}">
       <div class="adm-row-main">
         <b>${esc(a.name || a.email)}</b>
         <span>${esc(a.email)}${a.phone ? " · " + esc(a.phone) : ""}</span>
-        <span class="adm-ath-chips">${a.taken ? `<span class="adm-chip is-total">${a.taken} ${a.taken === 1 ? "clase" : "clases"}</span>` : ""}
-          ${a.clubs.map(c => `<span class="adm-chip" title="Club">${esc(c.name)} <b>${c.count}</b></span>`).join("")}
-          ${a.disciplines.map(c => `<span class="adm-chip" title="Disciplina">${esc(c.name)} <b>${c.count}</b></span>`).join("")}
-          ${a.types.map(c => `<span class="adm-chip" title="Tipo">${esc(c.name)} <b>${c.count}</b></span>`).join("")}
-          ${a.upcoming ? `<span class="adm-chip is-next">${a.upcoming} ${a.upcoming === 1 ? "próxima" : "próximas"}</span>` : ""}</span>
-        <span class="adm-ath-chips">${a.attendance.total ? `<span class="adm-chip is-next" title="Asistencias reales: total y últimos 90 días">Asistió ${a.attendance.total} · 90 d: ${a.attendance.last90}</span>` : ""}${Object.entries(a.ranks || {}).map(([d, r]) => `<span class="adm-chip is-total" title="Grado y clases asistidas desde que lo tiene">${esc(d)} · ${esc(r.grade)} <b>${(a.attendance.sinceGrade || {})[d] || 0}</b></span>`).join("")}${MEDICAL && !a.medical ? '<span class="adm-chip is-next" title="Aún no llena su ficha médica">Ficha médica pendiente</span>' : ""}</span>
+        <span class="adm-ath-chips">${a.taken ? `<span class="adm-chip is-total">${a.taken} ${a.taken === 1 ? "clase" : "clases"}</span>` : ""}${a.upcoming ? `<span class="adm-chip is-next">${a.upcoming} ${a.upcoming === 1 ? "próxima" : "próximas"}</span>` : ""}${a.attendance.total ? `<span class="adm-chip is-next" title="Asistencias reales: total y últimos 90 días">Asistió ${a.attendance.total} · 90 d: ${a.attendance.last90}</span>` : ""}${Object.entries(a.ranks || {}).map(([d, r]) => `<span class="adm-chip is-total" title="Grado y clases asistidas desde que lo tiene">${esc(d)} · ${esc(r.grade)} <b>${(a.attendance.sinceGrade || {})[d] || 0}</b></span>`).join("")}${MEDICAL && !a.medical ? '<span class="adm-chip is-next" title="Aún no llena su ficha médica">Ficha médica pendiente</span>' : ""}</span>
+        ${breakdown(a)}
         <span>${a.active ? "" : "Desactivado · "}${a.lastLoginAt ? "Último ingreso: " + esc(when(a.lastLoginAt)) : "Aún no ha entrado"}</span>
       </div>
       <div class="adm-row-actions">
@@ -137,6 +142,12 @@ export function initDeportistas({ getToken, esc, toast }) {
   }
 
   /* ---------- Acciones ---------- */
+  // Recuerda qué desglose está abierto aunque la lista se vuelva a dibujar (por ejemplo al buscar)
+  root.addEventListener("toggle", e => {
+    const d = e.target.closest && e.target.closest("[data-more]");
+    if (d) (d.open ? openMore.add(d.dataset.more) : openMore.delete(d.dataset.more));
+  }, true);
+
   root.addEventListener("input", e => {
     if (e.target.id !== "athQuery") return;
     query = e.target.value;

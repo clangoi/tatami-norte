@@ -69,3 +69,22 @@ span.ath-cell{cursor:default}
 .ath-status{align-self:flex-start;text-transform:uppercase;letter-spacing:.12em}
 .ath-class b{font-weight:800}
 .ath-block-btn{align-self:flex-start;margin-top:6px;background:var(--navy);color:var(--gold);border:1px solid var(--gold)}
+
+/* Celular */
+.ath-form .row2{gap:0 12px}
+.ath-save-bottom{display:none}
+.ath-foot .adm-link{padding:14px 0}
+.adm .adm-info-btn{position:relative}
+.adm .adm-info-btn::after{content:"";position:absolute;inset:-10px}   /* zona de toque más grande que el ícono */
+@media (max-width:640px){
+  .ath-sum{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ath-sum .adm-cfg{padding:14px 12px}
+  .ath-sum .adm-cfg h3{font-size:19px}
+  .ath-sum .ath-stat b{font-size:28px}
+  .ath-sum .ath-stat span{font-size:12px}
+  .ath-sync-btns .btn{flex:1 1 100%;text-align:center}
+  .adm-detail-title{font-size:24px}
+  .ath-save-bottom{display:block;margin-top:6px}
+  .ath-class{padding-block:14px}
+}
+.ath-sum{align-items:stretch}

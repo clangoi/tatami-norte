@@ -49,7 +49,7 @@ export function initAsistencia({ getToken, esc, toast }) {
         ${p.fatigue ? `<span class="att-survey"><em class="att-tag att-fat">Cansancio ${p.fatigue}/10</em>${p.comment ? `“${esc(p.comment)}”` : ""}</span>` : p.present === true && p.source === "admin" ? '<span class="att-survey"><em class="att-tag">Marcada por el equipo</em></span>' : ""}
         <span>${p.walkIn ? '<em class="att-tag">Sin reserva</em>' : ""}${p.booked ? "" : p.walkIn ? "" : '<em class="att-tag">Reserva cancelada</em>'}${esc(p.phone || p.email || "")}</span></div>
       <div class="att-btns">
-        <button type="button" class="btn small att-yes" data-mark="${esc(s.key)}|${esc(p.id)}|true" aria-pressed="${p.present === true}">Vino</button>
+        <button type="button" class="btn small ghost att-yes" data-mark="${esc(s.key)}|${esc(p.id)}|true" aria-pressed="${p.present === true}">Vino</button>
         <button type="button" class="btn small ghost att-no" data-mark="${esc(s.key)}|${esc(p.id)}|false" aria-pressed="${p.present === false}">Faltó</button>
         ${p.walkIn ? `<button type="button" class="btn small ghost" data-remove="${esc(s.key)}|${esc(p.id)}" aria-label="Quitar a ${esc(p.name)}">✕</button>` : ""}
       </div>

@@ -340,3 +340,12 @@
 .rv-who{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:0 0 20px;padding:14px 16px;border:1px solid var(--navy-3);background:var(--navy-2)}
 .rv-who dt{font:600 13px/1.6 var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--steel)}
 .rv-who dd{margin:0;color:var(--cream);overflow-wrap:anywhere}
+
+/* Celular: la reserva con los datos de la cuenta (rv-who) y los botones de texto se leen y se tocan bien */
+@media (max-width:520px){
+  .rv-who{grid-template-columns:1fr;gap:2px}
+  .rv-who dt{margin-top:8px}
+  .rv-who dt:first-child{margin-top:0}
+  .rv-who dd{font-size:16px}
+  .rv-back{display:inline-flex;align-items:center;min-height:44px;padding:0}
+}

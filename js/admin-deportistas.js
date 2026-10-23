@@ -74,7 +74,6 @@ export function initDeportistas({ getToken, esc, toast }) {
     const med = a.medical;
     return `<div class="row2">
         <div class="field"><label for="aNick">Apodo (sale en las listas de inscritos)</label><input id="aNick" name="nickname" maxlength="30" value="${esc(a.nickname)}"></div>
-        <div class="field"></div>
       </div>
       <div class="row2">
         <div class="field"><label for="aEmN">Contacto de emergencia</label><input id="aEmN" name="emergencyName" maxlength="80" placeholder="Nombre" value="${esc(a.emergencyName)}"></div>

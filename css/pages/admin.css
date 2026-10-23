@@ -304,3 +304,14 @@ body.adm-dragging .adm-block{pointer-events:none}
 .att-survey{display:block;margin-top:2px;font-size:14px;font-style:italic;color:var(--text-soft)}
 .att-survey .att-fat{font-style:normal;color:var(--navy);background:var(--gold);border-color:var(--gold)}
 .att-avg b{color:var(--gold)}
+
+/* Deportistas (admin): campos de grados con el mismo aspecto que el resto y buen uso del ancho en celular */
+.adm-ath-form .row2{gap:0 12px}
+.adm-ranks input{background:var(--navy-2);border:1px solid var(--navy-3);color:var(--cream);font:500 16px/1.2 var(--body);padding:11px 12px;border-radius:0;min-height:44px;color-scheme:dark}
+.adm-ranks input:focus{outline:none;border-color:var(--gold)}
+@media (max-width:640px){
+  .adm-ranks .adm-cfg-row{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;align-items:center}
+  .adm-ranks .adm-rank-name{grid-column:1 / -1;flex:none}
+  .adm-ranks .adm-cfg-row input,.adm-ranks .adm-cfg-row input[type=date]{width:100%;min-width:0;flex:none}
+}
+.adm-ath-chips:not(:has(.adm-chip)){display:none}

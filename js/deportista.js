@@ -178,6 +178,7 @@ function viewProfile() {
       <div class="row2">${f("pEmN", "emergencyName", "Contacto de emergencia", p.emergencyName, 'maxlength="80" placeholder="Nombre"')}
         ${f("pEmP", "emergencyPhone", "Teléfono de emergencia", p.emergencyPhone, 'type="tel" inputmode="tel" placeholder="+56 9 1234 5678"')}</div>
       <div class="err" data-err role="alert"></div>
+      <button class="btn block ath-save-bottom" type="submit">Guardar</button>
     </form>
     ${MEDICAL ? medicalForm(m) : ""}`;
 }

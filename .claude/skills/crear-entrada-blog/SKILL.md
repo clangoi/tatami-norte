@@ -27,9 +27,19 @@ Convierte una o más fuentes en entradas del blog de Kizuna. Los artículos vive
 
 - Cuando el artículo necesite imágenes, **genéralas con la paleta del sitio** (`css/tokens.css`): azul marino `#1B2338`, crema `#F6F2E7`, acero `#888D95`, bronce `#A98B5E`, dorado `#D6BD8C`.
 - Deben ser **realistas, limpias y sin adornos**. **No uses SVG, dibujos de palitos ni ilustraciones esquemáticas.**
-- Entrega en WebP (o PNG/JPG) en `assets/images/content/`, con una versión de unos 600 px de ancho (`nombre-600.webp`) como las existentes.
+- Las imágenes van **sin fondo, solo los sujetos**: entrégalas en WebP o PNG con transparencia en `assets/images/content/`, con una versión de unos 600 px de ancho (`nombre-600.webp`) como las existentes.
 - **Usa las herramientas de creación de imágenes del chat** (las de la app de Claude) para generarlas, describiendo escena, encuadre, personas, vestimenta y la paleta de colores. Guarda el resultado en `assets/images/content/`.
-- Si en la sesión no hay ninguna herramienta de creación de imágenes disponible, **no las sustituyas por SVG**: dile al usuario qué imágenes hacen falta (qué mostrar, encuadre, colores) y pídele que las genere en el chat o las aporte.
+- Si en la sesión no hay ninguna herramienta de creación de imágenes disponible, **no las sustituyas por SVG**: escribe un **prompt por imagen** para que el usuario lo pegue en el generador del chat. Guárdalos en `docs/prompts-imagenes/<tema>.md`; el modelo a seguir es `docs/prompts-imagenes/hikite-tsurite.md`.
+- Cada prompt debe ser muy detallado, en inglés (los generadores lo siguen mejor), y llevar:
+  1. **Imagen de referencia online** (URL directa, con su licencia, qué aporta y qué no copiar). Compruébala abriéndola antes de usarla y prefiere Wikimedia Commons.
+  2. **Estilo fotográfico** realista (lente, luz, sin ilustración ni render).
+  3. **Sujetos** descritos de forma idéntica en toda la serie (edad, complexión, ropa, colores), para que no cambien entre imágenes.
+  4. **Paleta de `css/tokens.css`** con sus códigos hex y para qué usa cada color, más la prohibición de colores fuera de ella.
+  5. **Sin fondo: solo los sujetos**, sobre fondo transparente (PNG con alfa), sin suelo, tatami, paredes, sombra proyectada ni otras personas, con bordes limpios y sin halo. Como respaldo, si el generador no da transparencia, pide fondo blanco liso (#FFFFFF) sin sombra para recortarlo después. La referencia solo aporta pose y tela, nunca el fondo.
+  6. **Encuadre y proporción** (plano, ángulo, 8:5 o 4:5) y la **pose exacta**, mano por mano y articulación por articulación cuando importe.
+  7. **"Keep it clean"**: sin texto, flechas, marcas de agua ni logos dentro de la imagen (las explicaciones van en el pie).
+  8. **Negative prompt** con los errores típicos (dedos de más, manos deformadas, agarre equivocado, ilustración, texto, colores fuertes).
+- Termina el archivo con el **nombre de cada imagen**, la **sintaxis para insertarla** en la entrada y una **lista de revisión** para aceptar o rechazar cada resultado. Si una imagen compara varias posiciones, pide una imagen por posición con los mismos personajes (la entrada las muestra como galería).
 - Cada imagen lleva texto alternativo y, si ayuda, un pie: `![descripción](/assets/images/content/archivo.webp "pie")`.
 
 ## 4. Videos

@@ -61,7 +61,8 @@ async function classCatalog(db) {
       const [left, ...rest] = String(c.label || "").split(" · ");
       discipline = left.trim(); club = rest.join(" · ").trim();
     }
-    map.set(d.id, { discipline, type, club });
+    // tone, design y clubTone son el diseño del bloque de la clase en el horario del sitio
+    map.set(d.id, { discipline, type, club, tone: c.tone || "oro", design: Number.isInteger(c.design) ? c.design : 0, clubTone: c.clubTone || "" });
   });
   return map;
 }

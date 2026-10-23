@@ -60,3 +60,12 @@ span.ath-cell{cursor:default}
 .ath-cell.is-todo i{color:var(--danger)}
 .ath-legend{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:14px;color:var(--text-soft)}
 .ath-dot{display:inline-block;width:14px;height:14px;border:1px solid var(--danger);background:rgba(240,163,155,.18)}
+
+/* Detalle del día: bloques con el diseño del horario del sitio (.sch-class en components.css) */
+.ath-blocks{display:flex;flex-direction:column;gap:10px}
+.ath-class{flex:none;gap:5px;padding-block:12px}
+.ath-class:hover{transform:none}
+.ath-class.is-off{opacity:.6}
+.ath-status{align-self:flex-start;text-transform:uppercase;letter-spacing:.12em}
+.ath-class b{font-weight:800}
+.ath-block-btn{align-self:flex-start;margin-top:6px;background:var(--navy);color:var(--gold);border:1px solid var(--gold)}

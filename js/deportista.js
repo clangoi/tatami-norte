@@ -263,6 +263,7 @@ function viewNext() {
       : '<p class="adm-empty">No tienes clases próximas. Reserva una desde <a href="index.html#horario" style="color:var(--gold)">el horario del sitio</a>.</p>'}`;
 }
 
+const TONES = ["oro", "bronce", "cobre", "marino", "acero", "plata", "crema", "linea"];   // mismos colores que js/schedule.js
 const STATUS = { confirmed: "Tomada", cancelled: "Cancelada" };
 
 // Detalle de un día: las clases que tomó (o canceló) ese día, encima del calendario
@@ -274,16 +275,20 @@ function dayDetail(date, list) {
         <h3 class="adm-detail-title">${esc(cap(dayLabel(date)))}</h3>
         <button class="btn small ghost" type="button" data-close-day>Cerrar</button>
       </div>
-      <div class="adm-rows">${list.map(b => {
+      <div class="ath-blocks">${list.map(b => {
         const status = b.status === "confirmed" ? (b.canChange ? "Próxima" : b.attended === true ? "Asistió" : b.attended === false ? "Faltó" : "Sin registro") : STATUS[b.status] || "Cambiada";
-        const meta = [b.club, b.discipline, b.type].filter(Boolean);
-        const answered = b.fatigue ? `<span>Cansancio: <b>${b.fatigue}/10</b>${b.comment ? ` · “${esc(b.comment)}”` : ""}</span>` : "";
-        const ask = canSurvey(b) ? `<button class="btn small" type="button" data-survey="${esc(b.id)}">Responder encuesta</button>` : "";
-        return `<div class="adm-row${b.status === "confirmed" ? "" : " is-fixed"}">
-          <div class="adm-row-main"><b>${esc(b.classLabel)}</b><span>${esc(b.start)}–${esc(b.end)}</span>
-            ${meta.length ? `<span class="ath-meta">${meta.map(m => `<span class="adm-chip">${esc(m)}</span>`).join("")}</span>` : ""}
-            ${b.cancelReason ? `<span>Motivo: ${esc(b.cancelReason)}</span>` : ""}${answered}${ask}</div>
-          <span class="adm-tag${b.status === "confirmed" && b.attended !== false ? " on" : ""}">${status}</span></div>`;
+        const meta = [b.club, b.discipline, b.type].filter(Boolean).join(" · ");
+        const ask = canSurvey(b) ? `<button class="btn small ath-block-btn" type="button" data-survey="${esc(b.id)}">Responder encuesta</button>` : "";
+        // Mismo diseño que el bloque de la clase en el horario del sitio (color de la disciplina, diseño del tipo y franja del club)
+        return `<div class="sch-class ath-class t-${TONES.includes(b.tone) ? b.tone : "oro"} ty-${Number.isInteger(b.design) && b.design >= 0 && b.design <= 10 ? b.design : 0}${TONES.includes(b.clubTone) ? " s-" + b.clubTone : ""}${b.status === "confirmed" && b.attended !== false ? "" : " is-off"}">
+          <span class="sch-name">${esc(b.classLabel)}</span>
+          <span class="sch-time">${esc(b.start)}–${esc(b.end)}</span>
+          <span class="sch-spots ath-status">${esc(status)}</span>
+          ${meta ? `<span class="sch-note">${esc(meta)}</span>` : ""}
+          ${b.fatigue ? `<span class="sch-note">Cansancio: <b>${b.fatigue}/10</b>${b.comment ? ` · “${esc(b.comment)}”` : ""}</span>` : ""}
+          ${b.cancelReason ? `<span class="sch-note">Motivo: ${esc(b.cancelReason)}</span>` : ""}
+          ${ask}
+        </div>`;
       }).join("")}</div>
     </section>
   </div>`;

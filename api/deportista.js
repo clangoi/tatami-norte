@@ -51,6 +51,7 @@ function bookingView(b, classes, marks) {
     start: v.start, end: v.end, startAt: v.startAt, canChange: v.canChange,
     cancelReason: v.cancelReason, rescheduleReason: v.rescheduleReason,
     club: c.club || "", discipline: c.discipline || "", type: c.type || "",
+    tone: c.tone || "oro", design: c.design || 0, clubTone: c.clubTone || "",   // diseño del bloque, igual que en el horario
     endAt: b.endAt,
     attended: marks.has(b.id) ? marks.get(b.id).present : null,   // true vino, false faltó, null sin registro
     fatigue: marks.has(b.id) ? marks.get(b.id).fatigue || null : null,

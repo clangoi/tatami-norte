@@ -186,8 +186,13 @@ function renderPosts(){
     return;
   }
   const list = posts.filter(p => !filter.value || catsOf(p).includes(filter.value)).sort(SORTS[$("#postSort").value] || SORTS.new);
-  if (!list.length) { $("#posts").innerHTML = '<p class="adm-empty">No hay artículos con ese tema.</p>'; return; }
-  $("#posts").innerHTML = list.map(p => {
+  const missing = SEED_POSTS.filter(s => !posts.some(p => p.slug === s.slug)).length;
+  const seedNotice = missing ? `<div class="notice adm-seed">
+      <p><strong>Hay ${missing} artículo${missing === 1 ? "" : "s"} nuevo${missing === 1 ? "" : "s"} listo${missing === 1 ? "" : "s"} para cargar.</strong> No se tocan los que ya tienes.</p>
+      <button class="btn small" type="button" id="seedPosts">Cargar artículos nuevos</button>
+    </div>` : "";
+  if (!list.length) { $("#posts").innerHTML = seedNotice + '<p class="adm-empty">No hay artículos con ese tema.</p>'; return; }
+  $("#posts").innerHTML = seedNotice + list.map(p => {
     const text = `<b>${esc(p.title)}</b>
         <span>${esc(catsOf(p).join(" · ") || "Sin tema")} · ${fmtDate(p.date)}</span>`;
     // Ver = tocar el artículo: abre la página publicada. Un borrador no tiene página que ver.
@@ -212,7 +217,7 @@ async function seedPosts(btn){
   btn.disabled = true;
   const batch = fs.writeBatch(db);
   const cats = new Set();
-  SEED_POSTS.forEach(({ slug, ...p }) => {
+  SEED_POSTS.filter(s => !posts.some(p => p.slug === s.slug)).forEach(({ slug, ...p }) => {
     cats.add(p.cat);
     batch.set(fs.doc(db, "posts", slug), { ...p, cats: [p.cat], read: readingMinutes(p.body), published: true, updatedAt: fs.serverTimestamp() });
   });

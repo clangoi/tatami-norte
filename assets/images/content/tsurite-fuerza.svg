@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 440" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif">
+  <rect width="800" height="440" fill="#1B2338"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 1 · brazo extendido -->
+    <path d="M70 110 L70 330" stroke="#888D95" stroke-width="3"/>
+    <path d="M70 130 L150 150 L230 170" stroke="#F6F2E7" stroke-width="5"/>
+    <circle cx="230" cy="170" r="9" fill="#888D95" stroke="none"/>
+    <path d="M230 150 L230 136" stroke="#888D95" stroke-width="3"/>
+    <!-- 2 · intermedio -->
+    <path d="M320 110 L320 330" stroke="#888D95" stroke-width="3"/>
+    <path d="M320 130 L370 205 L420 150" stroke="#F6F2E7" stroke-width="5"/>
+    <circle cx="420" cy="150" r="9" fill="#A98B5E" stroke="none"/>
+    <path d="M420 130 L420 100" stroke="#A98B5E" stroke-width="4"/>
+    <!-- 3 · codo al cuerpo, mano encima -->
+    <path d="M570 110 L570 330" stroke="#888D95" stroke-width="3"/>
+    <path d="M570 130 L588 230 L604 150" stroke="#F6F2E7" stroke-width="5"/>
+    <circle cx="604" cy="150" r="9" fill="#D6BD8C" stroke="none"/>
+    <path d="M604 130 L604 70" stroke="#D6BD8C" stroke-width="5"/>
+    <path d="M592 84 L604 66 L616 84" stroke="#D6BD8C" stroke-width="5"/>
+  </g>
+  <g font-size="21" font-weight="700" letter-spacing="1" text-anchor="middle">
+    <text x="150" y="372" fill="#888D95">DÉBIL</text>
+    <text x="370" y="372" fill="#A98B5E">INTERMEDIA</text>
+    <text x="590" y="372" fill="#D6BD8C">FUERTE</text>
+  </g>
+  <g font-size="17" fill="#F6F2E7" text-anchor="middle">
+    <text x="150" y="398">Brazo extendido</text>
+    <text x="370" y="398">Codo a medio camino</text>
+    <text x="590" y="398">Codo al cuerpo, mano encima</text>
+  </g>
+  <text x="70" y="64" font-size="16" fill="#888D95" letter-spacing="2">TSURITE · FUERZA DE ELEVACIÓN</text>
+</svg>

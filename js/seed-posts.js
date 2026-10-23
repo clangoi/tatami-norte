@@ -101,5 +101,76 @@ Carga pesada en cada mano y camina 30 metros sin soltar. Es simple, se nota ráp
 @[Caminata de granjero](lLAw6fUccKA "Técnica de la caminata de granjero. Video: Runna (en inglés).")
 
 Dos sesiones por semana bastan. No las hagas justo antes de una clase: llega con los antebrazos frescos.`
+  },
+  {
+    slug: "hikite-mano-que-tira",
+    title: "Hikite: la mano que tira",
+    cat: "Técnica", letter: "HI", date: "2026-10-23", pattern: 1,
+    ex: "La mano de la manga marca hacia dónde va la tracción. Aprende a tirar con todo el cuerpo y no solo con el brazo.",
+    body: `En Judo, el agarre (kumikata) es el primer paso de cualquier proyección. Cada mano tiene un trabajo distinto: una tira y la otra eleva. Empezamos por la que tira.
+
+![Esquema de Uke de frente con el punto de agarre de la solapa (tsurite) y de la manga (hikite)](/assets/images/content/kumikata-agarres.svg "Tsurite en la solapa, hikite en la manga.")
+
+## Qué es el hikite
+
+Hikite significa "mano que tira". Es la mano que sujeta la manga de Uke, y es la que marca la tracción en los movimientos: hacia atrás, hacia adelante o hacia un costado.
+
+## Tira con todo el tronco
+
+El error más común es jalar solo con el brazo. El brazo es la cuerda; la fuerza viene del tronco, la espalda y las piernas, que se mueven junto con la mano. Si solo trabaja el bíceps, te cansas rápido y Uke apenas se desequilibra.
+
+![Esquema visto desde arriba con las tres direcciones de tracción del hikite: atrás, adelante y al costado](/assets/images/content/hikite-traccion.svg "Las tres direcciones de tracción del hikite.")
+
+## Cómo practicarlo
+
+- Agarra la manga y desplázate en las tres direcciones sin soltar, moviendo el cuerpo entero con la mano.
+- Mira cómo reacciona el equilibrio de tu compañero: ese desequilibrio (kuzushi) es lo que abre la técnica.
+- Mantén la otra mano trabajando: el hikite nunca actúa solo, siempre va en pareja con el tsurite. Lo vemos en [Tsurite: la mano que eleva](/blog/articulo.html?p=tsurite-mano-que-eleva).
+
+## Para ver en acción
+
+@[Agarre de judo japonés avanzado, derecha vs. izquierda · Gatame Online](ay7cC-DVThE "Agarres de manga y solapa en judo japonés. Video: Gatame Online (en español).")
+
+@[4 ejercicios básicos de desequilibrio · Gatame Online](NFDvctB4x1E "Kuzushi: ejercicios de desequilibrio para principiantes. Video: Gatame Online (en español).")
+
+*Basado en la entrada [Tsurite – Hikite (kumikata)](https://judotube.wordpress.com/2016/04/28/tsurite-hikite-kumikata/) de JudoTube.*`
+  },
+  {
+    slug: "tsurite-mano-que-eleva",
+    title: "Tsurite: la mano que eleva",
+    cat: "Técnica", letter: "TS", date: "2026-10-23", pattern: 0,
+    ex: "La mano de la solapa levanta y dirige a Uke. Su fuerza depende de dónde pongas el codo.",
+    body: `Si el hikite tira, el tsurite eleva. Entender cómo funciona esta mano te ahorra fuerza y hace que tus proyecciones salgan más limpias.
+
+## Qué es el tsurite
+
+Tsurite significa "mano que levanta". Es la que agarra la solapa de Uke y se encarga de elevarlo y guiar la técnica, mientras el hikite tira desde la manga.
+
+## Dónde está su fuerza
+
+La capacidad de elevación del tsurite cambia mucho según la posición del brazo:
+
+- **Más fuerte:** el codo pegado al cuerpo y la mano justo encima de él.
+- **Más débil:** el brazo completamente extendido. Ahí la mano casi no tiene capacidad de elevar.
+
+![Tres posiciones del brazo del tsurite, de brazo extendido (débil) a codo al cuerpo con la mano encima (fuerte)](/assets/images/content/tsurite-fuerza.svg "Cuanto más cerca del cuerpo el codo, más fuerza de elevación.")
+
+La idea práctica: si estás con el brazo estirado, acércate o recoge el codo antes de intentar elevar. Elevar desde lejos es pelear contra tu propia palanca.
+
+## Cómo practicarlo
+
+1. Agarra la solapa y lleva el codo hacia tu cuerpo, con la mano por encima.
+2. Eleva usando las piernas y el tronco, no el hombro.
+3. Combina con el hikite: mientras una mano levanta, la otra tira. Probaremos esa coordinación en el tatami.
+
+Mira también [Hikite: la mano que tira](/blog/articulo.html?p=hikite-mano-que-tira).
+
+## Para ver en acción
+
+@[Uchi-mata usando solo el agarre de solapa · atsushi judo channel](taoMO-1n2wo "Cómo el tsurite lleva la técnica en uchi-mata. Video: atsushi judo channel (en japonés).")
+
+@[Uchi-mata explicado · This is Judo](JVByGg_9MGw "Análisis de uchi-mata, una técnica donde el agarre es clave. Video: This is Judo (en inglés).")
+
+*Basado en la entrada [Tsurite – Hikite (kumikata)](https://judotube.wordpress.com/2016/04/28/tsurite-hikite-kumikata/) de JudoTube.*`
   }
 ];

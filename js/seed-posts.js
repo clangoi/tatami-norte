@@ -129,11 +129,15 @@ El error más común es jalar solo con el brazo. El brazo es la cuerda; la fuerz
 
 ## Para ver en acción
 
-@[Agarre de judo japonés avanzado, derecha vs. izquierda · Gatame Online](ay7cC-DVThE "Agarres de manga y solapa en judo japonés. Video: Gatame Online (en español).")
+@[Agarre de judo japonés avanzado, derecha vs. izquierda · Gatame Online](ay7cC-DVThE "Agarres de manga y solapa en judo japonés. Video: Gatame Online.")
 
-@[4 ejercicios básicos de desequilibrio · Gatame Online](NFDvctB4x1E "Kuzushi: ejercicios de desequilibrio para principiantes. Video: Gatame Online (en español).")
+@[4 ejercicios básicos de desequilibrio · Gatame Online](NFDvctB4x1E "Kuzushi: ejercicios de desequilibrio para principiantes. Video: Gatame Online.")
 
-*Basado en la entrada [Tsurite – Hikite (kumikata)](https://judotube.wordpress.com/2016/04/28/tsurite-hikite-kumikata/) de JudoTube.*`
+## Fuentes
+
+- [Tsurite – Hikite (kumikata)](https://judotube.wordpress.com/2016/04/28/tsurite-hikite-kumikata/) · JudoTube
+- [Agarre de judo japonés avanzado, derecha vs. izquierda](https://www.youtube.com/watch?v=ay7cC-DVThE) · Gatame Online
+- [4 ejercicios básicos de desequilibrio](https://www.youtube.com/watch?v=NFDvctB4x1E) · Gatame Online`
   },
   {
     slug: "tsurite-mano-que-eleva",
@@ -167,10 +171,14 @@ Mira también [Hikite: la mano que tira](/blog/articulo.html?p=hikite-mano-que-t
 
 ## Para ver en acción
 
-@[Uchi-mata usando solo el agarre de solapa · atsushi judo channel](taoMO-1n2wo "Cómo el tsurite lleva la técnica en uchi-mata. Video: atsushi judo channel (en japonés).")
+@[Uchi-mata usando solo el agarre de solapa · atsushi judo channel](taoMO-1n2wo "Cómo el tsurite lleva la técnica en uchi-mata. Video: atsushi judo channel.")
 
-@[Uchi-mata explicado · This is Judo](JVByGg_9MGw "Análisis de uchi-mata, una técnica donde el agarre es clave. Video: This is Judo (en inglés).")
+@[Uchi-mata explicado · This is Judo](JVByGg_9MGw "Análisis de uchi-mata, una técnica donde el agarre es clave. Video: This is Judo.")
 
-*Basado en la entrada [Tsurite – Hikite (kumikata)](https://judotube.wordpress.com/2016/04/28/tsurite-hikite-kumikata/) de JudoTube.*`
+## Fuentes
+
+- [Tsurite – Hikite (kumikata)](https://judotube.wordpress.com/2016/04/28/tsurite-hikite-kumikata/) · JudoTube
+- [Uchi-mata usando solo el agarre de solapa](https://www.youtube.com/watch?v=taoMO-1n2wo) · atsushi judo channel
+- [Uchi-mata explicado](https://www.youtube.com/watch?v=JVByGg_9MGw) · This is Judo`
   }
 ];

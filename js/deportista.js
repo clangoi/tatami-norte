@@ -301,9 +301,10 @@ function viewCal() {
     const list = byDate[date] || [];
     const kept = list.filter(b => b.status === "confirmed").length;
     const todo = list.filter(canSurvey).length;   // clases sin encuesta respondida
+    const done = list.filter(b => b.status === "confirmed" && b.attended !== null).length;   // clases ya registradas (encuesta respondida o marcadas por el equipo)
     const cls = `ath-cell${kept ? " has" : list.length ? " is-off" : ""}${todo ? " is-todo" : ""}${date === today ? " is-today" : ""}`;
     cells.push(list.length
-      ? `<button type="button" class="${cls}" data-day="${date}" aria-label="${esc(dayLabel(date))}: ${list.length} ${list.length === 1 ? "clase" : "clases"}${todo ? ", con encuesta por responder" : ""}"><span>${d}</span><i>${kept || list.length}</i></button>`
+      ? `<button type="button" class="${cls}" data-day="${date}" aria-label="${esc(dayLabel(date))}: ${list.length} ${list.length === 1 ? "clase" : "clases"}${todo ? `, encuesta respondida en ${done} de ${kept}` : ""}"><span>${d}</span><i>${todo ? `${done}/${kept}` : kept || list.length}</i></button>`
       : `<span class="${cls}"><span>${d}</span></span>`);
   }
   const cal = data.calendar;

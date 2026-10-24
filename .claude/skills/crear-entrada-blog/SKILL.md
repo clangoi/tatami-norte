@@ -25,22 +25,33 @@ Convierte una o más fuentes en entradas del blog de Kizuna. Los artículos vive
 
 ## 3. Imágenes
 
-- Cuando el artículo necesite imágenes, **genéralas con la paleta del sitio** (`css/tokens.css`): azul marino `#1B2338`, crema `#F6F2E7`, acero `#888D95`, bronce `#A98B5E`, dorado `#D6BD8C`.
-- Deben ser **realistas, limpias y sin adornos**. **No uses SVG, dibujos de palitos ni ilustraciones esquemáticas.**
-- Las imágenes van **sin fondo, solo los sujetos**: entrégalas en WebP o PNG con transparencia en `assets/images/content/`, con una versión de unos 600 px de ancho (`nombre-600.webp`) como las existentes.
-- **Usa las herramientas de creación de imágenes del chat** (las de la app de Claude) para generarlas, describiendo escena, encuadre, personas, vestimenta y la paleta de colores. Guarda el resultado en `assets/images/content/`.
-- Si en la sesión no hay ninguna herramienta de creación de imágenes disponible, **no las sustituyas por SVG**: escribe un **prompt por imagen** para que el usuario lo pegue en el generador del chat. Guárdalos en `docs/prompts-imagenes/<tema>.md`; el modelo a seguir es `docs/prompts-imagenes/hikite-tsurite.md`.
-- Cada prompt debe ser muy detallado, en inglés (los generadores lo siguen mejor), y llevar:
-  1. **Imagen de referencia online** (URL directa, con su licencia, qué aporta y qué no copiar). Compruébala abriéndola antes de usarla y prefiere Wikimedia Commons.
-  2. **Estilo fotográfico** realista (lente, luz, sin ilustración ni render).
-  3. **Sujetos** descritos de forma idéntica en toda la serie (edad, complexión, ropa, colores), para que no cambien entre imágenes.
-  4. **Paleta de `css/tokens.css`** con sus códigos hex y para qué usa cada color, más la prohibición de colores fuera de ella.
-  5. **Sin fondo: solo los sujetos**, sobre fondo transparente (PNG con alfa), sin suelo, tatami, paredes, sombra proyectada ni otras personas, con bordes limpios y sin halo. Como respaldo, si el generador no da transparencia, pide fondo blanco liso (#FFFFFF) sin sombra para recortarlo después. La referencia solo aporta pose y tela, nunca el fondo.
-  6. **Encuadre y proporción** (plano, ángulo, 8:5 o 4:5) y la **pose exacta**, mano por mano y articulación por articulación cuando importe.
-  7. **"Keep it clean"**: sin texto, flechas, marcas de agua ni logos dentro de la imagen (las explicaciones van en el pie).
-  8. **Negative prompt** con los errores típicos (dedos de más, manos deformadas, agarre equivocado, ilustración, texto, colores fuertes).
-- Termina el archivo con el **nombre de cada imagen**, la **sintaxis para insertarla** en la entrada y una **lista de revisión** para aceptar o rechazar cada resultado. Si una imagen compara varias posiciones, pide una imagen por posición con los mismos personajes (la entrada las muestra como galería).
-- Cada imagen lleva texto alternativo y, si ayuda, un pie: `![descripción](/assets/images/content/archivo.webp "pie")`.
+Las imágenes de las entradas son **fotos reales encontradas online, recoloreadas con la paleta del sitio**. No se generan con IA, no se dibujan y **no se usan SVG ni esquemas de palitos**.
+
+**Búsqueda**
+- Busca fotos realistas, limpias y sin adornos que muestren justo lo que explica el texto (la técnica, la posición, el gesto). Revisa cada candidata abriéndola, no solo su título.
+- Usa solo imágenes con **licencia que permita reutilizar y modificar** (Creative Commons, dominio público, o bancos como Unsplash, Pexels o Pixabay). Prefiere Wikimedia Commons, que da licencia y autor en la propia página. No uses fotos de sitios o redes con todos los derechos reservados.
+- Descarta las que tengan texto, logos, marcas de agua, rostros de menores, o que muestren la técnica equivocada.
+- Si varias imágenes comparan posiciones, elige fotos del mismo estilo y encuadre parecido para que la galería se vea coherente.
+- Si no encuentras una foto adecuada con licencia libre, no la inventes: dile al usuario qué falta y propón alternativas.
+
+**Recoloreado con la paleta** (`css/tokens.css`)
+- Convierte la foto a escala de grises y aplica un **mapa de degradado (duotono/tritono)** con estas paradas: `0 %` tinta `#141a2b`, `30 %` azul `#2b3654`, `55 %` acero `#888D95`, `80 %` dorado `#D6BD8C`, `100 %` crema `#F6F2E7`. El bronce `#A98B5E` se puede usar como acento suave en los tonos medios cálidos.
+- Resultado: sin ningún color fuera de la paleta, con contraste suficiente para que se lea la técnica (manos, agarres, posición). Ajusta niveles si queda plano u oscuro.
+- Usa la herramienta disponible en la sesión (ImageMagick, sharp, Pillow o un `canvas` en el navegador). Trabaja sobre una copia: no modifiques el original descargado.
+- El **fondo se conserva** tal como sale en la foto (ya recoloreado), salvo que el usuario pida expresamente recortar los sujetos.
+
+**Archivos y atribución**
+- Entrega WebP en `assets/images/content/`, con una versión de unos 600 px de ancho (`nombre-600.webp`), como las existentes.
+- Cada imagen lleva texto alternativo y un pie con la atribución que exija la licencia (autor, licencia): `![descripción](/assets/images/content/archivo.webp "Texto. Foto: Autor, CC BY-SA 4.0.")`.
+- Agrega cada foto a la sección `## Fuentes` con su enlace a la página original.
+- Guarda un registro de cada imagen (URL original, autor, licencia, ajustes aplicados) en `docs/imagenes-blog.md`, para poder rehacerla o retirarla.
+
+**Revisión antes de aceptar cada imagen**
+- [ ] La licencia permite el uso y la modificación, y la atribución está en el pie y en Fuentes.
+- [ ] Muestra lo que dice el texto (manos, agarre o posición correctos).
+- [ ] Sin texto, logos ni marcas de agua.
+- [ ] Solo colores de la paleta.
+- [ ] Se lee bien en pantallas pequeñas.
 
 ## 4. Videos
 
@@ -71,7 +82,7 @@ Cierra cada entrada con una sección `## Fuentes` con **todas** las fuentes usad
 
 - [ ] Se leyeron todas las fuentes y las discrepancias se resolvieron con el usuario.
 - [ ] Lectura de 10 minutos o menos.
-- [ ] Imágenes realistas, con la paleta, no SVG.
+- [ ] Imágenes: fotos online con licencia libre, recoloreadas con la paleta, con atribución; no SVG ni generadas.
 - [ ] Videos recientes, embebibles, pies sin "(español)" y similares.
 - [ ] Sección `## Fuentes` al final.
 - [ ] Enlaces internos con `slug` correcto.

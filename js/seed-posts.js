@@ -109,7 +109,7 @@ Dos sesiones por semana bastan. No las hagas justo antes de una clase: llega con
     ex: "La mano de la manga marca hacia dónde va la tracción. Aprende a tirar con todo el cuerpo y no solo con el brazo.",
     body: `En Judo, el agarre (kumikata) es el primer paso de cualquier proyección. Cada mano tiene un trabajo distinto: una tira y la otra eleva. Empezamos por la que tira.
 
-![Esquema de Uke de frente con el punto de agarre de la solapa (tsurite) y de la manga (hikite)](/assets/images/content/kumikata-agarres.svg "Tsurite en la solapa, hikite en la manga.")
+![Dos judokas de pie; uno sujeta con ambas manos la manga del otro](/assets/images/content/kumikata-agarres-foto-600.webp "El agarre de la manga marca el rumbo de la tracción. Foto: Kampus Production, Pexels.")
 
 ## Qué es el hikite
 
@@ -118,8 +118,6 @@ Hikite significa "mano que tira". Es la mano que sujeta la manga de Uke, y es la
 ## Tira con todo el tronco
 
 El error más común es jalar solo con el brazo. El brazo es la cuerda; la fuerza viene del tronco, la espalda y las piernas, que se mueven junto con la mano. Si solo trabaja el bíceps, te cansas rápido y Uke apenas se desequilibra.
-
-![Esquema visto desde arriba con las tres direcciones de tracción del hikite: atrás, adelante y al costado](/assets/images/content/hikite-traccion.svg "Las tres direcciones de tracción del hikite.")
 
 ## Cómo practicarlo
 
@@ -137,7 +135,8 @@ El error más común es jalar solo con el brazo. El brazo es la cuerda; la fuerz
 
 - [Tsurite – Hikite (kumikata)](https://judotube.wordpress.com/2016/04/28/tsurite-hikite-kumikata/) · JudoTube
 - [Agarre de judo japonés avanzado, derecha vs. izquierda](https://www.youtube.com/watch?v=ay7cC-DVThE) · Gatame Online
-- [4 ejercicios básicos de desequilibrio](https://www.youtube.com/watch?v=NFDvctB4x1E) · Gatame Online`
+- [4 ejercicios básicos de desequilibrio](https://www.youtube.com/watch?v=NFDvctB4x1E) · Gatame Online
+- [Foto de dos judokas agarrándose](https://www.pexels.com/photo/men-grabbing-each-others-gi-6765016/) · Kampus Production, Pexels (recoloreada)`
   },
   {
     slug: "tsurite-mano-que-eleva",
@@ -157,7 +156,8 @@ La capacidad de elevación del tsurite cambia mucho según la posición del braz
 - **Más fuerte:** el codo pegado al cuerpo y la mano justo encima de él.
 - **Más débil:** el brazo completamente extendido. Ahí la mano casi no tiene capacidad de elevar.
 
-![Tres posiciones del brazo del tsurite, de brazo extendido (débil) a codo al cuerpo con la mano encima (fuerte)](/assets/images/content/tsurite-fuerza.svg "Cuanto más cerca del cuerpo el codo, más fuerza de elevación.")
+![Primer plano de una mano que agarra la solapa del judogi](/assets/images/content/tsurite-agarre-solapa-600.webp "Agarre de la solapa. Foto: RDNE Stock project, Pexels.")
+![Primer plano del agarre de la solapa desde otro ángulo](/assets/images/content/tsurite-agarre-solapa-2-600.webp "El mismo agarre desde otro ángulo. Foto: RDNE Stock project, Pexels.")
 
 La idea práctica: si estás con el brazo estirado, acércate o recoge el codo antes de intentar elevar. Elevar desde lejos es pelear contra tu propia palanca.
 
@@ -179,6 +179,8 @@ Mira también [Hikite: la mano que tira](/blog/articulo.html?p=hikite-mano-que-t
 
 - [Tsurite – Hikite (kumikata)](https://judotube.wordpress.com/2016/04/28/tsurite-hikite-kumikata/) · JudoTube
 - [Uchi-mata usando solo el agarre de solapa](https://www.youtube.com/watch?v=taoMO-1n2wo) · atsushi judo channel
-- [Uchi-mata explicado](https://www.youtube.com/watch?v=JVByGg_9MGw) · This is Judo`
+- [Uchi-mata explicado](https://www.youtube.com/watch?v=JVByGg_9MGw) · This is Judo
+- [Foto del agarre de solapa (1)](https://www.pexels.com/photo/man-people-woman-girl-7045658/) · RDNE Stock project, Pexels (recoloreada)
+- [Foto del agarre de solapa (2)](https://www.pexels.com/photo/girl-sport-fight-training-7045671/) · RDNE Stock project, Pexels (recoloreada)`
   }
 ];

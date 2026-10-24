@@ -1,0 +1,12 @@
+{
+  "appId": "cl.hccombat.kizuna",
+  "appName": "Kizuna",
+  "webDir": "www",
+  "server": {
+    "url": "https://www.hccombat.com",
+    "cleartext": false
+  },
+  "android": {
+    "backgroundColor": "#1B2338"
+  }
+}
